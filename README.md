@@ -1,3 +1,5 @@
+<img src="docs/assets/logo.png" alt="" width="88" align="left" hspace="12">
+
 # Human Mode — AI Detox Center
 
 > Detoxing from AI is not about not using AI.
@@ -94,9 +96,25 @@ More: [docs/architecture/technical-decisions.md](docs/architecture/technical-dec
 
 ## Screenshots
 
-The calm, paper-and-ink "Quiet Mind" design system — see
-[docs/design/design-system.md](docs/design/design-system.md). Screenshot
-assets: coming with the first release.
+<table>
+  <tr>
+    <td width="25%"><img src="docs/assets/screenshots/01-home.png" alt="Home screen showing a Brain Score of 77 and today's challenge"></td>
+    <td width="25%"><img src="docs/assets/screenshots/02-report.png" alt="Brain Report showing the AI reliance score broken down by factor"></td>
+    <td width="25%"><img src="docs/assets/screenshots/05-gate.png" alt="AI Gate asking what you are about to ask AI"></td>
+    <td width="25%"><img src="docs/assets/screenshots/04-history.png" alt="Progress history listing challenges, gates and detox sessions"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Home</b><br>your score, today's practice</td>
+    <td align="center"><b>Brain Report</b><br>every score explains itself</td>
+    <td align="center"><b>AI Gate</b><br>a pause, never a wall</td>
+    <td align="center"><b>Progress</b><br>a record that only adds up</td>
+  </tr>
+</table>
+
+The calm, paper-and-ink "Quiet Mind" design system is documented in
+[docs/design/design-system.md](docs/design/design-system.md). These images are
+generated from demo data with `npm run screenshots` — see
+[docs/assets/screenshots/README.md](docs/assets/screenshots/README.md).
 
 ## Getting started
 
@@ -121,6 +139,8 @@ npm run lint         # all workspaces
 npm run typecheck    # all workspaces
 npm test             # core unit tests (Vitest)
 npm run build        # core tsc build + app web export
+npm run icons        # regenerate brand assets (icon, splash, favicon)
+npm run screenshots  # regenerate documentation screenshots (app must be running)
 ```
 
 Read [CLAUDE.md](CLAUDE.md) (works for humans too) for architecture rules,

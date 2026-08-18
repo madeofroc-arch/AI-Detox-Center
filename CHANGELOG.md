@@ -31,3 +31,22 @@ project adheres to [Semantic Versioning](https://semver.org/).
   JSON export and double-confirmed full deletion.
 - Open-source scaffolding: README, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY,
   MIT LICENSE, issue/PR templates, CI (lint + typecheck + tests + build).
+- Progress history: reverse-chronological list merging challenge attempts,
+  resolved AI Gate sessions, and ended detox sessions, with a new `ListItem`
+  component and neutral row copy.
+- Brand assets generated from source (`npm run icons`): the Open Ring mark as
+  app icon, adaptive icon, monochrome icon, splash, and favicon — rendered by
+  a dependency-free PNG encoder rather than committed as opaque binaries.
+- Documentation screenshots generated from demo data (`npm run screenshots`)
+  via headless Chrome over the DevTools Protocol, embedded in the README.
+
+### Fixed
+
+- `dist` output is now importable from plain Node ESM: relative specifiers get
+  explicit `.js` extensions in a post-build step, while source stays
+  extensionless for Metro. Previously any non-bundler consumer (a future CLI or
+  browser extension) hit `ERR_MODULE_NOT_FOUND`.
+
+### Removed
+
+- Unused Expo template assets (react/expo logos, tab icons, tutorial image).

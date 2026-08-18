@@ -13,8 +13,10 @@ import {
 } from '@ai-detox/core';
 import { Card } from '../../components/Card';
 import { EmptyState } from '../../components/EmptyState';
+import { ListItem } from '../../components/ListItem';
 import { ProgressBar } from '../../components/ProgressBar';
 import { Screen } from '../../components/Screen';
+import { buildTimeline, dayLabel } from '../../lib/timeline';
 import { nowIso, todayKey } from '../../lib/clock';
 import { useAppStore } from '../../state/store';
 import { useTheme } from '../../theme/useTheme';
@@ -42,6 +44,7 @@ export default function Progress() {
   const currentThreshold = xpThresholdForLevel(level);
   const spread = categorySpread(data.challengeHistory);
   const maxSpread = Math.max(1, ...Object.values(spread));
+  const timeline = useMemo(() => buildTimeline(data), [data]);
 
   const empty = data.challengeHistory.length === 0 && data.events.length === 0;
 
@@ -109,6 +112,34 @@ export default function Progress() {
                 />
               ))}
             </View>
+          </Card>
+
+          <Card>
+            <Text
+              style={[
+                type.micro,
+                { color: colors.inkMuted, textTransform: 'uppercase', marginBottom: spacing.md },
+              ]}
+            >
+              History
+            </Text>
+            {timeline.length === 0 ? (
+              <Text style={[type.body, { color: colors.inkMuted }]}>
+                Moments you record — challenges, gates, detox sessions — collect here.
+              </Text>
+            ) : (
+              <View style={{ gap: spacing.sm }}>
+                {timeline.map((entry) => (
+                  <ListItem
+                    key={entry.id}
+                    glyph={entry.glyph}
+                    kindLabel={entry.kindLabel}
+                    title={entry.title}
+                    meta={dayLabel(entry.dateKey, today)}
+                  />
+                ))}
+              </View>
+            )}
           </Card>
         </>
       )}

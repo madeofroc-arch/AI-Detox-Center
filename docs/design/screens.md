@@ -73,8 +73,19 @@ lists its empty/error/loading state. Copy shown is canonical.
 - Capability spread: 9 rows with small ProgressBars.
 - Streak card: "Active streak: N days · Total active days: M". A gap shows
   as "Streak paused" — never "lost".
-- History: reverse-chron ListItems (challenge/gate/detox icons + one line).
-- Empty: invitation copy per section.
+- History: reverse-chron ListItems merging challenge attempts, resolved AI
+  Gate sessions, and ended detox sessions. Each row: glyph (challenge ◆ /
+  gate ◈ / detox ◉) + kind in words (never glyph-only meaning) + one-line
+  title + relative day (Today / Yesterday / Mon, 18 Aug). Capped at the 20
+  most recent — a record to glance at, never an infinite feed.
+  Ordering: gates and detox sessions carry real timestamps; challenges record
+  only a day, so they sort at end-of-day rather than implying a precision we
+  do not have. In-flight records (unresolved gate, running detox) are omitted
+  until they end.
+  Row copy is neutral by construction: "Skipped · Writing", "Went to AI ·
+  Do it for me", "18 focused minutes · ended early".
+- Empty: invitation copy per section; history empty reads "Moments you record
+  — challenges, gates, detox sessions — collect here." 
 
 ## 10. Settings (`/settings`)
 - Sections: Focus (capability tags) · About (philosophy summary, version,

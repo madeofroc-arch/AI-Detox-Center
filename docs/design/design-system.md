@@ -67,7 +67,9 @@ uses surface contrast instead of shadows. Never heavy drop shadows.
 - **ProgressRing / ProgressBar** — accent on `line` track.
 - **Tag** — pill, `accentSoft` bg, micro type; used for categories/difficulty.
 - **TimerDisplay** — display type, monospaced digits, generous whitespace.
-- **ListItem** — 56pt min height, radius `md`, chevron optional.
+- **ListItem** — 56pt min height, radius `md`, surfaceAlt background; leading
+  accent glyph paired with a written kind label (meaning never rests on the
+  glyph alone), title + muted meta line. Used by Progress history.
 - **EmptyState** — icon-free: short heading + one supportive sentence +
   optional single action. Never "No data :(" — always an invitation.
 - **ErrorState** — plain explanation + retry; no alarm styling.
