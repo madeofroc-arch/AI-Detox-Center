@@ -77,11 +77,19 @@ work fully without any LLM API.
    `reducerMaxDiscount` and never subtracts freely. Changing scoring
    semantics means bumping `SCORING_CONFIG_VERSION` — `sanitizeScoringConfig`
    rejects stale versions, which is how the change reaches existing users.
-6. **Business rules never live in components.** Screens read the zustand
+6. **User-visible strings are data, and they live by layer.** Domain language
+   (score bands, factor names, the usage taxonomy, the challenge catalog,
+   reflection prompts) lives in `packages/core/src/i18n/`; screen copy lives in
+   `apps/mobile/src/i18n/`. Core never reads the device — resolving a locale is
+   the app's job. Never let behavior depend on the language: challenge
+   selection runs on the canonical catalog and only then swaps the text.
+   Adding a key to `apps/mobile/src/i18n/en.ts` breaks every other pack at
+   compile time, which is the point.
+7. **Business rules never live in components.** Screens read the zustand
    store (`apps/mobile/src/state/store.ts`), call core functions, render.
    Styles come from theme tokens (`apps/mobile/src/theme/tokens.ts`), never
    inline hex values.
-7. **Tests accompany logic changes** — determinism tests are mandatory for
+8. **Tests accompany logic changes** — determinism tests are mandatory for
    scoring/selection changes (same inputs ⇒ deep-equal outputs).
 
 ## Key entry points

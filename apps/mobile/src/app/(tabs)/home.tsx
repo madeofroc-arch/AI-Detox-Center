@@ -2,14 +2,13 @@ import React, { useMemo } from 'react';
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 import {
-  BAND_LABELS,
-  CATEGORY_LABELS,
   CHALLENGE_CATALOG,
   activeDaysInLast,
   computeBrainScore,
   computeDependencyScore,
   computeUsageStats,
   eventsInWindow,
+  localizeChallenge,
   recommendedDifficulty,
   selectDailyChallenge,
 } from '@ai-detox/core';
@@ -18,6 +17,7 @@ import { Card } from '../../components/Card';
 import { ScoreDial } from '../../components/ScoreDial';
 import { Screen } from '../../components/Screen';
 import { Tag } from '../../components/Tag';
+import { useI18n } from '../../i18n/useI18n';
 import { useAppStore } from '../../state/store';
 import { useTheme } from '../../theme/useTheme';
 import { nowIso, todayKey } from '../../lib/clock';
@@ -25,6 +25,7 @@ import { spacing, type } from '../../theme/tokens';
 
 export default function Home() {
   const { colors } = useTheme();
+  const { t, core } = useI18n();
   const data = useAppStore((s) => s.data);
   const saveError = useAppStore((s) => s.saveError);
 
@@ -41,13 +42,18 @@ export default function Home() {
       }),
     [dependency, data.challengeHistory, today],
   );
+  // Selection runs on the canonical catalog; only the text is localized, so
+  // the same day offers the same practice in either language.
   const challenge = useMemo(
     () =>
-      selectDailyChallenge(today, CHALLENGE_CATALOG, data.challengeHistory, {
-        focusCategories: data.settings.focusCategories,
-        targetDifficulty: recommendedDifficulty(data.challengeHistory),
-      }),
-    [today, data.challengeHistory, data.settings.focusCategories],
+      localizeChallenge(
+        selectDailyChallenge(today, CHALLENGE_CATALOG, data.challengeHistory, {
+          focusCategories: data.settings.focusCategories,
+          targetDifficulty: recommendedDifficulty(data.challengeHistory),
+        }),
+        core,
+      ),
+    [today, data.challengeHistory, data.settings.focusCategories, core],
   );
   const doneToday = data.challengeHistory.some((a) => a.dateKey === today);
 
@@ -75,18 +81,9 @@ export default function Home() {
       windowDays,
     );
     const candidates: { share: number; say: (p: number) => string }[] = [
-      {
-        share: stats.fractionResolvedWithoutAI,
-        say: (p) => `You handled ${p}% of these moments without AI.`,
-      },
-      {
-        share: stats.fractionAIUsesWithReflection,
-        say: (p) => `You paused to reflect on ${p}% of your AI uses.`,
-      },
-      {
-        share: stats.fractionDeliberate,
-        say: (p) => `${p}% of your AI use was deliberate, tool-like work.`,
-      },
+      { share: stats.fractionResolvedWithoutAI, say: t.home.strengthIndependent },
+      { share: stats.fractionAIUsesWithReflection, say: t.home.strengthReflection },
+      { share: stats.fractionDeliberate, say: t.home.strengthDeliberate },
     ];
     const best = candidates
       .filter((c) => Math.round(c.share * 100) >= 1)
@@ -94,33 +91,28 @@ export default function Home() {
     if (best) return best.say(Math.round(best.share * 100));
 
     const practiceDays = activeDaysInLast(data.challengeHistory, today, 7);
-    if (practiceDays > 0) {
-      return `You practised on ${practiceDays} of the last 7 days.`;
-    }
-    return 'One gate where you try first will start moving this.';
-  }, [data.events, data.scoringConfig, data.challengeHistory, today]);
+    if (practiceDays > 0) return t.home.strengthPractice(practiceDays);
+    return t.home.strengthFallback;
+  }, [data.events, data.scoringConfig, data.challengeHistory, today, t]);
 
   return (
-    <Screen title="Human Mode" subtitle="Your thinking, back in your hands." padBottom>
+    <Screen title={t.home.title} subtitle={t.home.subtitle} padBottom>
       {saveError ? (
         <Card alt>
-          <Text style={[type.caption, { color: colors.ink }]}>
-            Saving to this device failed. Recent changes are held in memory — freeing up
-            storage space usually resolves this.
-          </Text>
+          <Text style={[type.caption, { color: colors.ink }]}>{t.home.saveError}</Text>
         </Card>
       ) : null}
 
-      <Card onPress={() => router.push('/report')} accessibilityLabel="Open Brain Report">
+      <Card onPress={() => router.push('/report')} accessibilityLabel={t.home.openReport}>
         <ScoreDial
           value={brainScore}
-          label="Brain Score"
+          label={t.home.brainScore}
           caption={
             brainScore === null
-              ? 'Your score appears after your first few gates and challenges.'
+              ? t.home.scoreEmpty
               : dependency.band
-                ? `AI reliance: ${BAND_LABELS[dependency.band]} — tap to see why`
-                : 'Tap to see why'
+                ? t.home.reliance(core.bandLabels[dependency.band])
+                : t.home.tapToSee
           }
           footnote={brainScore === null ? undefined : strongestStrength}
         />
@@ -129,37 +121,36 @@ export default function Home() {
       <Card>
         <View style={{ gap: spacing.md }}>
           <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-            <Tag label={CATEGORY_LABELS[challenge.category]} />
+            <Tag label={core.challengeCategories[challenge.category]} />
             <Text style={[type.caption, { color: colors.inkMuted }]}>
               {'◆'.repeat(challenge.difficulty)}
-              {'◇'.repeat(5 - challenge.difficulty)} · {challenge.durationMinutes} min
+              {'◇'.repeat(5 - challenge.difficulty)} ·{' '}
+              {t.common.minutesShort(challenge.durationMinutes)}
             </Text>
           </View>
           <Text style={[type.heading, { color: colors.ink }]}>{challenge.title}</Text>
           {doneToday ? (
-            <Text style={[type.body, { color: colors.inkMuted }]}>
-              Today&apos;s practice is in the books. See you tomorrow.
-            </Text>
+            <Text style={[type.body, { color: colors.inkMuted }]}>{t.home.doneToday}</Text>
           ) : (
-            <Button label="Open today's challenge" onPress={() => router.push('/challenge')} />
+            <Button label={t.home.openChallenge} onPress={() => router.push('/challenge')} />
           )}
         </View>
       </Card>
 
       <View style={{ flexDirection: 'row', gap: spacing.md }}>
         <Button
-          label="AI Gate"
+          label={t.home.aiGate}
           variant="secondary"
           style={{ flex: 1 }}
           onPress={() => router.push('/gate')}
-          accessibilityLabel="Open AI Gate — pause before using AI"
+          accessibilityLabel={t.home.aiGateA11y}
         />
         <Button
-          label="Detox"
+          label={t.home.detox}
           variant="secondary"
           style={{ flex: 1 }}
           onPress={() => router.push('/detox')}
-          accessibilityLabel="Start a detox focus session"
+          accessibilityLabel={t.home.detoxA11y}
         />
       </View>
     </Screen>

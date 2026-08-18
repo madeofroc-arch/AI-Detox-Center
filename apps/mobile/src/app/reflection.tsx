@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 import type { ReflectionContext } from '@ai-detox/core';
-import { createReflection, promptsFor } from '@ai-detox/core';
+import { createReflection, localizePrompt, promptsFor } from '@ai-detox/core';
 import { AppTextInput } from '../components/AppTextInput';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
+import { useI18n } from '../i18n/useI18n';
 import { newId } from '../lib/ids';
 import { nowIso } from '../lib/clock';
 import { useAppStore } from '../state/store';
@@ -15,6 +16,7 @@ import { spacing, type } from '../theme/tokens';
 
 export default function Reflection() {
   const { colors } = useTheme();
+  const { t, core } = useI18n();
   const params = useLocalSearchParams<{
     context?: string;
     linkedId?: string;
@@ -23,7 +25,7 @@ export default function Reflection() {
   const addReflection = useAppStore((s) => s.addReflection);
 
   const context = (params.context ?? 'free') as ReflectionContext;
-  const prompts = promptsFor(context, 2);
+  const prompts = promptsFor(context, 2).map((p) => localizePrompt(p, core));
   const [answers, setAnswers] = useState<string[]>(prompts.map(() => ''));
 
   const save = async () => {
@@ -46,7 +48,7 @@ export default function Reflection() {
   };
 
   return (
-    <Screen title="Reflection" subtitle={params.confirmation}>
+    <Screen title={t.reflection.title} subtitle={params.confirmation}>
       {prompts.map((prompt, i) => (
         <View key={prompt.id} style={{ gap: spacing.sm }}>
           <Text style={[type.heading, { color: colors.ink }]}>{prompt.question}</Text>
@@ -56,18 +58,22 @@ export default function Reflection() {
             onChangeText={(text) =>
               setAnswers((prev) => prev.map((a, j) => (j === i ? text : a)))
             }
-            placeholder="A line or two is plenty."
+            placeholder={t.reflection.placeholder}
             accessibilityLabel={prompt.question}
           />
         </View>
       ))}
       <Card alt>
         <Text style={[type.caption, { color: colors.inkMuted }]}>
-          Reflections never leave your device.
+          {t.reflection.privacyNote}
         </Text>
       </Card>
-      <Button label="Save" onPress={() => void save()} />
-      <Button label="Skip" variant="ghost" onPress={() => router.dismissTo('/(tabs)/home')} />
+      <Button label={t.common.save} onPress={() => void save()} />
+      <Button
+        label={t.common.skip}
+        variant="ghost"
+        onPress={() => router.dismissTo('/(tabs)/home')}
+      />
     </Screen>
   );
 }

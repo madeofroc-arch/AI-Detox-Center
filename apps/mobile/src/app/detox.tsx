@@ -17,20 +17,22 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { Segmented } from '../components/Segmented';
+import { useI18n } from '../i18n/useI18n';
 import { newId } from '../lib/ids';
 import { nowIso } from '../lib/clock';
 import { useAppStore } from '../state/store';
 import { useTheme } from '../theme/useTheme';
 import { spacing, type } from '../theme/tokens';
 
-const DURATIONS = [
-  { value: 25, label: '25 min' },
-  { value: 50, label: '50 min' },
-  { value: 90, label: '90 min' },
-] as const;
+const DURATION_MINUTES = [25, 50, 90] as const;
 
 export default function Detox() {
   const { colors } = useTheme();
+  const { t } = useI18n();
+  const durations = DURATION_MINUTES.map((value) => ({
+    value,
+    label: t.common.minutesShort(value),
+  }));
   const recordDetoxSession = useAppStore((s) => s.recordDetoxSession);
 
   const [minutes, setMinutes] = useState<number>(25);
@@ -57,21 +59,19 @@ export default function Detox() {
   if (ended) {
     const focusedMin = Math.round(elapsedFocusedSeconds(ended, nowIso()) / 60);
     return (
-      <Screen title="Session ended">
+      <Screen title={t.detox.endedTitle}>
         <Card>
           <Text style={[type.heading, { color: colors.ink }]}>
             {ended.state === 'completed'
-              ? `${focusedMin} focused minutes.`
-              : `${focusedMin} minutes — noted.`}
+              ? t.detox.focusedMinutes(focusedMin)
+              : t.detox.minutesNoted(focusedMin)}
           </Text>
           <Text style={[type.body, { color: colors.inkMuted, marginTop: spacing.sm }]}>
-            {ended.state === 'completed'
-              ? 'A full block of your own thinking.'
-              : 'Ending early is data, not defeat. Every minute counted.'}
+            {ended.state === 'completed' ? t.detox.completedBody : t.detox.endedEarlyBody}
           </Text>
         </Card>
         <Button
-          label="Add a reflection"
+          label={t.common.addReflection}
           variant="ghost"
           onPress={() =>
             router.replace({
@@ -80,28 +80,28 @@ export default function Detox() {
             })
           }
         />
-        <Button label="Done" onPress={() => router.back()} />
+        <Button label={t.common.done} onPress={() => router.back()} />
       </Screen>
     );
   }
 
   if (!session) {
     return (
-      <Screen title="Detox" subtitle="A block of time for just you and the work.">
+      <Screen title={t.detox.title} subtitle={t.detox.subtitle}>
         <Segmented
-          accessibilityLabel="Session duration"
-          options={DURATIONS}
+          accessibilityLabel={t.detox.durationLabel}
+          options={durations}
           value={minutes}
           onChange={setMinutes}
         />
         <AppTextInput
           value={intention}
           onChangeText={setIntentionText}
-          placeholder="What will you do with this time?"
-          accessibilityLabel="Session intention"
+          placeholder={t.detox.intentionPlaceholder}
+          accessibilityLabel={t.detox.intentionA11y}
         />
         <Button
-          label="Begin"
+          label={t.common.begin}
           onPress={() => setSession(startDetox(newId('detox'), minutes, intention, nowIso()))}
         />
       </Screen>
@@ -114,11 +114,11 @@ export default function Detox() {
   const timeUp = isTimeUp(session, nowIso());
 
   return (
-    <Screen title="Detox">
+    <Screen title={t.detox.title}>
       <Card>
         <View style={{ alignItems: 'center', gap: spacing.lg, paddingVertical: spacing.xxl }}>
           <Text
-            accessibilityLabel={`${mm} minutes ${ss} seconds remaining`}
+            accessibilityLabel={t.detox.timeRemaining(mm, ss)}
             style={[type.display, { color: colors.ink, fontSize: 56, lineHeight: 64, fontVariant: ['tabular-nums'] }]}
           >
             {String(mm).padStart(2, '0')}:{String(ss).padStart(2, '0')}
@@ -131,19 +131,19 @@ export default function Detox() {
         </View>
       </Card>
       {timeUp ? (
-        <Button label="Complete session" onPress={() => void finish(completeDetox)} />
+        <Button label={t.detox.completeSession} onPress={() => void finish(completeDetox)} />
       ) : (
         <>
           {session.state === 'running' ? (
             <Button
-              label="Pause"
+              label={t.detox.pause}
               variant="ghost"
               onPress={() => setSession(pauseDetox(session, nowIso()))}
             />
           ) : (
-            <Button label="Resume" onPress={() => setSession(resumeDetox(session, nowIso()))} />
+            <Button label={t.detox.resume} onPress={() => setSession(resumeDetox(session, nowIso()))} />
           )}
-          <Button label="End session" variant="secondary" onPress={() => void finish(endDetoxEarly)} />
+          <Button label={t.detox.endSession} variant="secondary" onPress={() => void finish(endDetoxEarly)} />
         </>
       )}
     </Screen>

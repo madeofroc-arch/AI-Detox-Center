@@ -13,6 +13,8 @@ replace it.
 [![License: MIT](https://img.shields.io/badge/License-MIT-3E6B5C.svg)](LICENSE)
 [![Local-first](https://img.shields.io/badge/data-stays%20on%20your%20device-3E6B5C.svg)](docs/architecture/privacy.md)
 
+English · [繁體中文](README.zh-TW.md)
+
 ## What is Human Mode?
 
 Most tools treat "too much AI" as a screen-time problem and reach for
@@ -95,6 +97,11 @@ capabilities that atrophy first.
 - **Progress & Brain Report** — additive progress records and a score
   breakdown that always explains itself.
 - **Privacy controls** — one-tap JSON export and full deletion.
+- **English and 繁體中文** — every screen, every challenge, every prompt,
+  translated rather than machine-generated. The app follows your device
+  language by default and nothing is sent anywhere to translate it. Adding a
+  language is a data change, not an engineering project — see
+  [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
 
 ## Privacy
 
@@ -135,6 +142,18 @@ More: [docs/architecture/technical-decisions.md](docs/architecture/technical-dec
     <td align="center"><b>Brain Report</b><br>every score explains itself</td>
     <td align="center"><b>AI Gate</b><br>a pause, never a wall</td>
     <td align="center"><b>Progress</b><br>a record that only adds up</td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td width="25%"><img src="docs/assets/screenshots/01-home.zh-TW.png" alt="Home screen in Traditional Chinese"></td>
+    <td width="25%"><img src="docs/assets/screenshots/02-report.zh-TW.png" alt="Brain Report in Traditional Chinese"></td>
+    <td width="25%"><img src="docs/assets/screenshots/06-challenge.zh-TW.png" alt="Daily challenge in Traditional Chinese"></td>
+    <td width="25%"><img src="docs/assets/screenshots/07-settings.zh-TW.png" alt="Settings in Traditional Chinese, showing the language picker"></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="4"><b>繁體中文</b> — the same build, translated end to end</td>
   </tr>
 </table>
 
@@ -191,7 +210,8 @@ Good places to start, in rough order of how little setup they need:
 - **[Propose a Human Challenge](../../issues/1)** — no code at all; fill in a form
 - **[Run the accessibility checklist](../../issues/4)** — never yet executed against the built app
 - **[Add UI tests for the app](../../issues/2)** — the largest coverage gap in the repo
-- **[i18n + zh-TW](../../issues/3)** — half engineering, half careful writing
+- **[Add a language](CONTRIBUTING.md#adding-a-language)** — two data files and a
+  compiler-checked contract; English and 繁體中文 ship today
 
 Everything labeled [`good first issue`](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 is scoped to be completable without reading the whole codebase.
@@ -199,7 +219,7 @@ is scoped to be completable without reading the whole codebase.
 ## Roadmap
 
 See [docs/product/roadmap.md](docs/product/roadmap.md). Highlights: richer
-reports, i18n (zh-TW first), opt-in OS-level gate entry points, community
+reports, more languages, opt-in OS-level gate entry points, community
 challenge packs. Never on the roadmap: ads, data sales, engagement
 mechanics, surveillance features.
 

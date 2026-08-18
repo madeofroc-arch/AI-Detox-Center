@@ -121,8 +121,13 @@ lists its empty/error/loading state. Copy shown is canonical.
   — challenges, gates, detox sessions — collect here." 
 
 ## 10. Settings (`/settings`)
-- Sections: Focus (capability tags) · About (philosophy summary, version,
-  license, link to repo) · Data & Privacy.
+- Sections: Language · Focus (capability tags) · About (philosophy summary,
+  version, license, link to repo) · Data & Privacy.
+- Language sits FIRST. Someone who cannot read the rest of the screen should
+  reach it without scrolling. Options are "Follow device" plus each language
+  named in itself ("繁體中文", never "Chinese (Traditional)"). The same picker
+  appears on the first onboarding panel, for the same reason: nobody should
+  have to finish a flow they cannot read in order to change the language.
 - Data & Privacy: "Export my data" (JSON via share sheet/download) ·
   "Delete all data" (danger button, double confirm modal: "This erases
   everything on this device. There is no cloud copy.") · "Reset scoring

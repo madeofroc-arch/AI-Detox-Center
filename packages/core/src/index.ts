@@ -27,6 +27,10 @@ export * from './challenges/selection';
 export * from './challenges/difficulty';
 export * from './challenges/progression';
 
+// i18n (domain strings only; screen copy lives in the app layer)
+export * from './i18n/types';
+export * from './i18n/i18n';
+
 // storage
 export * from './storage/port';
 export * from './storage/schema';

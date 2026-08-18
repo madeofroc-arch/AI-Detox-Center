@@ -10,6 +10,7 @@ import type {
   ChallengeCategory,
   DetoxSession,
   GateSession,
+  LanguagePreference,
   LoadWarning,
   ReflectionEntry,
 } from '@ai-detox/core';
@@ -36,6 +37,7 @@ interface AppStore {
 
   completeOnboarding: (focusCategories: ChallengeCategory[]) => Promise<void>;
   setFocusCategories: (focusCategories: ChallengeCategory[]) => Promise<void>;
+  setLanguage: (language: LanguagePreference) => Promise<void>;
   /** Records the session + its usage event; returns the event id (for reflection linking). */
   recordGateSession: (session: GateSession) => Promise<string>;
   recordDetoxSession: (session: DetoxSession) => Promise<void>;
@@ -78,6 +80,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
     get().update((data) => ({
       ...data,
       settings: { ...data.settings, focusCategories },
+    })),
+
+  setLanguage: (language) =>
+    get().update((data) => ({
+      ...data,
+      settings: { ...data.settings, language },
     })),
 
   recordGateSession: async (session) => {

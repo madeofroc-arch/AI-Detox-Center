@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import {
-  CATEGORY_LABELS,
   CHALLENGE_CATEGORIES,
   categorySpread,
   computeStreak,
@@ -16,6 +15,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { ListItem } from '../../components/ListItem';
 import { ProgressBar } from '../../components/ProgressBar';
 import { Screen } from '../../components/Screen';
+import { useI18n } from '../../i18n/useI18n';
 import { buildTimeline, dayLabel } from '../../lib/timeline';
 import { nowIso, todayKey } from '../../lib/clock';
 import { useAppStore } from '../../state/store';
@@ -24,6 +24,7 @@ import { spacing, type } from '../../theme/tokens';
 
 export default function Progress() {
   const { colors } = useTheme();
+  const { t, core, locale } = useI18n();
   const data = useAppStore((s) => s.data);
   const today = todayKey();
 
@@ -44,52 +45,48 @@ export default function Progress() {
   const currentThreshold = xpThresholdForLevel(level);
   const spread = categorySpread(data.challengeHistory);
   const maxSpread = Math.max(1, ...Object.values(spread));
-  const timeline = useMemo(() => buildTimeline(data), [data]);
+  const timeline = useMemo(() => buildTimeline(data, t, core), [data, t, core]);
 
   const empty = data.challengeHistory.length === 0 && data.events.length === 0;
 
   return (
-    <Screen title="Progress" subtitle="Everything here only ever adds up." padBottom>
+    <Screen title={t.progress.title} subtitle={t.progress.subtitle} padBottom>
       {empty ? (
-        <EmptyState
-          heading="Your record starts today"
-          message="Do a challenge or visit the AI Gate once, and this page begins to fill."
-        />
+        <EmptyState heading={t.progress.emptyHeading} message={t.progress.emptyMessage} />
       ) : (
         <>
           <Card>
             <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
-              This week
+              {t.progress.thisWeek}
             </Text>
             <Text style={[type.heading, { color: colors.ink, marginTop: spacing.xs }]}>
-              {weekStats.challengesThisWeek} challenge
-              {weekStats.challengesThisWeek === 1 ? '' : 's'} practiced ·{' '}
-              {weekStats.attemptsFirst} independent attempt
-              {weekStats.attemptsFirst === 1 ? '' : 's'}
+              {t.progress.weekSummary(weekStats.challengesThisWeek, weekStats.attemptsFirst)}
             </Text>
           </Card>
 
           <Card>
             <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
-              Practice
+              {t.progress.practice}
             </Text>
             <Text style={[type.heading, { color: colors.ink, marginTop: spacing.xs }]}>
-              Level {level} · {xp} XP
+              {t.progress.levelAndXp(level, xp)}
             </Text>
             <View style={{ marginTop: spacing.md }}>
               <ProgressBar
                 fraction={(xp - currentThreshold) / Math.max(1, nextThreshold - currentThreshold)}
-                label={`Toward level ${level + 1}`}
+                label={t.progress.towardLevel(level + 1)}
                 valueText={`${xp - currentThreshold} / ${nextThreshold - currentThreshold}`}
               />
             </View>
             <Text style={[type.caption, { color: colors.inkMuted, marginTop: spacing.md }]}>
               {streak.state === 'active' && streak.current > 0
-                ? `Active streak: ${streak.current} day${streak.current === 1 ? '' : 's'}`
+                ? t.progress.streakActive(streak.current)
                 : streak.state === 'paused'
-                  ? 'Streak paused — it picks back up whenever you do.'
-                  : 'Your first active day starts the record.'}
-              {streak.totalActiveDays > 0 ? ` · ${streak.totalActiveDays} active days total` : ''}
+                  ? t.progress.streakPaused
+                  : t.progress.streakNone}
+              {streak.totalActiveDays > 0
+                ? t.progress.activeDaysTotal(streak.totalActiveDays)
+                : ''}
             </Text>
           </Card>
 
@@ -100,14 +97,14 @@ export default function Progress() {
                 { color: colors.inkMuted, textTransform: 'uppercase', marginBottom: spacing.md },
               ]}
             >
-              Capability spread
+              {t.progress.capabilitySpread}
             </Text>
             <View style={{ gap: spacing.md }}>
               {CHALLENGE_CATEGORIES.map((c) => (
                 <ProgressBar
                   key={c}
                   fraction={spread[c] / maxSpread}
-                  label={CATEGORY_LABELS[c]}
+                  label={core.challengeCategories[c]}
                   valueText={String(spread[c])}
                 />
               ))}
@@ -121,11 +118,11 @@ export default function Progress() {
                 { color: colors.inkMuted, textTransform: 'uppercase', marginBottom: spacing.md },
               ]}
             >
-              History
+              {t.progress.history}
             </Text>
             {timeline.length === 0 ? (
               <Text style={[type.body, { color: colors.inkMuted }]}>
-                Moments you record — challenges, gates, detox sessions — collect here.
+                {t.progress.historyEmpty}
               </Text>
             ) : (
               <View style={{ gap: spacing.sm }}>
@@ -135,7 +132,7 @@ export default function Progress() {
                     glyph={entry.glyph}
                     kindLabel={entry.kindLabel}
                     title={entry.title}
-                    meta={dayLabel(entry.dateKey, today)}
+                    meta={dayLabel(entry.dateKey, today, t, locale)}
                   />
                 ))}
               </View>

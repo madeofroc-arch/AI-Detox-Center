@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View } from 'react-native';
+import { useI18n } from '../i18n/useI18n';
 import { useAppStore } from '../state/store';
 import { useTheme } from '../theme/useTheme';
 import { spacing, type } from '../theme/tokens';
 
 export default function RootLayout() {
   const { colors, isDark } = useTheme();
+  const { t } = useI18n();
   const hydrated = useAppStore((s) => s.hydrated);
   const loadWarning = useAppStore((s) => s.loadWarning);
   const hydrate = useAppStore((s) => s.hydrate);
@@ -30,9 +32,7 @@ export default function RootLayout() {
           style={{ backgroundColor: colors.surfaceAlt, padding: spacing.md }}
         >
           <Text style={[type.caption, { color: colors.ink, textAlign: 'center' }]}>
-            {loadWarning === 'corrupt_data_backed_up'
-              ? 'Stored data could not be read. A backup was kept on this device.'
-              : 'Data was written by a newer app version. Update the app to use it.'}
+            {loadWarning === 'corrupt_data_backed_up' ? t.root.corruptData : t.root.schemaTooNew}
           </Text>
         </View>
       ) : null}

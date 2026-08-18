@@ -4,7 +4,8 @@
  * reports a warning (no silent data loss, ever).
  */
 import { defaultScoringConfig, sanitizeScoringConfig } from '../ai-detox/scoring/config';
-import type { AppData } from './schema';
+import { isLocale } from '../i18n/types';
+import type { AppData, LanguagePreference } from './schema';
 import { SCHEMA_VERSION, emptyAppData } from './schema';
 
 export class SchemaTooNewError extends Error {
@@ -18,6 +19,10 @@ export class SchemaTooNewError extends Error {
 }
 
 type Migration = (data: Record<string, unknown>) => Record<string, unknown>;
+
+function asLanguage(value: unknown): LanguagePreference {
+  return value === 'system' || isLocale(value) ? value : 'system';
+}
 
 /**
  * Registry: MIGRATIONS[n] migrates version n -> n+1.
@@ -34,6 +39,24 @@ const MIGRATIONS: Record<number, Migration> = {
     challengeHistory: Array.isArray(data.challengeHistory) ? data.challengeHistory : [],
     schemaVersion: 1,
   }),
+  // 1 -> 2: AppSettings gained `language`. Existing users follow their device
+  // rather than being pinned to English, which is what they had implicitly.
+  //
+  // Fill, never overwrite. A v1 document is not supposed to carry a language,
+  // but one that does is telling us something, and clobbering it is a silent
+  // data loss of exactly the kind ADR-0003 forbids. (This is not theoretical:
+  // it discarded the language on every migrated document during development.)
+  1: (data) => {
+    const settings =
+      typeof data.settings === 'object' && data.settings !== null
+        ? (data.settings as Record<string, unknown>)
+        : {};
+    return {
+      ...data,
+      settings: { ...settings, language: asLanguage(settings.language) },
+      schemaVersion: 2,
+    };
+  },
 };
 
 /**
@@ -89,6 +112,7 @@ export function migrateAppData(raw: unknown): AppData {
       focusCategories: Array.isArray(result.settings?.focusCategories)
         ? result.settings.focusCategories
         : [],
+      language: asLanguage(result.settings?.language),
     },
   };
 }

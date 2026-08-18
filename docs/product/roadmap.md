@@ -14,7 +14,8 @@
 - Expanded challenge catalog (community-contributed, curated)
 - Richer Brain Report (trends over time, factor history)
 - Gentle habit scaffolding (time-of-day suggestion, still no push pressure)
-- i18n (starting with zh-TW)
+- More languages (English and zh-TW ship today; adding one is a data change,
+  see CONTRIBUTING.md)
 - Component/UI test coverage
 
 ## Phase 3 — Integration (all opt-in, all local-first)

@@ -2,8 +2,11 @@
  * Demo data for documentation screenshots. Plausible two weeks of a user who
  * is mid-journey: real dependency patterns, real practice, nothing perfect.
  * Never shipped in the app — this only ever runs in a browser dev session.
+ *
+ * `language` is a preference, not a locale: 'system' follows the device, which
+ * is what a real first-run install has.
  */
-export function buildDemoData(todayKey) {
+export function buildDemoData(todayKey, language = 'system') {
   const day = (offset) =>
     new Date(Date.parse(todayKey) + offset * 86_400_000).toISOString().slice(0, 10);
   const at = (offset, hour) => `${day(offset)}T${String(hour).padStart(2, '0')}:20:00.000Z`;
@@ -133,12 +136,19 @@ export function buildDemoData(todayKey) {
     }));
 
   return {
+    // Deliberately the OLD schema version: the fixture doubles as a migration
+    // exercise, so every screenshot run proves migrateAppData still lifts a
+    // v1 document rather than only ever testing a freshly-written one.
     schemaVersion: 1,
     events,
     gateSessions,
     detoxSessions,
     reflections,
     challengeHistory,
-    settings: { onboardingComplete: true, focusCategories: ['writing', 'thinking', 'focus'] },
+    settings: {
+      onboardingComplete: true,
+      focusCategories: ['writing', 'thinking', 'focus'],
+      language,
+    },
   };
 }

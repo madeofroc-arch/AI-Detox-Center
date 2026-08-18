@@ -1,0 +1,122 @@
+/**
+ * Domain-string lookup. Pure, deterministic, and total: every locale resolves
+ * to a complete `CoreStrings`, because a partial translation falls back to
+ * English key by key rather than leaving a hole in the UI.
+ */
+import type { Challenge } from '../challenges/types';
+import type { ReflectionPrompt } from '../ai-detox/reflection/reflection';
+import type { AIUsageCategory, CategoryInfo } from '../ai-detox/tracking/types';
+import { CATEGORY_INFO } from '../ai-detox/tracking/types';
+import { EN_STRINGS } from './en';
+import { ZH_TW_STRINGS } from './zh-TW';
+import type { CoreStrings, Locale, PartialCoreStrings } from './types';
+import { DEFAULT_LOCALE, LOCALES, isLocale } from './types';
+
+const OVERRIDES: Record<Locale, PartialCoreStrings> = {
+  en: {},
+  'zh-TW': ZH_TW_STRINGS,
+};
+
+/** Shallow-merge one table, keeping every English key the translation omits. */
+function mergeTable<T extends Record<string, unknown>>(base: T, over: Partial<T> | undefined): T {
+  return over ? { ...base, ...over } : base;
+}
+
+const CACHE = new Map<Locale, CoreStrings>();
+
+/**
+ * Every domain string for a language. Results are memoized because screens
+ * call this on every render and the merge allocates; the objects are treated
+ * as immutable (never mutate a returned pack).
+ */
+export function getCoreStrings(locale: Locale | string | undefined): CoreStrings {
+  const key: Locale = isLocale(locale) ? locale : DEFAULT_LOCALE;
+  const cached = CACHE.get(key);
+  if (cached) return cached;
+
+  const over = OVERRIDES[key];
+  const merged: CoreStrings = {
+    locale: key,
+    bandLabels: mergeTable(EN_STRINGS.bandLabels, over.bandLabels),
+    factorLabels: mergeTable(EN_STRINGS.factorLabels, over.factorLabels),
+    factorDescriptions: mergeTable(EN_STRINGS.factorDescriptions, over.factorDescriptions),
+    usageCategories: mergeTable(EN_STRINGS.usageCategories, over.usageCategories),
+    challengeCategories: mergeTable(EN_STRINGS.challengeCategories, over.challengeCategories),
+    reflectionPrompts: mergeTable(EN_STRINGS.reflectionPrompts, over.reflectionPrompts),
+    challenges: mergeTable(EN_STRINGS.challenges, over.challenges),
+  };
+  CACHE.set(key, merged);
+  return merged;
+}
+
+/**
+ * A challenge with its text in the requested language. Id, category,
+ * difficulty and duration are untouched — selection and scoring must not
+ * depend on the display language, or the same day would offer different
+ * practice to the same person in two languages.
+ */
+export function localizeChallenge(challenge: Challenge, strings: CoreStrings): Challenge {
+  const text = strings.challenges[challenge.id];
+  if (!text) return challenge;
+  return {
+    ...challenge,
+    title: text.title,
+    instructions: text.instructions,
+    successCondition: text.successCondition,
+    reflectionQuestions: text.reflectionQuestions,
+  };
+}
+
+/** A reflection prompt with its question translated. */
+export function localizePrompt(
+  prompt: ReflectionPrompt,
+  strings: CoreStrings,
+): ReflectionPrompt {
+  const question = strings.reflectionPrompts[prompt.id];
+  return question ? { ...prompt, question } : prompt;
+}
+
+/** The usage taxonomy in display order, translated. Kinds are unchanged. */
+export function localizeCategoryInfo(strings: CoreStrings): CategoryInfo[] {
+  return CATEGORY_INFO.map((info) => {
+    const text = strings.usageCategories[info.category];
+    return text ? { ...info, label: text.label, description: text.description } : { ...info };
+  });
+}
+
+/**
+ * Match device language tags (most-preferred first) to a supported locale.
+ *
+ * Pure, so it lives here and is tested here; reading the tags off the device
+ * is the app layer's job. Exact tags win, then the language subtag, so a
+ * device set to `zh-Hant-HK` or `zh-TW` both land on Traditional Chinese.
+ * `zh-Hans` / `zh-CN` deliberately do NOT: Simplified is a different
+ * translation this project does not have yet, and serving Traditional to a
+ * Simplified reader is a guess, not a courtesy.
+ */
+export function matchLocale(tags: readonly string[]): Locale {
+  // One pass, in the user's own preference order. A two-pass version that
+  // looked for exact tags everywhere first got ['en-US', 'zh-TW'] wrong: it
+  // returned Chinese to someone whose first choice was English.
+  for (const tag of tags) {
+    if (isLocale(tag)) return tag;
+    if (typeof tag !== 'string') continue;
+    const lower = tag.toLowerCase();
+    const base = lower.split('-')[0];
+    if (base === 'zh') {
+      if (/hant|-tw|-hk|-mo/.test(lower)) return 'zh-TW';
+      continue; // Simplified and bare `zh` fall through to the next tag.
+    }
+    const match = LOCALES.find((l) => l.toLowerCase().split('-')[0] === base);
+    if (match) return match;
+  }
+  return DEFAULT_LOCALE;
+}
+
+/** One category's label, for a chip or a row. */
+export function usageCategoryLabel(
+  category: AIUsageCategory,
+  strings: CoreStrings,
+): string {
+  return strings.usageCategories[category]?.label ?? category;
+}

@@ -9,12 +9,22 @@ import type { ScoringConfig } from '../ai-detox/scoring/config';
 import { defaultScoringConfig } from '../ai-detox/scoring/config';
 import type { AIUsageEvent } from '../ai-detox/tracking/types';
 import type { ChallengeAttempt, ChallengeCategory } from '../challenges/types';
+import type { Locale } from '../i18n/types';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+
+/**
+ * 'system' means "follow the device", which is the honest default: guessing a
+ * language once at install and freezing it is wrong the moment the user
+ * changes their phone. Resolving 'system' to a concrete locale is the app
+ * layer's job — core never reads the platform.
+ */
+export type LanguagePreference = Locale | 'system';
 
 export interface AppSettings {
   onboardingComplete: boolean;
   focusCategories: ChallengeCategory[];
+  language: LanguagePreference;
 }
 
 export interface AppData {
@@ -37,6 +47,6 @@ export function emptyAppData(): AppData {
     reflections: [],
     challengeHistory: [],
     scoringConfig: defaultScoringConfig(),
-    settings: { onboardingComplete: false, focusCategories: [] },
+    settings: { onboardingComplete: false, focusCategories: [], language: 'system' },
   };
 }

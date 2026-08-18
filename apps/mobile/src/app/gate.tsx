@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 import type { AIUsageCategory, GateSession } from '@ai-detox/core';
 import {
-  CATEGORY_INFO,
   answerTriedFirst,
   finishAttempt,
+  localizeCategoryInfo,
   resolveGate,
   setIntention,
   skipAttempt,
@@ -16,6 +16,8 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { Tag } from '../components/Tag';
+import { useI18n } from '../i18n/useI18n';
+import type { AppStrings } from '../i18n/en';
 import { newId } from '../lib/ids';
 import { nowIso } from '../lib/clock';
 import { useAppStore } from '../state/store';
@@ -26,6 +28,7 @@ const ATTEMPT_SECONDS = 180;
 
 export default function Gate() {
   const { colors } = useTheme();
+  const { t, core } = useI18n();
   const recordGateSession = useAppStore((s) => s.recordGateSession);
 
   const [session, setSession] = useState<GateSession>(() => startGate(newId('gate'), nowIso()));
@@ -34,6 +37,8 @@ export default function Gate() {
   const [secondsLeft, setSecondsLeft] = useState(ATTEMPT_SECONDS);
   const [timerRunning, setTimerRunning] = useState(false);
   const attemptStartRef = useRef<number | null>(null);
+
+  const categories = useMemo(() => localizeCategoryInfo(core), [core]);
 
   useEffect(() => {
     if (!timerRunning) return;
@@ -53,29 +58,25 @@ export default function Gate() {
     const eventId = await recordGateSession(resolved);
     router.replace({
       pathname: '/reflection',
-      params: { context: 'gate', linkedId: eventId, confirmation: confirmationFor(outcome) },
+      params: { context: 'gate', linkedId: eventId, confirmation: confirmationFor(outcome, t) },
     });
   };
 
   return (
-    <Screen title="AI Gate" subtitle="A moment of intention before AI.">
+    <Screen title={t.gate.title} subtitle={t.gate.subtitle}>
       {session.step === 'intention' ? (
         <View style={{ gap: spacing.lg }}>
-          <Text style={[type.heading, { color: colors.ink }]}>
-            What are you about to ask AI?
-          </Text>
+          <Text style={[type.heading, { color: colors.ink }]}>{t.gate.askWhat}</Text>
           <AppTextInput
             area
             value={question}
             onChangeText={setQuestion}
-            placeholder="One line is enough. Stays on this device."
-            accessibilityLabel="What are you about to ask AI"
+            placeholder={t.gate.askPlaceholder}
+            accessibilityLabel={t.gate.askWhat}
           />
-          <Text style={[type.caption, { color: colors.inkMuted }]}>
-            What kind of use is it?
-          </Text>
+          <Text style={[type.caption, { color: colors.inkMuted }]}>{t.gate.kindOfUse}</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            {CATEGORY_INFO.map((info) => (
+            {categories.map((info) => (
               <Tag
                 key={info.category}
                 label={info.label}
@@ -85,7 +86,7 @@ export default function Gate() {
             ))}
           </View>
           <Button
-            label="Continue"
+            label={t.common.continue}
             onPress={() => setSession((s) => setIntention(s, { question, category }))}
           />
         </View>
@@ -93,15 +94,13 @@ export default function Gate() {
 
       {session.step === 'attempt_check' ? (
         <View style={{ gap: spacing.lg }}>
-          <Text style={[type.heading, { color: colors.ink }]}>
-            Have you tried it yourself yet?
-          </Text>
+          <Text style={[type.heading, { color: colors.ink }]}>{t.gate.triedYet}</Text>
           <Button
-            label="Yes, I tried"
+            label={t.gate.yesTried}
             onPress={() => setSession((s) => answerTriedFirst(s, true))}
           />
           <Button
-            label="Not yet"
+            label={t.gate.notYet}
             variant="secondary"
             onPress={() => setSession((s) => answerTriedFirst(s, false))}
           />
@@ -112,11 +111,12 @@ export default function Gate() {
         <View style={{ gap: spacing.lg }}>
           <Card>
             <View style={{ alignItems: 'center', gap: spacing.md }}>
-              <Text style={[type.caption, { color: colors.inkMuted }]}>
-                Three minutes with just your own head. Hints and AI will still be there after.
-              </Text>
+              <Text style={[type.caption, { color: colors.inkMuted }]}>{t.gate.attemptBlurb}</Text>
               <Text
-                accessibilityLabel={`${Math.floor(secondsLeft / 60)} minutes ${secondsLeft % 60} seconds remaining`}
+                accessibilityLabel={t.gate.timeRemaining(
+                  Math.floor(secondsLeft / 60),
+                  secondsLeft % 60,
+                )}
                 style={[type.display, { color: colors.ink, fontVariant: ['tabular-nums'] }]}
               >
                 {String(Math.floor(secondsLeft / 60)).padStart(1, '0')}:
@@ -124,7 +124,7 @@ export default function Gate() {
               </Text>
               {!timerRunning ? (
                 <Button
-                  label="Start 3-minute attempt"
+                  label={t.gate.startAttempt}
                   onPress={() => {
                     attemptStartRef.current = Date.now();
                     setTimerRunning(true);
@@ -132,7 +132,7 @@ export default function Gate() {
                 />
               ) : (
                 <Button
-                  label="Done attempting"
+                  label={t.gate.doneAttempting}
                   onPress={() => {
                     setTimerRunning(false);
                     setSession((s) => finishAttempt(s, attemptElapsed()));
@@ -142,7 +142,7 @@ export default function Gate() {
             </View>
           </Card>
           <Button
-            label="Skip and continue"
+            label={t.gate.skipAndContinue}
             variant="ghost"
             onPress={() => {
               setTimerRunning(false);
@@ -156,15 +156,19 @@ export default function Gate() {
 
       {session.step === 'outcome' ? (
         <View style={{ gap: spacing.md }}>
-          <Text style={[type.heading, { color: colors.ink }]}>How did it go?</Text>
-          <Button label="Solved it myself" variant="secondary" onPress={() => void complete('solved_myself')} />
+          <Text style={[type.heading, { color: colors.ink }]}>{t.gate.howDidItGo}</Text>
           <Button
-            label="Got a hint, thinking more"
+            label={t.gate.solvedMyself}
+            variant="secondary"
+            onPress={() => void complete('solved_myself')}
+          />
+          <Button
+            label={t.gate.hintThenThinking}
             variant="secondary"
             onPress={() => void complete('hint_then_thinking')}
           />
           <Button
-            label="Proceeding to AI"
+            label={t.gate.proceedingToAI}
             variant="secondary"
             onPress={() => void complete('proceeded_to_ai')}
           />
@@ -174,13 +178,13 @@ export default function Gate() {
   );
 }
 
-function confirmationFor(outcome: string): string {
+function confirmationFor(outcome: string, t: AppStrings): string {
   switch (outcome) {
     case 'solved_myself':
-      return 'That was all you. Noted.';
+      return t.gate.confirmSolved;
     case 'hint_then_thinking':
-      return 'A hint, then your own thinking. Noted.';
+      return t.gate.confirmHint;
     default:
-      return 'Noted. Nice pause.';
+      return t.gate.confirmProceeded;
   }
 }

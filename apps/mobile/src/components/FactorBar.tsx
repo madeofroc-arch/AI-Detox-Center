@@ -1,18 +1,10 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import type { FactorScore } from '@ai-detox/core';
+import type { CoreStrings, FactorScore } from '@ai-detox/core';
+import type { AppStrings } from '../i18n/en';
 import { useTheme } from '../theme/useTheme';
 import { spacing, type } from '../theme/tokens';
 import { ProgressBar } from './ProgressBar';
-
-const FACTOR_LABELS: Record<string, string> = {
-  frequency: 'Frequency',
-  immediacy: 'Immediacy',
-  delegation: 'Delegation',
-  lackOfAttempt: 'No attempt first',
-  emotionalDependency: 'Reassurance',
-  independentAttempt: 'Independent attempts',
-};
 
 /**
  * One scoring factor with its plain-language explanation.
@@ -23,12 +15,26 @@ const FACTOR_LABELS: Record<string, string> = {
  * just the factor's intensity -- rendered every saturated factor as an
  * identical full bar, so a row worth 61 points and one worth 31 looked the
  * same (ADR-0007).
+ *
+ * Both string packs are passed in: the label and description are domain
+ * language (core), the direction words and the points unit are screen copy.
  */
-export function FactorBar({ factor, scale }: { factor: FactorScore; scale: number }) {
+export function FactorBar({
+  factor,
+  scale,
+  t,
+  core,
+}: {
+  factor: FactorScore;
+  scale: number;
+  t: AppStrings;
+  core: CoreStrings;
+}) {
   const { colors } = useTheme();
-  const label = FACTOR_LABELS[factor.factor] ?? factor.factor;
+  const label = core.factorLabels[factor.factor] ?? factor.factor;
   const tone = factor.role === 'contributor' ? 'amber' : 'accent';
-  const direction = factor.role === 'contributor' ? 'adds to' : 'lowers';
+  const direction =
+    factor.role === 'contributor' ? t.report.factorAdds : t.report.factorLowers;
   const points = Math.round(factor.points);
   const fill = scale > 0 ? factor.points / scale : 0;
   return (
@@ -36,12 +42,12 @@ export function FactorBar({ factor, scale }: { factor: FactorScore; scale: numbe
       <ProgressBar
         fraction={fill}
         label={label}
-        valueText={`${points} pts`}
+        valueText={t.report.points(points)}
         tone={tone}
-        announce={`${label}: ${points} points, ${direction} the score`}
+        announce={t.report.factorA11y(label, points, direction)}
       />
       <Text style={[type.caption, { color: colors.inkMuted }]}>
-        {factor.description} ({direction} the score)
+        {core.factorDescriptions[factor.factor] ?? factor.description} ({direction})
       </Text>
     </View>
   );

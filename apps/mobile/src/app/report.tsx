@@ -1,16 +1,12 @@
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';
-import {
-  BAND_LABELS,
-  computeDependencyScore,
-  computeUsageStats,
-  eventsInWindow,
-} from '@ai-detox/core';
+import { computeDependencyScore, computeUsageStats, eventsInWindow } from '@ai-detox/core';
 import { Card } from '../components/Card';
 import { EmptyState } from '../components/EmptyState';
 import { FactorBar } from '../components/FactorBar';
 import { ScoreDial } from '../components/ScoreDial';
 import { Screen } from '../components/Screen';
+import { useI18n } from '../i18n/useI18n';
 import { nowIso } from '../lib/clock';
 import { useAppStore } from '../state/store';
 import { useTheme } from '../theme/useTheme';
@@ -18,6 +14,7 @@ import { spacing, type } from '../theme/tokens';
 
 export default function Report() {
   const { colors } = useTheme();
+  const { t, core } = useI18n();
   const data = useAppStore((s) => s.data);
 
   const result = useMemo(
@@ -34,10 +31,10 @@ export default function Report() {
 
   if (result.status === 'insufficient_data') {
     return (
-      <Screen title="Brain Report">
+      <Screen title={t.report.title}>
         <EmptyState
-          heading="Not enough data yet"
-          message={`The report unlocks after about ${data.scoringConfig.minEventsForScore} recorded uses. Each AI Gate visit counts — including the ones you solve yourself.`}
+          heading={t.report.insufficientHeading}
+          message={t.report.insufficientMessage(data.scoringConfig.minEventsForScore)}
         />
       </Screen>
     );
@@ -50,66 +47,59 @@ export default function Report() {
   const percent = (n: number): number => Math.round(n * 100);
 
   return (
-    <Screen title="Brain Report" subtitle="Why your score is what it is.">
+    <Screen title={t.report.title} subtitle={t.report.subtitle}>
       <Card>
         <ScoreDial
           value={result.score}
-          label="AI reliance"
-          caption={result.band ? BAND_LABELS[result.band] : undefined}
+          label={t.report.reliance}
+          caption={result.band ? core.bandLabels[result.band] : undefined}
         />
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>What adds to reliance</Text>
+      <Text style={[type.heading, { color: colors.ink }]}>{t.report.whatAdds}</Text>
       <Card>
         <View style={{ gap: spacing.lg }}>
           {contributors.map((f) => (
-            <FactorBar key={f.factor} factor={f} scale={scale} />
+            <FactorBar key={f.factor} factor={f} scale={scale} t={t} core={core} />
           ))}
         </View>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>What lowers it</Text>
+      <Text style={[type.heading, { color: colors.ink }]}>{t.report.whatLowers}</Text>
       <Card>
         <View style={{ gap: spacing.lg }}>
           {reducers.map((f) => (
-            <FactorBar key={f.factor} factor={f} scale={scale} />
+            <FactorBar key={f.factor} factor={f} scale={scale} t={t} core={core} />
           ))}
         </View>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>Not counted, worth knowing</Text>
+      <Text style={[type.heading, { color: colors.ink }]}>{t.report.notCounted}</Text>
       <Card>
         <View style={{ gap: spacing.md }}>
           <Text style={[type.body, { color: colors.ink }]}>
-            You paused to reflect on {percent(stats.fractionAIUsesWithReflection)}% of your AI
-            uses.
+            {t.report.reflectedLine(percent(stats.fractionAIUsesWithReflection))}
           </Text>
           <Text style={[type.body, { color: colors.ink }]}>
-            {percent(stats.fractionDeliberate)}% of your AI use was deliberate, tool-like work.
+            {t.report.deliberateLine(percent(stats.fractionDeliberate))}
           </Text>
           <Text style={[type.caption, { color: colors.inkMuted }]}>
-            Neither of these moves the number. Anything you can do inside this app to lower your
-            own score would make the score worth less, so reflecting is reported and never
-            rewarded.
+            {t.report.notCountedNote}
           </Text>
         </View>
       </Card>
 
       <Card alt>
         <Text style={[type.caption, { color: colors.inkMuted }]}>
-          How this works: each factor above is measured from your last {result.windowDays} days of
-          recorded uses ({result.eventCount} moments, {result.aiUseCount} of them with AI). The
-          factors that add up form your reliance; moments you resolved without AI discount that
-          reliance by up to {Math.round(data.scoringConfig.reducerMaxDiscount * 100)}%, never
-          erase it. Each number is rounded to whole points, so reading them off and adding them up
-          can land a point or two from the dial.
+          {t.report.howItWorks(
+            result.windowDays,
+            result.eventCount,
+            result.aiUseCount,
+            Math.round(data.scoringConfig.reducerMaxDiscount * 100),
+          )}
         </Text>
         <Text style={[type.caption, { color: colors.inkMuted, marginTop: spacing.md }]}>
-          What counts is how much thinking you handed over, not how much you used AI. Heavy,
-          deliberate use where you think first scores low by design, and handing over twice as
-          many whole tasks counts as twice as much — until the scale runs out, above roughly two
-          handed-over tasks a day, where the dial simply stays at 100. Early on the number reads
-          low while the {result.windowDays} days fill up. Computed entirely on this device.
+          {t.report.whatCounts(result.windowDays)}
         </Text>
       </Card>
     </Screen>

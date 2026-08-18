@@ -4,7 +4,11 @@
  * so `npm run screenshots` works on a clean clone.
  *
  * Usage: start the web app first, then
- *   node scripts/capture-screenshots.mjs [baseUrl]
+ *   node scripts/capture-screenshots.mjs [baseUrl] [locale]
+ *
+ * The locale defaults to English and writes docs/assets/screenshots/NN-name.png;
+ * any other locale writes NN-name.<locale>.png alongside it, so the README can
+ * show either without one language overwriting the other.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -16,6 +20,8 @@ import { buildDemoData } from './demo-data.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'docs/assets/screenshots');
 const BASE = process.argv[2] ?? 'http://localhost:8123';
+const LOCALE = process.argv[3] ?? 'en';
+const SUFFIX = LOCALE === 'en' ? '' : `.${LOCALE}`;
 const VIEWPORT = { width: 390, height: 844, scale: 2 };
 
 const CHROME_CANDIDATES = [
@@ -117,7 +123,7 @@ async function main() {
   }
   const page = targets?.find((t) => t.type === 'page');
   if (!page) throw new Error('Headless browser never exposed a page target');
-  console.log(`browser ready · capturing ${SHOTS.length} screens from ${BASE}`);
+  console.log(`browser ready · capturing ${SHOTS.length} screens from ${BASE} (${LOCALE})`);
 
   const cdp = await CDP.connect(page.webSocketDebuggerUrl);
   await cdp.send('Page.enable');
@@ -140,7 +146,7 @@ async function main() {
     String(now.getMonth() + 1).padStart(2, '0'),
     String(now.getDate()).padStart(2, '0'),
   ].join('-');
-  const demo = JSON.stringify(buildDemoData(todayKey));
+  const demo = JSON.stringify(buildDemoData(todayKey, LOCALE));
 
   for (const shot of SHOTS) {
     // Seed on the app origin, then load the route so state is already there.
@@ -165,8 +171,8 @@ async function main() {
     }
 
     const { data } = await cdp.send('Page.captureScreenshot', { format: 'png' });
-    writeFileSync(join(OUT, `${shot.name}.png`), Buffer.from(data, 'base64'));
-    console.log(`${shot.name}.png`);
+    writeFileSync(join(OUT, `${shot.name}${SUFFIX}.png`), Buffer.from(data, 'base64'));
+    console.log(`${shot.name}${SUFFIX}.png`);
   }
 
   cdp.close();

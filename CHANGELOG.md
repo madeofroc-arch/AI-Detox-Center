@@ -8,6 +8,26 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **繁體中文 (Traditional Chinese), and the machinery to add more languages.**
+  Every screen, all nine capability names, the whole AI-usage taxonomy, the ten
+  reflection prompts and all 27 challenges — translated, not machine-generated.
+  The app follows the device language by default and nothing is sent anywhere
+  to translate it (the privacy invariant is unchanged).
+
+  Split by layer: `packages/core/src/i18n/` owns the domain strings, because a
+  challenge's instructions are data; `apps/mobile/src/i18n/` owns screen copy
+  and is the only place that reads the device. Domain packs may be partial and
+  fall back to English key by key; screen packs are typed, so a missing key is
+  a build error rather than an English button inside a Chinese flow.
+
+  Selection is deliberately language-independent: `selectDailyChallenge` runs
+  on the canonical catalog and only then swaps the text, so the same person
+  gets the same practice on the same day in either language. Tested.
+
+  Storage schema 1 -> 2 adds `settings.language`, defaulting to "follow
+  device". Adding a language is documented in
+  [CONTRIBUTING.md](CONTRIBUTING.md#adding-a-language).
+
 - Skill-driven development system: five Claude Code skills
   (product-architect, ux-ui-designer, ai-detox-engine,
   human-challenge-engine, open-source-engineer) with an orchestration

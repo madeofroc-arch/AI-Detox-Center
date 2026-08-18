@@ -3,8 +3,8 @@ import { router } from 'expo-router';
 import { Text, View } from 'react-native';
 import type { AttemptStatus } from '@ai-detox/core';
 import {
-  CATEGORY_LABELS,
   CHALLENGE_CATALOG,
+  localizeChallenge,
   recommendedDifficulty,
   selectDailyChallenge,
   xpForAttempt,
@@ -14,6 +14,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
 import { Tag } from '../components/Tag';
+import { useI18n } from '../i18n/useI18n';
 import { newId } from '../lib/ids';
 import { todayKey } from '../lib/clock';
 import { useAppStore } from '../state/store';
@@ -22,17 +23,24 @@ import { spacing, type } from '../theme/tokens';
 
 export default function Challenge() {
   const { colors } = useTheme();
+  const { t, core } = useI18n();
   const data = useAppStore((s) => s.data);
   const recordChallengeAttempt = useAppStore((s) => s.recordChallengeAttempt);
 
   const today = todayKey();
+  // Selection runs on the canonical catalog and only then swaps the text:
+  // the same person must get the same practice on the same day in either
+  // language, so nothing language-dependent may reach selectDailyChallenge.
   const challenge = useMemo(
     () =>
-      selectDailyChallenge(today, CHALLENGE_CATALOG, data.challengeHistory, {
-        focusCategories: data.settings.focusCategories,
-        targetDifficulty: recommendedDifficulty(data.challengeHistory),
-      }),
-    [today, data.challengeHistory, data.settings.focusCategories],
+      localizeChallenge(
+        selectDailyChallenge(today, CHALLENGE_CATALOG, data.challengeHistory, {
+          focusCategories: data.settings.focusCategories,
+          targetDifficulty: recommendedDifficulty(data.challengeHistory),
+        }),
+        core,
+      ),
+    [today, data.challengeHistory, data.settings.focusCategories, core],
   );
 
   const [workText, setWorkText] = useState('');
@@ -61,18 +69,19 @@ export default function Challenge() {
   };
 
   return (
-    <Screen title="Today's challenge">
+    <Screen title={t.challenge.title}>
       <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
-        <Tag label={CATEGORY_LABELS[challenge.category]} />
+        <Tag label={core.challengeCategories[challenge.category]} />
         <Text style={[type.caption, { color: colors.inkMuted }]}>
-          Difficulty {challenge.difficulty} of 5 · {challenge.durationMinutes} min
+          {t.challenge.difficulty(challenge.difficulty, 5)} ·{' '}
+          {t.common.minutesShort(challenge.durationMinutes)}
         </Text>
       </View>
       <Text style={[type.title, { color: colors.ink }]}>{challenge.title}</Text>
       <Text style={[type.body, { color: colors.ink }]}>{challenge.instructions}</Text>
       <Card alt>
         <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
-          Done means
+          {t.challenge.doneMeans}
         </Text>
         <Text style={[type.body, { color: colors.ink, marginTop: spacing.xs }]}>
           {challenge.successCondition}
@@ -83,22 +92,34 @@ export default function Challenge() {
           area
           value={workText}
           onChangeText={setWorkText}
-          placeholder="Work here if you like — this text stays on your device."
-          accessibilityLabel="Challenge work area"
+          placeholder={t.challenge.workPlaceholder}
+          accessibilityLabel={t.challenge.workA11y}
           style={{ minHeight: 160 }}
         />
       ) : null}
 
       {!choosing ? (
-        <Button label="Mark outcome" onPress={() => setChoosing(true)} />
+        <Button label={t.challenge.markOutcome} onPress={() => setChoosing(true)} />
       ) : (
         <View style={{ gap: spacing.md }}>
           <Text style={[type.caption, { color: colors.inkMuted, textAlign: 'center' }]}>
-            Honesty beats streaks. All three are fine answers.
+            {t.challenge.honestyNote}
           </Text>
-          <Button label="Completed" variant="secondary" onPress={() => void mark('completed')} />
-          <Button label="Attempted" variant="secondary" onPress={() => void mark('attempted')} />
-          <Button label="Skipped" variant="secondary" onPress={() => void mark('skipped')} />
+          <Button
+            label={t.challenge.completed}
+            variant="secondary"
+            onPress={() => void mark('completed')}
+          />
+          <Button
+            label={t.challenge.attempted}
+            variant="secondary"
+            onPress={() => void mark('attempted')}
+          />
+          <Button
+            label={t.challenge.skipped}
+            variant="secondary"
+            onPress={() => void mark('skipped')}
+          />
         </View>
       )}
     </Screen>

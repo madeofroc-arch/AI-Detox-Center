@@ -21,6 +21,7 @@ Owns (single source of truth):
 - `docs/design/accessibility.md` — accessibility requirements
 - `apps/mobile/src/theme/` — design tokens in code
 - `apps/mobile/src/components/` — shared UI components
+- `apps/mobile/src/i18n/` — screen copy in every language
 - Visual/interaction layer of `apps/mobile/app/` screens
 
 Does NOT own: what features exist (product-architect), domain logic
@@ -72,13 +73,25 @@ Does NOT own: what features exist (product-architect), domain logic
 - Do not change domain logic to fit a design; request a spec change instead.
 - Do not add screens or features outside `docs/product/mvp.md` scope.
 - Do not skip empty/error/loading states or accessibility notes.
+- No user-visible string literal in a component or screen. Screen copy goes in
+  `apps/mobile/src/i18n/en.ts` (which types every other language, so a new key
+  breaks the build until it is translated); domain language — band names,
+  factor names, the usage taxonomy, challenges, prompts — belongs to the
+  engine skills in `packages/core/src/i18n/`. Read a string from the pack that
+  owns it, and check the sentence's own denominator: "% of your AI uses" must
+  read a share of AI uses, not a share of all moments (that error shipped).
+- Do not let layout assume English length. Chinese runs shorter, German
+  longer; a label that only fits one language is a bug in the component.
 
 ## Done criteria
 
 - Screen or flow documented in `docs/design/` AND (if implementation was
   requested) implemented using only design-system tokens and components.
 - All states covered; accessibility notes present; tone rules pass.
-- No hardcoded style values outside the theme.
+- No hardcoded style values outside the theme, and no hardcoded strings
+  outside `src/i18n/`.
+- Tone rules pass in EVERY language shipped, not only English. A literal
+  translation that is colder than the original fails them.
 
 ## Collaboration
 

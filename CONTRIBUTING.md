@@ -47,6 +47,51 @@ All four must pass — CI runs exactly these.
 - New significant technical decisions get an ADR in
   `docs/architecture/adr/`.
 
+## Adding a language
+
+A language is two data files. There is no engineering project behind it, and
+the compiler will tell you when you are done.
+
+1. **Add the tag.** `packages/core/src/i18n/types.ts` — add it to `LOCALES`
+   and give it a name **in that language** in `LOCALE_NAMES`. A picker that
+   says "Chinese (Traditional)" in English is useless to the person who needs
+   it.
+2. **Domain strings** — copy `packages/core/src/i18n/zh-TW.ts` and translate:
+   score bands, factor names, the AI-usage taxonomy, the reflection prompts,
+   and all 27 challenges. Register it in the `OVERRIDES` map in
+   `packages/core/src/i18n/i18n.ts`. This file may be **partial**; anything
+   you leave out falls back to English key by key, so you can ship one
+   section at a time.
+3. **Screen copy** — copy `apps/mobile/src/i18n/zh-TW.ts` and translate.
+   This file may **not** be partial: it is typed as `AppStrings`, so a missing
+   key is a build error. A "Continue" button in the middle of an otherwise
+   translated flow is worse than a red CI run.
+4. Add it to the `PACKS` map in `apps/mobile/src/i18n/useI18n.ts`.
+
+`npm test` then checks the pack for completeness — every band, factor,
+category, prompt and challenge, including that each challenge kept the same
+number of reflection questions — and that no string was left identical to the
+English one (the failure mode where a new key is copy-pasted and never
+translated).
+
+Three things that are easy to get wrong:
+
+- **Tone is part of the translation.** The rules in
+  [docs/design/design-system.md](docs/design/design-system.md) bind in every
+  language: never shaming, never "you failed", never a number presented as a
+  verdict on the person. A literal translation that is colder than the
+  original is a mistranslation.
+- **Challenge instructions are content, not labels.** They are the product.
+  Translate the intent; adapt an example if the original does not travel.
+- **Never make behavior depend on the language.** Challenge selection runs on
+  the canonical catalog and only then swaps the text, so the same person gets
+  the same practice on the same day in any language. There is a test for it.
+
+Regional matching is handled for you: `matchLocale` maps device tags to the
+closest supported language. Note that Simplified Chinese deliberately does
+*not* fall back to Traditional — serving one to a reader of the other is a
+guess, not a courtesy.
+
 ## Reporting issues
 
 Use the issue templates. For challenge content ideas, the `challenge
