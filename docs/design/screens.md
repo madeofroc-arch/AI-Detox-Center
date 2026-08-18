@@ -74,6 +74,13 @@ lists its empty/error/loading state. Copy shown is canonical.
   The bottom band describes behavior rather than claiming an identity — an
   identity compliment there makes losing it feel like demotion when a score
   sharpens (see ADR-0005).
+  Band anchors are about the AMOUNT of outsourced thinking, not only its
+  pattern (ADR-0006): "Mostly your own" is little dependent behavior of any
+  kind; "Balanced" is some, most days; "Leaning on AI" is a whole task handed
+  over most days; "Running on AI" is several a day, never attempted first.
+  Handing over one task a day is Leaning, not Running — the pattern is total
+  but the amount is not, and someone doing it eight times a day is doing eight
+  times as much of it.
 - FactorBar list: each factor with plain sentence, e.g. "Delegation — 3 of
   12 uses this week handed the whole task to AI."
 - "How this is calculated" -> methodology text derived from core config. It must

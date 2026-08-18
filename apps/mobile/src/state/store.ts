@@ -15,7 +15,7 @@ import type {
 } from '@ai-detox/core';
 import {
   AppRepository,
-  DEFAULT_SCORING_CONFIG,
+  defaultScoringConfig,
   emptyAppData,
   gateToUsageEvent,
 } from '@ai-detox/core';
@@ -127,10 +127,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
   resetScoringConfig: () =>
     get().update((data) => ({
       ...data,
-      scoringConfig: {
-        ...DEFAULT_SCORING_CONFIG,
-        weights: { ...DEFAULT_SCORING_CONFIG.weights },
-      },
+      // Must go through defaultScoringConfig(): it deep-copies every nested
+      // object, so a reset cannot alias (and later corrupt) the shared default.
+      scoringConfig: defaultScoringConfig(),
     })),
 
   deleteAllData: async () => {

@@ -73,3 +73,27 @@ describe('defaultScoringConfig', () => {
     expect(DEFAULT_SCORING_CONFIG.weights.delegation).not.toBe(999);
   });
 });
+
+describe('nested config objects are never aliased', () => {
+  it('mutating a copy cannot corrupt the shared default', () => {
+    // saturation is nested, so a shallow spread would share it across every
+    // persisted document and every reset.
+    const copy = defaultScoringConfig();
+    copy.saturation.delegation = 999;
+    copy.weights.delegation = 999;
+    expect(defaultScoringConfig().saturation.delegation).toBe(
+      DEFAULT_SCORING_CONFIG.saturation.delegation,
+    );
+    expect(DEFAULT_SCORING_CONFIG.saturation.delegation).not.toBe(999);
+    expect(DEFAULT_SCORING_CONFIG.weights.delegation).not.toBe(999);
+  });
+
+  it('rejects a config with a missing or non-positive saturation rate', () => {
+    const missing = defaultScoringConfig() as unknown as Record<string, unknown>;
+    delete (missing.saturation as Record<string, unknown>).delegation;
+    expect(sanitizeScoringConfig(missing)).toBeNull();
+    const zero = defaultScoringConfig();
+    zero.saturation.immediacy = 0;
+    expect(sanitizeScoringConfig(zero)).toBeNull();
+  });
+});

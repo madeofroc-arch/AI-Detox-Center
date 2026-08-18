@@ -4,9 +4,10 @@
  * JSON-serializable and versioned so it can be persisted, reset, and (later)
  * tuned by the user.
  *
- * Every field is a FLAT scalar on purpose: `emptyAppData()` and the app's
- * `resetScoringConfig` copy this object two levels deep, so a nested object
- * would be shared by reference across every AppData instance.
+ * Nested objects here (`weights`, `saturation`) must be cloned by
+ * `defaultScoringConfig()`, which is the ONLY sanctioned way to make a copy.
+ * A shallow spread elsewhere would let a persisted document alias the
+ * module-level default and corrupt it for every other instance.
  */
 
 /** Factors that raise the dependency score. */
@@ -27,15 +28,23 @@ export type ScoringFactor = ContributorFactor | ReducerFactor;
  * changes; `migrateAppData` upgrades stored configs below this version by
  * replacing them with the defaults (see ADR-0005).
  */
-export const SCORING_CONFIG_VERSION = 2;
+export const SCORING_CONFIG_VERSION = 3;
 
 export interface ScoringConfig {
   /** Semantics version. Stored configs below SCORING_CONFIG_VERSION are replaced. */
   version: number;
   /** How many days of history the score looks at. */
   windowDays: number;
-  /** AI uses per day at which the frequency factor saturates to 1. */
-  saturationUsesPerDay: number;
+  /**
+   * Rate per day at which each contributor is treated as fully saturated.
+   *
+   * Contributors count DEPENDENT ACTS PER DAY rather than shares of AI use, so
+   * a count only ever rises when behavior gets worse. Measuring shares made the
+   * model report average severity per AI use, which mislabelled a user with one
+   * slip among nine independent moments and punished people for eliminating a
+   * dependency pattern (ADR-0006).
+   */
+  saturation: Record<ContributorFactor, number>;
   /** Below this many events the score reports insufficient data. */
   minEventsForScore: number;
   /**
@@ -68,9 +77,21 @@ export interface ScoringConfig {
 export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   version: SCORING_CONFIG_VERSION,
   windowDays: 14,
-  saturationUsesPerDay: 8,
   minEventsForScore: 10,
-  reducerMaxDiscount: 0.45,
+  reducerMaxDiscount: 0.3,
+  // Stated so they can be argued with:
+  //   delegation 0.7    handing over a whole task most days
+  //   lackOfAttempt 4   four AI uses a day with no attempt first
+  //   immediacy 2        reaching for AI instantly twice a day
+  //   emotionalDependency 1  seeking reassurance daily
+  //   frequency 8       sheer volume, deliberately the weakest axis
+  saturation: {
+    frequency: 8,
+    immediacy: 2,
+    delegation: 0.7,
+    lackOfAttempt: 4,
+    emotionalDependency: 1,
+  },
   bandIndependentMax: 25,
   bandBalancedMax: 50,
   bandLeaningMax: 75,
@@ -85,7 +106,7 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
     immediacy: 14,
     delegation: 40,
     lackOfAttempt: 40,
-    emotionalDependency: 30,
+    emotionalDependency: 22,
     // Reducers: relative shares of the discount, not absolute points.
     independentAttempt: 50,
     reflection: 20,
@@ -141,7 +162,6 @@ export function sanitizeScoringConfig(raw: unknown): ScoringConfig | null {
 
   if (
     !isPositiveFinite(c.windowDays) ||
-    !isPositiveFinite(c.saturationUsesPerDay) ||
     !isPositiveFinite(c.minEventsForScore) ||
     !isPositiveFinite(c.brainPracticeWindowDays) ||
     typeof c.reducerMaxDiscount !== 'number' ||
@@ -181,6 +201,14 @@ export function sanitizeScoringConfig(raw: unknown): ScoringConfig | null {
     return null;
   }
 
+  // Every contributor needs a positive saturation rate, or its intensity would
+  // divide by zero.
+  if (typeof c.saturation !== 'object' || c.saturation === null) return null;
+  const saturation = c.saturation as Record<string, unknown>;
+  for (const f of CONTRIBUTOR_FACTORS) {
+    if (!isPositiveFinite(saturation[f])) return null;
+  }
+
   const allFactors: ScoringFactor[] = [...CONTRIBUTOR_FACTORS, ...REDUCER_FACTORS];
   const weights = c.weights as Record<string, unknown>;
   for (const f of allFactors) {
@@ -198,7 +226,6 @@ export function sanitizeScoringConfig(raw: unknown): ScoringConfig | null {
   return {
     version: c.version,
     windowDays: c.windowDays,
-    saturationUsesPerDay: c.saturationUsesPerDay,
     minEventsForScore: c.minEventsForScore,
     reducerMaxDiscount: c.reducerMaxDiscount,
     bandIndependentMax: c.bandIndependentMax,
@@ -207,6 +234,9 @@ export function sanitizeScoringConfig(raw: unknown): ScoringConfig | null {
     brainIndependenceWeight: bi,
     brainConsistencyWeight: bc,
     brainPracticeWindowDays: c.brainPracticeWindowDays,
+    saturation: Object.fromEntries(
+      CONTRIBUTOR_FACTORS.map((f) => [f, saturation[f] as number]),
+    ) as Record<ContributorFactor, number>,
     weights: Object.fromEntries(allFactors.map((f) => [f, weights[f] as number])) as Record<
       ScoringFactor,
       number
@@ -214,10 +244,16 @@ export function sanitizeScoringConfig(raw: unknown): ScoringConfig | null {
   };
 }
 
-/** A fresh, independent copy of the defaults (safe to persist and mutate). */
+/**
+ * A fresh, independent copy of the defaults (safe to persist and mutate).
+ * Every nested object must be cloned here — a shallow spread would let one
+ * persisted document alias the module-level default and corrupt it for
+ * everyone.
+ */
 export function defaultScoringConfig(): ScoringConfig {
   return {
     ...DEFAULT_SCORING_CONFIG,
+    saturation: { ...DEFAULT_SCORING_CONFIG.saturation },
     weights: { ...DEFAULT_SCORING_CONFIG.weights },
   };
 }

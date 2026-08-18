@@ -105,26 +105,62 @@ describe('behavioral anchors land in their intended bands', () => {
   });
 
   it('the top of the scale is actually reachable', () => {
-    // Worst possible behavior at the saturation rate: the old model capped at
-    // 80 of 100, leaving the top band nearly unreachable.
-    const worst = rep(config.saturationUsesPerDay * config.windowDays, () =>
+    // Worst possible behavior at the saturation rate. Two earlier models each
+    // capped below 100 for different structural reasons, leaving a dead band.
+    const worst = rep(Math.ceil(config.saturation.frequency * config.windowDays), () =>
       ev('direct_delegation', { immediate: true }),
     );
     expect(score(worst).score).toBe(100);
   });
 
-  it('total outsourcing reads as such even at low volume', () => {
+  it('total outsourcing at low volume reads as serious but not maximal', () => {
+    // One whole task handed over every day, never attempted first. The pattern
+    // is total but the amount is not, and the model now grades the amount: this
+    // sits in "Leaning on AI", below someone doing the same thing eight times a
+    // day. Under ADR-0005 it scored 96, indistinguishable from the latter.
     const lowVolume = rep(config.windowDays, () => ev('direct_delegation', { immediate: true }));
-    expect(score(lowVolume).band).toBe('dependent');
+    const result = score(lowVolume);
+    expect(result.band).toBe('leaning');
+    const heavy = rep(config.windowDays * 8, () => ev('direct_delegation', { immediate: true }));
+    expect(score(heavy).score!).toBeGreaterThan(result.score! + 15);
   });
 });
 
-describe('volume is not reliance', () => {
-  it('identical behavior at different volumes stays in the same band', () => {
+describe('volume of DEPENDENT acts is reliance; volume of healthy use is not', () => {
+  it('the same pattern at half the volume scores lower', () => {
+    // This inverts an assertion from ADR-0005, deliberately. That model measured
+    // the SHAPE of AI use, so halving the volume of an unchanged pattern left the
+    // score alone. Measuring shape is what made it punish a user for eliminating
+    // a dependency pattern (issue #5), so ADR-0006 measures the AMOUNT instead:
+    // half as many tasks handed over is half as much outsourced thinking, and
+    // the number should say so.
     const half = MODERATE.filter((_, i) => i % 2 === 0);
-    const busy = score(MODERATE);
-    const quiet = score(half.concat(half.map((e, i) => ({ ...e, id: `dup${i}` }))).slice(0, 18));
-    expect(quiet.band).toBe(busy.band);
+    expect(score(half).score!).toBeLessThan(score(MODERATE).score!);
+  });
+
+  it('cutting out a whole dependency pattern lowers the score', () => {
+    // The headline defect of #5: this pair moved 67 -> 96 and demoted the user
+    // a band for eliminating 27 instant-help reaches.
+    const withInstantHelp = [
+      ...rep(10, () => ev('direct_delegation', { immediate: true })),
+      ...rep(27, () => ev('instant_help', { immediate: true })),
+    ];
+    const withoutInstantHelp = rep(10, () => ev('direct_delegation', { immediate: true }));
+    expect(score(withoutInstantHelp).score!).toBeLessThan(score(withInstantHelp).score!);
+  });
+
+  it('one slip among nine independent moments is not "Running on AI"', () => {
+    // The P0. Nine gate sessions resolved without AI, one delegated use: the
+    // previous model saturated every fraction on a denominator of 1 and scored
+    // this 77, printing "You handled 90% of these moments without AI" directly
+    // beneath the caption "Running on AI".
+    const mostlyIndependent = [
+      ...rep(9, () => ev('lookup', { attemptedFirst: true, usedAI: false })),
+      ev('direct_delegation', { immediate: true }),
+    ];
+    const result = score(mostlyIndependent);
+    expect(result.band).toBe('independent');
+    expect(result.score!).toBeLessThanOrEqual(config.bandIndependentMax);
   });
 
   it('frequency alone cannot lift a healthy user out of the lowest band', () => {

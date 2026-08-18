@@ -17,9 +17,27 @@ export function eventsInWindow(
   });
 }
 
+/**
+ * Counts of dependent acts in the window. Scoring reads these rather than the
+ * fractions below: a count only ever rises when behavior gets worse, whereas a
+ * share of AI uses rises when you stop doing something else (ADR-0006).
+ */
+export interface DependentActCounts {
+  /** AI uses reached for with no pause. */
+  immediacy: number;
+  /** Whole tasks or decisions handed to AI. */
+  delegation: number;
+  /** AI uses with no attempt first. */
+  lackOfAttempt: number;
+  /** AI uses seeking reassurance. */
+  emotionalDependency: number;
+}
+
 export interface UsageStats {
   /** All recorded events (gate moments + manual logs). */
   totalEvents: number;
+  /** Absolute counts of each dependent behavior — what scoring is built on. */
+  counts: DependentActCounts;
   /** Events where AI was actually used. */
   aiUseCount: number;
   /** Independent moments: gate resolved without using AI. */
@@ -63,8 +81,17 @@ export function computeUsageStats(
   const nAI = aiUses.length;
   const frac = (n: number, d: number): number => (d === 0 ? 0 : n / d);
 
+  const counts: DependentActCounts = {
+    immediacy: aiUses.filter((e) => e.proceededImmediately || kindOf(e.category) === 'immediate')
+      .length,
+    delegation: byKind.delegation,
+    lackOfAttempt: aiUses.filter((e) => !e.attemptedFirst).length,
+    emotionalDependency: byKind.emotional,
+  };
+
   return {
     totalEvents: total,
+    counts,
     aiUseCount: nAI,
     independentCount: total - nAI,
     aiUsesPerDay: windowDays > 0 ? nAI / windowDays : 0,

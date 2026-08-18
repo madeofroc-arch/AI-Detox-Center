@@ -1,31 +1,41 @@
 /**
  * AI Dependency Score — deterministic, transparent, config-driven.
  *
- * Shape of the model (see ADR-0005 for why it is this and not a plain
- * weighted difference):
+ * Shape of the model (ADR-0005 established the frame, ADR-0006 fixed what it
+ * measures):
  *
- *   reliance  = 100 * (weighted contributor signals / attainable capacity)
+ *   rate_f    = count of that dependent act / windowDays
+ *   reliance  = 100 * (weighted rate intensities / attainable capacity)
  *   discount  = reliance * reducerMaxDiscount * (weighted reducer signals)
  *   score     = reliance - discount
  *
- * Three properties follow, and each one is a fix for a measured defect:
+ * Four properties follow, and each is a fix for a measured defect:
  *
- * 1. NORMALIZED BY ATTAINABLE CAPACITY. `delegation` and
- *    `emotionalDependency` are mutually exclusive shares of one usage-kind
- *    partition, so only the larger is ever collectable. Dividing by the
- *    nominal weight sum used to cap the reachable score at 80 of 100 and made
- *    the top band nearly unreachable; dividing by max(...) makes 100 real.
+ * 1. CONTRIBUTORS COUNT ACTS, NOT SHARES. Intensity is the RATE of a dependent
+ *    behavior per day, so it only ever rises when behavior gets worse. Measuring
+ *    each behavior as a share of AI uses reported average severity per AI use,
+ *    which produced three confirmed absurdities: nine gate sessions solved alone
+ *    plus one delegated use scored 77 "Running on AI"; eliminating an entire
+ *    dependency pattern moved a user 67 -> 96 and demoted them a band; and
+ *    converting an independent moment into an AI use LOWERED the score, because
+ *    a lower-weight kind diluted a higher-weight one.
  *
- * 2. REDUCERS DISCOUNT, THEY DO NOT SUBTRACT. A bounded multiplicative
- *    discount can shrink reliance but can never cancel it, never drive the
- *    score negative (where three very different users all clamped to 0), and
- *    never invert a contributor's marginal effect. Under the old subtraction,
- *    below ~44% delegation the delegation axis was net NEGATIVE — the model
- *    literally paid people to outsource a few tasks.
+ * 2. NORMALIZED BY ATTAINABLE CAPACITY. Any given AI use is either delegation or
+ *    reassurance, never both, so the ceiling counts only the larger of the two.
+ *    Summing both would make 100 reachable only by someone exhibiting every
+ *    pattern at once — a dead top band, which is the bug ADR-0005 fixed and
+ *    which reappears the moment this is written as a plain sum.
  *
- * 3. EVERY SIGNAL HAS ONE HOME. `independentAttempt` reads moments resolved
- *    with no AI at all, not the complement of `lackOfAttempt`, so no pair of
- *    factors cancels each other by construction.
+ * 3. REDUCERS DISCOUNT, THEY DO NOT SUBTRACT. A bounded multiplicative discount
+ *    can shrink reliance but never cancel it, never drive the score negative,
+ *    and never invert a contributor's marginal effect.
+ *
+ * 4. EVERY SIGNAL HAS ONE HOME. `independentAttempt` reads moments resolved with
+ *    no AI at all, not the complement of `lackOfAttempt`.
+ *
+ * Reducers remain proportional on purpose: they describe the SHAPE of what you
+ * did, while contributors measure the AMOUNT. Their influence is bounded well
+ * below a band width so in-app activity cannot buy a better label.
  *
  * Determinism: same (events, config, referenceTime) => identical output. No
  * clock reads, no randomness, and no transcendental math anywhere in the path
@@ -47,7 +57,11 @@ export type ScoreBand = 'independent' | 'balanced' | 'leaning' | 'dependent';
 export interface FactorScore {
   factor: ScoringFactor;
   role: 'contributor' | 'reducer';
-  /** The honest observed fraction, 0..1 (e.g. 0.42 = "14 of 33 uses"). */
+  /**
+   * How far this factor has gone, 0..1. For contributors that is the rate of
+   * the behavior against its saturation rate (0.5 = half the daily rate that
+   * counts as saturated); for reducers it is the observed share.
+   */
   intensity: number;
   /** The configured weight, unchanged from ScoringConfig. */
   weight: number;
@@ -105,21 +119,25 @@ export function computeDependencyScore(
   const windowed = eventsInWindow(events, nowIso, config.windowDays);
   const stats = computeUsageStats(windowed, config.windowDays);
   const w = config.weights;
+  const days = config.windowDays;
 
-  // Only the larger of delegation/emotionalDependency is ever attainable —
-  // an AI use is one kind or the other, never both.
-  const behaviorCapacity =
-    w.immediacy + w.lackOfAttempt + Math.max(w.delegation, w.emotionalDependency);
-  const capacity = w.frequency + behaviorCapacity;
+  const capacity =
+    w.frequency + w.immediacy + w.lackOfAttempt + Math.max(w.delegation, w.emotionalDependency);
   const scale = capacity > 0 ? 100 / capacity : 0;
 
+  /** A dependent act's rate per day, against the rate that counts as saturated. */
+  const rate = (count: number, factor: keyof typeof config.saturation): number =>
+    clamp01(count / days / config.saturation[factor]);
+
   const intensities: Record<ScoringFactor, number> = {
-    frequency: clamp01(stats.aiUsesPerDay / config.saturationUsesPerDay),
-    immediacy: clamp01(stats.fractionImmediate),
-    delegation: clamp01(stats.fractionDelegation),
-    lackOfAttempt: clamp01(stats.fractionNoAttemptBeforeAI),
-    emotionalDependency: clamp01(stats.fractionEmotional),
-    // Reads a signal no contributor reads (see property 3 above).
+    // Contributors: how MUCH dependent behavior there was.
+    frequency: rate(stats.aiUseCount, 'frequency'),
+    immediacy: rate(stats.counts.immediacy, 'immediacy'),
+    delegation: rate(stats.counts.delegation, 'delegation'),
+    lackOfAttempt: rate(stats.counts.lackOfAttempt, 'lackOfAttempt'),
+    emotionalDependency: rate(stats.counts.emotionalDependency, 'emotionalDependency'),
+    // Reducers: the SHAPE of what you did. independentAttempt reads a signal no
+    // contributor reads (see property 4 above).
     independentAttempt: clamp01(stats.fractionResolvedWithoutAI),
     reflection: clamp01(stats.fractionAIUsesWithReflection),
     deliberateUsage: clamp01(stats.fractionDeliberate),

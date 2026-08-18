@@ -1,6 +1,6 @@
 # ADR-0005: Recalibrate the dependency score — capacity normalization and bounded reducer discount
 
-Status: Accepted, with known defects (see issue #5) · Date: 2026-08-19 · Supersedes the weighting in [ADR-0004](0004-deterministic-scoring-no-llm-core.md) (its determinism and no-LLM rules stand unchanged)
+Status: Superseded in part by [ADR-0006](0006-score-counts-dependent-acts-not-shares.md) · Date: 2026-08-19 · Supersedes the weighting in [ADR-0004](0004-deterministic-scoring-no-llm-core.md) (its determinism and no-LLM rules stand unchanged)
 
 ## Context
 
@@ -106,8 +106,11 @@ band, and monotonicity — are documented with reproductions in **issue #5**,
 which also explains why the tests here could not observe any of it.
 
 The structural fixes in this ADR (bounded discount, capacity normalization,
-config-version delivery, single-homed `independentAttempt`) stand. The
-denominator choice does not, and needs its own ADR.
+config-version delivery, single-homed `independentAttempt`) stand and are
+carried forward. The denominator choice does not:
+[ADR-0006](0006-score-counts-dependent-acts-not-shares.md) replaces the
+share-of-AI-uses contributors with rates of dependent acts per day, which is
+what makes those symptoms structurally impossible rather than merely retuned.
 
 ## Consequences
 

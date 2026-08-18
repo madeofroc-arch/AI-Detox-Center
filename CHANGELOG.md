@@ -57,6 +57,24 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **The dependency score now counts dependent acts per day rather than shares
+  of AI use** (config semantics version 3, see
+  [ADR-0006](docs/architecture/adr/0006-score-counts-dependent-acts-not-shares.md),
+  fixes [#5](https://github.com/madeofroc-arch/AI-Detox-Center/issues/5)).
+
+  Measuring each behavior as a share of AI uses reported *average severity per
+  AI use* rather than how much dependency there was. Three consequences, all
+  reproduced: nine gate sessions solved alone plus one delegated use scored 77
+  "Running on AI" — printed directly above "You handled 90% of these moments
+  without AI"; eliminating a whole dependency pattern moved a user 67 to 96 and
+  demoted them a band; and worsening a single moment could *lower* the score.
+
+  A count only rises when behavior gets worse, which makes all three
+  structurally impossible rather than merely retuned. Two consequences worth
+  knowing: the same pattern at half the volume now scores about half (handing
+  over seven tasks is half as much outsourced thinking as fourteen), and
+  mid-journey scores rise again, so the Home number falls for those users.
+
 - **Recalibrated the AI Dependency Score** (config semantics version 2, see
   [ADR-0005](docs/architecture/adr/0005-dependency-score-recalibration.md)).
   Contributor signals now form *reliance*, normalized by the capacity that is
@@ -91,12 +109,6 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Known issues
 
-- The dependency score derives its behavioral factors as a share of AI uses,
-  which mislabels highly independent users and can punish genuine improvement.
-  Confirmed with reproductions in
-  [#5](https://github.com/madeofroc-arch/AI-Detox-Center/issues/5); needs a
-  follow-up ADR rather than a patch. Three claims in ADR-0005 do not hold as
-  written and are annotated there.
 - The Brain Report's rounded factor rows do not always sum to the dial
   ([#6](https://github.com/madeofroc-arch/AI-Detox-Center/issues/6)). The copy
   no longer claims they do.

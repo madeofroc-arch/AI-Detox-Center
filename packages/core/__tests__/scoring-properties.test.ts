@@ -113,29 +113,100 @@ describe('properties that hold for every input', () => {
     }
   });
 
-  it('is monotone: worsening one moment never lowers the score', () => {
+  it('is monotone toward EVERY dependent kind, not just the heaviest', () => {
+    // This test previously only ever worsened toward direct_delegation, the
+    // maximum-weight kind, so it was structurally incapable of observing the
+    // monotonicity break in issue #5 -- which needed a LOWER-weight kind to
+    // dilute a higher-weight one. It now sweeps every dependent category.
+    const worseKinds: AIUsageCategory[] = [
+      'direct_delegation',
+      'decision_outsourcing',
+      'instant_help',
+      'reassurance_seeking',
+    ];
     const rnd = makeRandom(7_777);
-    for (let trial = 0; trial < 40; trial += 1) {
-      const count = config.minEventsForScore + Math.floor(rnd() * 30);
-      const healthy: AIUsageEvent[] = Array.from({ length: count }, (_, i) => ({
-        id: `h${i}`,
-        timestamp: daysAgo(i % config.windowDays),
-        category: 'lookup',
-        source: 'gate',
-        attemptedFirst: true,
-        usedAI: true,
-        proceededImmediately: false,
-      }));
-      let previous = computeDependencyScore(healthy, config, NOW).score!;
-      for (let worsened = 0; worsened < count; worsened += 1) {
-        const events = healthy.map((e, i) =>
-          i <= worsened
-            ? { ...e, category: 'direct_delegation' as AIUsageCategory, attemptedFirst: false, proceededImmediately: true }
-            : e,
-        );
-        const current = computeDependencyScore(events, config, NOW).score!;
-        expect(current).toBeGreaterThanOrEqual(previous);
-        previous = current;
+    for (const kind of worseKinds) {
+      for (let trial = 0; trial < 10; trial += 1) {
+        const count = config.minEventsForScore + Math.floor(rnd() * 30);
+        const healthy: AIUsageEvent[] = Array.from({ length: count }, (_, i) => ({
+          id: `h${i}`,
+          timestamp: daysAgo(i % config.windowDays),
+          category: 'lookup',
+          source: 'gate',
+          attemptedFirst: true,
+          usedAI: true,
+          proceededImmediately: false,
+        }));
+        let previous = computeDependencyScore(healthy, config, NOW).score!;
+        for (let worsened = 0; worsened < count; worsened += 1) {
+          const events = healthy.map((e, i) =>
+            i <= worsened
+              ? { ...e, category: kind, attemptedFirst: false, proceededImmediately: true }
+              : e,
+          );
+          const current = computeDependencyScore(events, config, NOW).score!;
+          expect(current, `${kind} at step ${worsened}`).toBeGreaterThanOrEqual(previous);
+          previous = current;
+        }
+      }
+    }
+  });
+
+  it('converting an independently-resolved moment into any AI use never lowers the score', () => {
+    // The exact shape of the #5 monotonicity break: strictly worse behavior
+    // that the old model rewarded, because adding a lower-weight AI use
+    // diluted the share held by a higher-weight one.
+    const kinds: AIUsageCategory[] = [
+      'direct_delegation',
+      'decision_outsourcing',
+      'instant_help',
+      'reassurance_seeking',
+      'lookup',
+    ];
+    const solo = (i: number): AIUsageEvent => ({
+      id: `s${i}`,
+      timestamp: daysAgo(i % config.windowDays),
+      category: 'lookup',
+      source: 'gate',
+      attemptedFirst: true,
+      usedAI: false,
+      proceededImmediately: false,
+    });
+    for (const other of kinds) {
+      for (const soloCount of [4, 8, 15]) {
+        for (const otherCount of [6, 12]) {
+          const before = [
+            ...Array.from({ length: soloCount }, (_, i) => solo(i)),
+            ...delegatedEvents(otherCount, { category: other }),
+          ];
+          const after = [
+            ...Array.from({ length: soloCount - 1 }, (_, i) => solo(i)),
+            ...delegatedEvents(otherCount, { category: other }),
+            { ...delegatedEvents(1, { category: 'instant_help' })[0]!, id: 'converted' },
+          ];
+          const b = computeDependencyScore(before, config, NOW);
+          const a = computeDependencyScore(after, config, NOW);
+          if (b.status !== 'ok' || a.status !== 'ok') continue;
+          expect(a.score!, `${other} ${soloCount}/${otherCount}`).toBeGreaterThanOrEqual(b.score!);
+        }
+      }
+    }
+  });
+
+  it('eliminating a whole dependency pattern never raises the score', () => {
+    // The headline defect: dropping 27 instant-help reaches moved a user
+    // 67 -> 96 and demoted them a band, because it concentrated the shares.
+    for (const kept of [5, 10, 20]) {
+      for (const dropped of [5, 15, 27, 50]) {
+        const withPattern = [
+          ...delegatedEvents(kept),
+          ...delegatedEvents(dropped, { category: 'instant_help' }),
+        ];
+        const without = delegatedEvents(kept);
+        const w = computeDependencyScore(withPattern, config, NOW);
+        const o = computeDependencyScore(without, config, NOW);
+        if (w.status !== 'ok' || o.status !== 'ok') continue;
+        expect(o.score!, `kept ${kept}, dropped ${dropped}`).toBeLessThanOrEqual(w.score!);
       }
     }
   });
@@ -191,12 +262,27 @@ describe('degenerate inputs stay safe', () => {
 });
 
 describe('self-reported signals are bounded', () => {
-  it('padding the log with independent moments cannot buy a band', () => {
+  const reducerTotal =
+    config.weights.independentAttempt + config.weights.reflection + config.weights.deliberateUsage;
+
+  it('padding the log with independent moments is capped well below a band', () => {
+    // NOT "cannot cross a band". That phrasing is unachievable and was itself an
+    // overclaim: any factor with non-zero influence can cross a cut point if the
+    // user happens to be standing on one. What IS guaranteeable, and what
+    // actually protects the number, is the MAGNITUDE of the swing.
+    //
     // independentAttempt reads self-reported non-AI moments, so it is the most
-    // gameable input in the model. The bounded discount is what contains it.
+    // gameable input in the model. Its ceiling is reducerMaxDiscount x its share
+    // of the reducer weights, i.e. at most that percentage of a 100-point scale
+    // -- comfortably less than one 25-point band, however much a user pads.
     const base = delegatedEvents(28);
     const baseline = computeDependencyScore(base, config, NOW);
-    for (const padding of [10, 40, 200]) {
+    const ceiling =
+      100 * config.reducerMaxDiscount * (config.weights.independentAttempt / reducerTotal);
+    const bandWidth = config.bandBalancedMax - config.bandIndependentMax;
+    expect(ceiling).toBeLessThan(bandWidth);
+
+    for (const padding of [10, 200, 2000]) {
       const padded = [
         ...base,
         ...Array.from({ length: padding }, (_, i) => ({
@@ -209,11 +295,22 @@ describe('self-reported signals are bounded', () => {
           proceededImmediately: false,
         })),
       ];
-      const padded_result = computeDependencyScore(padded, config, NOW);
-      expect(padded_result.band).toBe(baseline.band);
-      expect(baseline.score! - padded_result.score!).toBeLessThanOrEqual(
-        100 * config.reducerMaxDiscount,
-      );
+      const swing = baseline.score! - computeDependencyScore(padded, config, NOW).score!;
+      expect(swing).toBeGreaterThanOrEqual(0);
+      expect(swing).toBeLessThanOrEqual(ceiling + 1);
     }
+  });
+
+  it('reflecting on every AI use is capped tighter still', () => {
+    // Principle 8: in-app activity must not be a route to a better number.
+    const none = delegatedEvents(28);
+    const all = delegatedEvents(28, { reflectionId: 'r' });
+    const swing =
+      computeDependencyScore(none, config, NOW).score! -
+      computeDependencyScore(all, config, NOW).score!;
+    expect(swing).toBeGreaterThan(0);
+    expect(swing).toBeLessThanOrEqual(
+      100 * config.reducerMaxDiscount * (config.weights.reflection / reducerTotal) + 1,
+    );
   });
 });

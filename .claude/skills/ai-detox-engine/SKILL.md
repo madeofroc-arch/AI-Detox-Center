@@ -44,11 +44,12 @@ Conceptual model (all weights, band cut points and normalization parameters
 live in a versioned, JSON-serializable `ScoringConfig` — never hardcoded in the
 algorithm body). Contributors form *reliance*; reducers *discount* it:
 
-    behaviorCapacity = immediacy + lackOfAttempt + max(delegation, emotionalDependency)
-    capacity         = frequency + behaviorCapacity
-    reliance         = (100 / capacity) * SUM(contributor weight * observed fraction)
-    discount         = reliance * reducerMaxDiscount * weighted reducer share
-    score            = round(reliance - discount)
+    rate_f   = count of that dependent act / windowDays
+    int_f    = clamp01(rate_f / saturation_f)
+    capacity = frequency + immediacy + lackOfAttempt + max(delegation, emotional)
+    reliance = (100 / capacity) * SUM(contributor weight * int_f)
+    discount = reliance * reducerMaxDiscount * weighted reducer share
+    score    = round(reliance - discount)
 
 Rules:
 
@@ -67,6 +68,11 @@ Rules:
    classification, reflection support, or personalization - it must never
    produce or control core score data, and all core features must work with
    no LLM API available.
+4b. **Contributors count acts; reducers describe shape.** A contributor is a
+   RATE of dependent behavior per day, so it only rises when behavior worsens.
+   Never express one as a share of AI uses: that measures average severity per
+   use, which labelled a 90%-independent user "Running on AI" and rewarded
+   people for eliminating a dependency pattern (ADR-0006).
 5. **One signal, one home.** Never let two factors read the same underlying
    bit with opposite signs — that is what compressed the v1 range. Check any
    new factor against the existing eight before adding it.
@@ -80,6 +86,11 @@ Rules:
 8. **Calibrate the algorithm to the bands, never the bands to the algorithm.**
    Cut points are the contract with the user. If a change crowds a band, fix
    the weights.
+9. **State guarantees as magnitudes, not absolutes.** "Reflection cannot cross
+   a band" is unachievable and produced a test that passed while the property
+   was false. Bound the size of an effect and derive the bound from config.
+10. **Test near the cut points and across every kind.** Both live bugs hid from
+   tests that probed only extremes and only the heaviest category.
 
 ## Inputs
 
