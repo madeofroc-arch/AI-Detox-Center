@@ -9,6 +9,10 @@
 independent thinking training**. AI should augment human thinking, not
 replace it.
 
+[![CI](https://github.com/madeofroc-arch/AI-Detox-Center/actions/workflows/ci.yml/badge.svg)](https://github.com/madeofroc-arch/AI-Detox-Center/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3E6B5C.svg)](LICENSE)
+[![Local-first](https://img.shields.io/badge/data-stays%20on%20your%20device-3E6B5C.svg)](docs/architecture/privacy.md)
+
 ## What is Human Mode?
 
 Most tools treat "too much AI" as a screen-time problem and reach for
@@ -156,9 +160,19 @@ storage migrations. UI-level tests are a Phase 2 roadmap item.
 
 ## Contributing
 
-Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Good first
-issues are labeled `good first issue`. The short version: read the owning
-skill in `.claude/skills/`, follow its done criteria, keep CI green.
+Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). The short
+version: read the owning skill in `.claude/skills/`, follow its done criteria,
+keep CI green.
+
+Good places to start, in rough order of how little setup they need:
+
+- **[Propose a Human Challenge](../../issues/1)** — no code at all; fill in a form
+- **[Run the accessibility checklist](../../issues/4)** — never yet executed against the built app
+- **[Add UI tests for the app](../../issues/2)** — the largest coverage gap in the repo
+- **[i18n + zh-TW](../../issues/3)** — half engineering, half careful writing
+
+Everything labeled [`good first issue`](../../issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+is scoped to be completable without reading the whole codebase.
 
 ## Roadmap
 
