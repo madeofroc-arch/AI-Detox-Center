@@ -70,8 +70,11 @@ work fully without any LLM API.
    `ScoringConfig`** — never hardcode them in algorithm bodies. Score output
    must keep its per-factor breakdown, and the breakdown must sum exactly to
    the displayed score in unrounded points (ADR-0005 pins both; note the
-   rounded values shown in the UI do not always reconcile — see issue #5). Reducers discount reliance by at
-   most `reducerMaxDiscount`; they never subtract freely. Changing scoring
+   rounded values shown in the UI do not always reconcile — see issue #6).
+   There is exactly ONE reducer and adding an AI use must never raise it: a
+   reducer an AI use can raise inverts that use's marginal effect and makes the
+   dial fall when reliance rises (ADR-0007). It discounts reliance by at most
+   `reducerMaxDiscount` and never subtracts freely. Changing scoring
    semantics means bumping `SCORING_CONFIG_VERSION` — `sanitizeScoringConfig`
    rejects stale versions, which is how the change reaches existing users.
 6. **Business rules never live in components.** Screens read the zustand

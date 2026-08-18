@@ -8,6 +8,8 @@ import {
   activeDaysInLast,
   computeBrainScore,
   computeDependencyScore,
+  computeUsageStats,
+  eventsInWindow,
   recommendedDifficulty,
   selectDailyChallenge,
 } from '@ai-detox/core';
@@ -59,29 +61,44 @@ export default function Home() {
   // people it was written to protect. When there is nothing to credit, the line
   // points at the next concrete step instead.
   const strongestStrength = useMemo(() => {
+    // Every sentence here states its own denominator, so each reads the stat
+    // that actually has it. The reflection line used to print
+    // `fractionWithReflection` — reflections over ALL moments — while claiming
+    // "of your AI uses", which could say 63% when the true figure was 0%.
+    //
     // Guard on the ROUNDED value, not the raw one: an intensity of 0.004 is
     // above zero but prints as "0%", which under a high band reads worse than
     // the fallback line it was meant to replace.
-    const best = dependency.factors
-      .filter((f) => f.role === 'reducer' && Math.round(f.intensity * 100) >= 1)
-      .sort((a, b) => b.intensity - a.intensity)[0];
-    if (best) {
-      const percent = Math.round(best.intensity * 100);
-      switch (best.factor) {
-        case 'independentAttempt':
-          return `You handled ${percent}% of these moments without AI.`;
-        case 'reflection':
-          return `You paused to reflect on ${percent}% of your AI uses.`;
-        case 'deliberateUsage':
-          return `${percent}% of your AI use was deliberate, tool-like work.`;
-      }
-    }
+    const windowDays = data.scoringConfig.windowDays;
+    const stats = computeUsageStats(
+      eventsInWindow(data.events, nowIso(), windowDays),
+      windowDays,
+    );
+    const candidates: { share: number; say: (p: number) => string }[] = [
+      {
+        share: stats.fractionResolvedWithoutAI,
+        say: (p) => `You handled ${p}% of these moments without AI.`,
+      },
+      {
+        share: stats.fractionAIUsesWithReflection,
+        say: (p) => `You paused to reflect on ${p}% of your AI uses.`,
+      },
+      {
+        share: stats.fractionDeliberate,
+        say: (p) => `${p}% of your AI use was deliberate, tool-like work.`,
+      },
+    ];
+    const best = candidates
+      .filter((c) => Math.round(c.share * 100) >= 1)
+      .sort((a, b) => b.share - a.share)[0];
+    if (best) return best.say(Math.round(best.share * 100));
+
     const practiceDays = activeDaysInLast(data.challengeHistory, today, 7);
     if (practiceDays > 0) {
       return `You practised on ${practiceDays} of the last 7 days.`;
     }
     return 'One gate where you try first will start moving this.';
-  }, [dependency.factors, data.challengeHistory, today]);
+  }, [data.events, data.scoringConfig, data.challengeHistory, today]);
 
   return (
     <Screen title="Human Mode" subtitle="Your thinking, back in your hands." padBottom>

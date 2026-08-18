@@ -44,12 +44,22 @@ Conceptual model (all weights, band cut points and normalization parameters
 live in a versioned, JSON-serializable `ScoringConfig` — never hardcoded in the
 algorithm body). Contributors form *reliance*; reducers *discount* it:
 
-    rate_f   = count of that dependent act / windowDays
-    int_f    = clamp01(rate_f / saturation_f)
-    capacity = frequency + immediacy + lackOfAttempt + max(delegation, emotional)
-    reliance = (100 / capacity) * SUM(contributor weight * int_f)
-    discount = reliance * reducerMaxDiscount * weighted reducer share
-    score    = round(reliance - discount)
+    int_f    = count of that dependent act / windowDays / saturation_f  -- NOT clamped
+    capacity = SUM(all contributor weights)                            -- plain sum
+    raw      = (100 / capacity) * SUM(contributor weight * int_f)
+    points_f = (100 / capacity) * weight_f * int_f * min(1, 100 / raw)
+    reliance = SUM(points_f)                                           -- summed, never recomputed
+    discount = reliance * reducerMaxDiscount * (moments resolved with no AI)
+    score    = round(reliance - discount + 1e-9)
+
+Every line above is load-bearing and each was learned by getting it wrong.
+Clamping `int_f` per factor breaks monotonicity (once the heavier axis pins,
+converting into it gains nothing while the lighter axis loses its weight).
+`max(delegation, emotional)` was correct only while those were shares of one
+partition; as rates both saturate and reliance reached 122. Recomputing the
+total instead of summing the points made the dial disagree with its own
+breakdown by a point. The epsilon stops two mathematically equal scores from
+rounding to different integers above the clamp (ADR-0006, ADR-0007).
 
 Rules:
 
@@ -57,6 +67,15 @@ Rules:
    (< 1). A plain weighted subtraction let complements cancel to zero, made
    three very different users indistinguishable, and even inverted the
    delegation axis below ~44% (see ADR-0005). Do not reintroduce it.
+
+0b. **There is exactly one reducer, and adding an AI use must never raise it.**
+   A reducer whose numerator can be raised by an AI use inverts that use's
+   marginal effect, because the use itself contributes almost no reliance: a
+   deliberate lookup added ~0.03 points and handed back ~0.24 through the old
+   `deliberateUsage` share, so the dial FELL when reliance rose. No small
+   enough weight exists — the score is rounded, so any non-zero weight can tip
+   a boundary. Check any proposed reducer against that rule before anything
+   else (ADR-0007).
 
 1. **Deterministic**: same events + same config + same reference time =
    identical output. No `Date.now()`, no randomness inside compute functions.
@@ -120,7 +139,11 @@ Rules:
 - Never implement "usage time = badness". A heavy but deliberate user who
   attempts first must stay in the lowest band — there is a test for this.
 - Never let in-app activity (reflections logged, sessions started) move the
-  score across a band. That is an engagement loop, which principle 8 forbids.
+  score AT ALL. Bounding it was tried twice and was the wrong guarantee both
+  times: a bound constrains how far the dial moves, not which direction, and
+  rounding carries any non-zero weight across a cut point eventually. Report
+  those signals, never score them (ADR-0007). Rewarding them is an engagement
+  loop, which principle 8 forbids.
 - Never make scoring non-deterministic or LLM-dependent.
 - Never hardcode weights inside algorithms.
 - Never punish the user in the domain model (no penalty mechanics for

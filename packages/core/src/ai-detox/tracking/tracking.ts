@@ -57,6 +57,10 @@ export interface UsageStats {
   fractionNoAttemptBeforeAI: number;
   /** Over ALL events. */
   fractionAttemptedFirst: number;
+  /**
+   * Reflections over ALL moments. `fractionAIUsesWithReflection` is the share
+   * of AI USES; UI copy saying "of your AI uses" must read that one.
+   */
   fractionWithReflection: number;
   /**
    * Moments resolved with no AI at all, over ALL events. This is the only
@@ -68,10 +72,12 @@ export interface UsageStats {
   /** Reflections attached to AI uses, over AI USES (not all events). */
   fractionAIUsesWithReflection: number;
   /**
-   * Deliberate, tool-like AI uses over ALL moments. Scoring uses this rather
-   * than the share of AI uses: sharing a denominator with AI uses meant that
-   * turning an independently-resolved moment into a deliberate AI use raised
-   * the reducer and LOWERED the score (ADR-0006).
+   * Deliberate, tool-like AI uses over ALL moments. Reported, never scored:
+   * as a reducer this made adding one more deliberate AI use LOWER the
+   * dependency score, because it handed back more discount than the use
+   * itself added reliance (ADR-0007). Pair it with `fractionDeliberate` --
+   * the share of AI USES that were deliberate -- and be careful which
+   * denominator the surrounding sentence claims.
    */
   fractionMomentsDeliberate: number;
 }

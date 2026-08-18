@@ -81,14 +81,23 @@ lists its empty/error/loading state. Copy shown is canonical.
   Handing over one task a day is Leaning, not Running — the pattern is total
   but the amount is not, and someone doing it eight times a day is doing eight
   times as much of it.
-- FactorBar list: each factor with plain sentence, e.g. "Delegation — 3 of
-  12 uses this week handed the whole task to AI."
+- FactorBar list: label, the factor's points, and the config's plain-language
+  description. NOT a share of AI uses ("3 of 12 uses handed the whole task to
+  AI") — the score counts acts, not shares, and share phrasing is the exact
+  semantics ADR-0006 removed. Bars fill against the largest row so bar length
+  means the same thing as the number beside it.
+- "Not counted, worth knowing" -> reflection share and deliberate share, each
+  stating its own denominator, with a line saying plainly that neither moves
+  the number. Anything a user can do inside the app to lower their own score
+  would make the score worth less (ADR-0007).
 - "How this is calculated" -> methodology text derived from core config. It must
-  state what the formula actually does: factors add up to reliance, and the
-  lowering factors discount that reliance by at most `reducerMaxDiscount`,
+  state what the formula actually does: factors add up to reliance, and moments
+  resolved without AI discount that reliance by at most `reducerMaxDiscount`,
   never erase it. The factor numbers add up to the score on the dial in
   unrounded points; the UI rounds each row, so the copy must not promise the
-  displayed integers reconcile exactly.
+  displayed integers reconcile exactly. It must also not promise unbounded
+  linearity: doubling handed-over tasks doubles the number only until the scale
+  runs out, above roughly two a day.
 - Empty: "Not enough data yet — the report unlocks after about N recorded uses"
   where N is `minEventsForScore` read from config (never hardcoded in copy).
 

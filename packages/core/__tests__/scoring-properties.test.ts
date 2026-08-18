@@ -254,8 +254,6 @@ describe('degenerate inputs stay safe', () => {
   it('zero reducer weights simply means no discount', () => {
     const noReducers = defaultScoringConfig();
     noReducers.weights.independentAttempt = 0;
-    noReducers.weights.reflection = 0;
-    noReducers.weights.deliberateUsage = 0;
     const result = computeDependencyScore(delegatedEvents(12), noReducers, NOW);
     expect(Number.isFinite(result.score!)).toBe(true);
     expect(result.factors.filter((f) => f.role === 'reducer').every((f) => f.points === 0)).toBe(
@@ -265,8 +263,7 @@ describe('degenerate inputs stay safe', () => {
 });
 
 describe('self-reported signals are bounded', () => {
-  const reducerTotal =
-    config.weights.independentAttempt + config.weights.reflection + config.weights.deliberateUsage;
+  const reducerTotal = config.weights.independentAttempt;
 
   it('padding the log with independent moments is capped well below a band', () => {
     // NOT "cannot cross a band". That phrasing is unachievable and was itself an
@@ -304,16 +301,16 @@ describe('self-reported signals are bounded', () => {
     }
   });
 
-  it('reflecting on every AI use is capped tighter still', () => {
-    // Principle 8: in-app activity must not be a route to a better number.
+  it('in-app activity does not move the number at all', () => {
+    // Principle 8, now structural rather than bounded. Reflection and
+    // deliberate-use shares were reducers until ADR-0007; both could be raised
+    // by adding an AI use, which made the score FALL when reliance rose. The
+    // fix is zero weight, not small weight -- any non-zero weight can still tip
+    // the rounding -- so the assertion is equality, not a magnitude.
     const none = delegatedEvents(28);
     const all = delegatedEvents(28, { reflectionId: 'r' });
-    const swing =
-      computeDependencyScore(none, config, NOW).score! -
-      computeDependencyScore(all, config, NOW).score!;
-    expect(swing).toBeGreaterThan(0);
-    expect(swing).toBeLessThanOrEqual(
-      100 * config.reducerMaxDiscount * (config.weights.reflection / reducerTotal) + 1,
+    expect(computeDependencyScore(all, config, NOW).score).toBe(
+      computeDependencyScore(none, config, NOW).score,
     );
   });
 });

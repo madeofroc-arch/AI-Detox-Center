@@ -1,175 +1,230 @@
 /**
  * Exhaustive monotonicity sweep.
  *
- * Two successive models shipped with monotonicity breaks that their own tests
- * could not see, each blind in a different way: the first only ever worsened
- * behavior toward the single heaviest category; the second swept categories but
- * always from the same starting flags, so one channel never varied.
+ * THREE successive models shipped with monotonicity breaks that their own
+ * tests could not see, and each was blind in a different way:
  *
- * This file exists to remove the guesswork. It enumerates every conversion
- * between categories, every flag combination, and both directions of adding and
- * removing dependent acts, in a range of bulk contexts and volumes. It is the
- * slowest test in the suite and that is the correct trade.
+ *   1. the first only ever worsened behavior toward the single heaviest
+ *      category;
+ *   2. the second swept categories but built every event with the same flags,
+ *      so `attemptedFirst` and `proceededImmediately` never varied;
+ *   3. the third swept categories AND flags but only ever CONVERTED one act
+ *      into another, never ADDED one alongside — which is where the
+ *      `deliberateUsage` reducer was handing back more discount than the added
+ *      act cost in reliance (ADR-0007).
+ *
+ * So this file does not hand-pick the changes it tests. It enumerates every
+ * distinguishable event variant, derives "strictly worse" from a dominance
+ * relation over the counts the engine actually reads, and sweeps every ordered
+ * pair — conversions and additions both. The comparison count is asserted so
+ * the figure quoted in the ADR cannot drift away from the code.
+ *
+ * It is the slowest test in the suite and that is the correct trade.
  */
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_INFO, DEFAULT_SCORING_CONFIG, computeDependencyScore } from '../src/index';
+import {
+  CATEGORY_INFO,
+  DEFAULT_SCORING_CONFIG,
+  bandForScore,
+  computeDependencyScore,
+  kindOf,
+} from '../src/index';
 import type { AIUsageCategory, AIUsageEvent, ScoringConfig } from '../src/index';
 
 const NOW = '2026-08-19T12:00:00.000Z';
 const config: ScoringConfig = DEFAULT_SCORING_CONFIG;
 const daysAgo = (d: number): string =>
-  new Date(Date.parse(NOW) - d * 86_400_000 - 3_600_000).toISOString();
+  new Date(Date.parse(NOW) - (d % config.windowDays) * 86_400_000 - 3_600_000).toISOString();
 
-/**
- * Severity ranking used ONLY to decide which direction counts as worse. It is
- * intentionally coarse: deliberate uses are 0, and the three dependency kinds
- * ascend from reaching instantly, through seeking reassurance, to handing over
- * a whole task.
- */
-const SEVERITY: Record<string, number> = {
-  translation: 0,
-  lookup: 0,
-  organize: 0,
-  brainstorm_partner: 0,
-  review_own_work: 0,
-  instant_help: 1,
-  reassurance_seeking: 2,
-  decision_outsourcing: 3,
-  direct_delegation: 3,
-};
-const CATEGORIES = CATEGORY_INFO.map((c) => c.category);
+interface Variant {
+  category: AIUsageCategory;
+  usedAI: boolean;
+  attemptedFirst: boolean;
+  immediate: boolean;
+  reflect: boolean;
+}
+
+/** Every event the taxonomy can distinguish: 9 categories x flags. */
+const VARIANTS: Variant[] = [];
+for (const { category } of CATEGORY_INFO) {
+  for (const usedAI of [true, false]) {
+    for (const attemptedFirst of [true, false]) {
+      for (const immediate of usedAI ? [true, false] : [false]) {
+        for (const reflect of [true, false]) {
+          VARIANTS.push({ category, usedAI, attemptedFirst, immediate, reflect });
+        }
+      }
+    }
+  }
+}
 
 let seq = 0;
-function ev(
-  category: AIUsageCategory,
-  i: number,
-  o: { attempted?: boolean; usedAI?: boolean; immediate?: boolean; reflect?: boolean } = {},
-): AIUsageEvent {
+function ev(v: Variant, i: number): AIUsageEvent {
   seq += 1;
-  const usedAI = o.usedAI ?? true;
-  const attempted = o.attempted ?? false;
   return {
     id: `m${seq}`,
-    timestamp: daysAgo(i % config.windowDays),
-    category,
+    timestamp: daysAgo(i),
+    category: v.category,
     source: 'gate',
-    attemptedFirst: attempted,
-    usedAI,
-    proceededImmediately: usedAI ? (o.immediate ?? !attempted) : false,
-    ...(o.reflect ? { reflectionId: `r${seq}` } : {}),
+    attemptedFirst: v.attemptedFirst,
+    usedAI: v.usedAI,
+    proceededImmediately: v.usedAI && v.immediate,
+    ...(v.reflect ? { reflectionId: `r${seq}` } : {}),
   };
 }
-/** A moment resolved with no AI at all, as the gate records it. */
-const solo = (i: number): AIUsageEvent => ev('lookup', i, { attempted: true, usedAI: false });
-const rep = (n: number, make: (i: number) => AIUsageEvent): AIUsageEvent[] =>
-  Array.from({ length: n }, (_, i) => make(i));
+
+/**
+ * The five counts scoring raises on, plus the one signal it discounts on.
+ * Derived from the engine's own definitions rather than from a hand-written
+ * severity ladder, so "strictly worse" is not a judgement call.
+ */
+function indicators(v: Variant): number[] {
+  const ai = v.usedAI;
+  return [
+    ai ? 1 : 0, // frequency
+    ai && v.immediate ? 1 : 0, // immediacy
+    ai && kindOf(v.category) === 'delegation' ? 1 : 0, // delegation
+    ai && !v.attemptedFirst ? 1 : 0, // lackOfAttempt
+    ai && kindOf(v.category) === 'emotional' ? 1 : 0, // emotionalDependency
+    ai ? 0 : -1, // resolved without AI — the only reducer, so sign-flipped
+  ];
+}
+/** b is at least as dependent as a on every axis, and strictly worse on one. */
+function dominates(a: Variant, b: Variant): boolean {
+  const [x, y] = [indicators(a), indicators(b)];
+  return x.every((n, i) => y[i]! >= n) && x.some((n, i) => y[i]! > n);
+}
+
+const WORSE_PAIRS: Array<[Variant, Variant]> = [];
+for (const a of VARIANTS) for (const b of VARIANTS) if (dominates(a, b)) WORSE_PAIRS.push([a, b]);
+
+const rep = (n: number, v: Variant): AIUsageEvent[] =>
+  Array.from({ length: n }, (_, i) => ev(v, i));
+const V = (
+  category: AIUsageCategory,
+  o: Partial<Omit<Variant, 'category'>> = {},
+): Variant => ({
+  category,
+  usedAI: o.usedAI ?? true,
+  attemptedFirst: o.attemptedFirst ?? false,
+  immediate: o.immediate ?? false,
+  reflect: o.reflect ?? false,
+});
+
+const SOLO = V('lookup', { usedAI: false, attemptedFirst: true });
+const DELEGATED = V('direct_delegation', { immediate: true });
+const DELIBERATE = V('lookup', { attemptedFirst: true });
+const REASSURANCE = V('reassurance_seeking', { immediate: true });
+
+/** Backdrops a change can happen against: independent, dependent, and mixed. */
+const CONTEXTS: AIUsageEvent[][] = [];
+for (const solo of [0, 12, 40])
+  for (const delegated of [0, 6, 24])
+    for (const deliberate of [0, 10])
+      CONTEXTS.push([
+        ...rep(solo, SOLO),
+        ...rep(delegated, DELEGATED),
+        ...rep(deliberate, DELIBERATE),
+        ...rep(delegated ? 4 : 0, REASSURANCE),
+      ]);
 
 const scoreOf = (events: readonly AIUsageEvent[]): number | null => {
   const r = computeDependencyScore(events, config, NOW);
   return r.status === 'ok' ? r.score : null;
 };
+const name = (v: Variant): string =>
+  `${v.category}${v.usedAI ? '' : '/solo'}${v.attemptedFirst ? '+attempt' : ''}${
+    v.immediate ? '+instant' : ''
+  }${v.reflect ? '+reflected' : ''}`;
+
+/** Every failure carries its band change, because that is the user-visible harm. */
+function record(failures: string[], label: string, before: number, after: number): void {
+  const crossed = bandForScore(before, config) !== bandForScore(after, config);
+  failures.push(`${label}: ${before} -> ${after}${crossed ? ' (BAND CHANGED)' : ''}`);
+}
+
+describe('the dominance relation itself', () => {
+  it('enumerates the whole variant space', () => {
+    expect(VARIANTS).toHaveLength(CATEGORY_INFO.length * 12);
+    expect(WORSE_PAIRS.length).toBeGreaterThan(4000);
+  });
+});
 
 describe('worsening behavior never lowers the score', () => {
-  it('converting any act into a strictly worse category', () => {
+  it('converting acts into strictly more dependent ones', () => {
     const failures: string[] = [];
-    for (const from of CATEGORIES) {
-      for (const to of CATEGORIES) {
-        if (SEVERITY[to]! <= SEVERITY[from]!) continue;
-        for (const bulkCat of ['direct_delegation', 'reassurance_seeking', 'lookup'] as const) {
-          for (const bulkN of [0, 6, 14, 30]) {
-            for (const convN of [4, 12, 25]) {
-              for (const soloN of [0, 5, 20]) {
-                const base = [...rep(soloN, solo), ...rep(bulkN, (i) => ev(bulkCat, i))];
-                const before = scoreOf([...base, ...rep(convN, (i) => ev(from, i))]);
-                const after = scoreOf([...base, ...rep(convN, (i) => ev(to, i))]);
-                if (before === null || after === null) continue;
-                if (after < before) {
-                  failures.push(`${from}->${to} bulk=${bulkCat}x${bulkN} n=${convN} solo=${soloN}: ${before}->${after}`);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    expect(failures.slice(0, 5)).toEqual([]);
-  });
-
-  it('converting an independently-resolved moment into any AI use', () => {
-    // The shape of the issue-#5 break, and of the reducer-channel break that
-    // followed it: reducers moving faster than reliance on a strictly worse change.
-    const failures: string[] = [];
-    for (const to of CATEGORIES) {
-      for (const attempted of [true, false]) {
-        for (const reflect of [true, false]) {
-          for (const soloN of [3, 8, 20, 40]) {
-            for (const bulkN of [0, 8, 20]) {
-              const bulk = rep(bulkN, (i) => ev('direct_delegation', i));
-              const before = scoreOf([...rep(soloN, solo), ...bulk]);
-              const after = scoreOf([
-                ...rep(soloN - 1, solo),
-                ev(to, 0, { attempted, reflect }),
-                ...bulk,
-              ]);
-              if (before === null || after === null) continue;
-              if (after < before) {
-                failures.push(`solo->${to} attempted=${attempted} reflect=${reflect} solo=${soloN} bulk=${bulkN}: ${before}->${after}`);
-              }
-            }
-          }
-        }
-      }
-    }
-    expect(failures.slice(0, 5)).toEqual([]);
-  });
-
-  it('dropping the attempt before an AI use', () => {
-    const failures: string[] = [];
-    for (const cat of CATEGORIES) {
-      for (const n of [6, 15, 30]) {
-        for (const soloN of [0, 10]) {
-          const base = rep(soloN, solo);
-          const before = scoreOf([...base, ...rep(n, (i) => ev(cat, i, { attempted: true }))]);
-          const after = scoreOf([...base, ...rep(n, (i) => ev(cat, i, { attempted: false }))]);
+    let comparisons = 0;
+    for (const [from, to] of WORSE_PAIRS) {
+      for (const ctx of [CONTEXTS[0]!, CONTEXTS[10]!, CONTEXTS[16]!]) {
+        for (const n of [1, 12]) {
+          const before = scoreOf([...ctx, ...rep(n, from)]);
+          const after = scoreOf([...ctx, ...rep(n, to)]);
+          comparisons += 1;
           if (before === null || after === null) continue;
-          if (after < before) failures.push(`${cat} n=${n} solo=${soloN}: ${before}->${after}`);
+          if (after < before) record(failures, `${name(from)} -> ${name(to)} x${n}`, before, after);
         }
       }
     }
+    expect(comparisons).toBeGreaterThan(24_000);
     expect(failures.slice(0, 5)).toEqual([]);
   });
 
-  it('adding one more dependent act', () => {
+  it('ADDING an AI use, of any kind, under any flags', () => {
+    // The defect this case exists for: `deliberateUsage` was a reducer over all
+    // moments, so one more deliberate attempted-first lookup handed back ~0.24
+    // points of discount while adding ~0.03 points of reliance. 18 reassurance
+    // uses scored 51 "Leaning on AI"; the same 18 plus one honest lookup scored
+    // 50 "Balanced". Logging AI use was the cheapest way to a better label.
     const failures: string[] = [];
-    for (const cat of CATEGORIES) {
-      if (SEVERITY[cat] === 0) continue;
-      for (const n of [10, 20, 40]) {
-        for (const soloN of [0, 10, 30]) {
-          const base = [...rep(soloN, solo), ...rep(n, (i) => ev(cat, i))];
-          const before = scoreOf(base);
-          const after = scoreOf([...base, ev(cat, 0)]);
+    let comparisons = 0;
+    for (const v of VARIANTS.filter((x) => x.usedAI)) {
+      for (const ctx of CONTEXTS) {
+        for (const k of [1, 3]) {
+          const before = scoreOf(ctx);
+          const after = scoreOf([...ctx, ...rep(k, v)]);
+          comparisons += 1;
           if (before === null || after === null) continue;
-          if (after < before) failures.push(`+1 ${cat} n=${n} solo=${soloN}: ${before}->${after}`);
+          if (after < before) record(failures, `+${k} ${name(v)} on ${ctx.length}`, before, after);
         }
       }
     }
+    expect(comparisons).toBeGreaterThan(2_500);
     expect(failures.slice(0, 5)).toEqual([]);
   });
 });
 
 describe('improving behavior never raises the score', () => {
-  it('eliminating a whole dependency pattern', () => {
-    // The headline symptom of #5: this moved a user 67 -> 96 and demoted them.
+  it('doing less of a dependent pattern, down to none of it', () => {
+    // The headline symptom of #5: eliminating a pattern moved a user 67 -> 96.
     const failures: string[] = [];
-    for (const dropped of ['instant_help', 'reassurance_seeking', 'decision_outsourcing'] as const) {
-      for (const kept of [5, 10, 20]) {
-        for (const n of [5, 15, 27, 50]) {
-          const withPattern = [...rep(kept, (i) => ev('direct_delegation', i)), ...rep(n, (i) => ev(dropped, i))];
-          const without = rep(kept, (i) => ev('direct_delegation', i));
-          const w = scoreOf(withPattern);
-          const o = scoreOf(without);
-          if (w === null || o === null) continue;
-          if (o > w) failures.push(`drop ${n}x${dropped}, keep ${kept}: ${w}->${o}`);
+    for (const v of [DELEGATED, REASSURANCE, V('instant_help', { immediate: true }), V('decision_outsourcing')]) {
+      for (const ctx of CONTEXTS) {
+        for (const n of [6, 15, 27, 50]) {
+          for (const kept of [Math.floor(n / 3), Math.floor(n / 10), 0]) {
+            const before = scoreOf([...ctx, ...rep(n, v)]);
+            const after = scoreOf([...ctx, ...rep(kept, v)]);
+            if (before === null || after === null) continue;
+            if (after > before) {
+              record(failures, `${name(v)} ${n} -> ${kept} on ${ctx.length}`, before, after);
+            }
+          }
+        }
+      }
+    }
+    expect(failures.slice(0, 5)).toEqual([]);
+  });
+
+  it('resolving more moments alone, and never by more than the configured discount', () => {
+    const failures: string[] = [];
+    const ceiling = 100 * config.reducerMaxDiscount;
+    for (const ctx of CONTEXTS) {
+      for (const k of [1, 5, 50, 2000]) {
+        const before = scoreOf(ctx);
+        const after = scoreOf([...ctx, ...rep(k, SOLO)]);
+        if (before === null || after === null) continue;
+        if (after > before) record(failures, `+${k} solo on ${ctx.length}`, before, after);
+        if (before - after > ceiling + 1) {
+          failures.push(`+${k} solo on ${ctx.length}: ${before} -> ${after} exceeds ${ceiling}`);
         }
       }
     }
@@ -180,26 +235,47 @@ describe('improving behavior never raises the score', () => {
 describe('the breakdown always reconciles with the dial', () => {
   it('contributor points minus reducer points rounds to the score, unclamped', () => {
     const failures: string[] = [];
-    for (const cat of CATEGORIES) {
-      for (const cat2 of CATEGORIES) {
-        for (const n of [10, 30, 60, 120, 300]) {
-          const result = computeDependencyScore(
-            [...rep(n, (i) => ev(cat, i)), ...rep(n, (i) => ev(cat2, i))],
-            config,
-            NOW,
-          );
+    for (const v of VARIANTS) {
+      for (const n of [10, 30, 120, 300]) {
+        for (const ctx of [CONTEXTS[0]!, CONTEXTS[16]!]) {
+          const result = computeDependencyScore([...ctx, ...rep(n, v)], config, NOW);
           if (result.status !== 'ok') continue;
           const sum = result.factors.reduce(
             (t, f) => t + (f.role === 'contributor' ? f.points : -f.points),
             0,
           );
           // Deliberately unclamped: clamping here is what hid a 14-point gap.
-          if (Math.round(sum) !== result.score) {
-            failures.push(`${cat}+${cat2} n=${n}: sum ${sum.toFixed(3)} vs dial ${result.score}`);
+          // The epsilon matches the engine's own rounding nudge (scoring.ts).
+          if (Math.round(sum + 1e-9) !== result.score) {
+            failures.push(`${name(v)} x${n}: sum ${sum.toFixed(3)} vs dial ${result.score}`);
           }
           if (result.score! < 0 || result.score! > 100) {
-            failures.push(`${cat}+${cat2} n=${n}: out of range ${result.score}`);
+            failures.push(`${name(v)} x${n}: out of range ${result.score}`);
           }
+        }
+      }
+    }
+    expect(failures.slice(0, 5)).toEqual([]);
+  });
+
+  it('above the clamp, mathematically equal scores round the same way', () => {
+    // Reliance pins to 100 within an ulp once raw reliance exceeds the scale,
+    // so worsening moves the true score by 0.0 and a naive Math.round sent two
+    // identical values to different integers whenever the score landed on x.5 —
+    // reading, to the user, as the worse behavior scoring lower.
+    const failures: string[] = [];
+    for (let delegations = 20; delegations <= 40; delegations += 1) {
+      for (let lookups = 1; lookups <= 40; lookups += 1) {
+        const base = rep(delegations, DELEGATED);
+        const before = scoreOf([...base, ...rep(lookups, DELIBERATE)]);
+        const after = scoreOf([
+          ...base,
+          ...rep(1, V('lookup', { attemptedFirst: true, immediate: true })),
+          ...rep(lookups - 1, DELIBERATE),
+        ]);
+        if (before === null || after === null) continue;
+        if (after < before) {
+          record(failures, `instant flip at D=${delegations} L=${lookups}`, before, after);
         }
       }
     }

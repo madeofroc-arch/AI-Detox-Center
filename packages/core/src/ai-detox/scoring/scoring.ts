@@ -1,41 +1,51 @@
 /**
- * AI Dependency Score — deterministic, transparent, config-driven.
+ * AI Dependency Score - deterministic, transparent, config-driven.
  *
- * Shape of the model (ADR-0005 established the frame, ADR-0006 fixed what it
- * measures):
+ * The whole model, and it fits on four lines (ADR-0006 fixed what the
+ * contributors measure; ADR-0007 reduced the reducers to one):
  *
- *   rate_f    = count of that dependent act / windowDays
- *   reliance  = 100 * (weighted rate intensities / attainable capacity)
- *   discount  = reliance * reducerMaxDiscount * (weighted reducer signals)
+ *   rate_f    = count of that dependent act / windowDays / saturation_f
+ *   reliance  = min(100, 100 * SUM(w_f * rate_f) / SUM(w_f))
+ *   discount  = reliance * reducerMaxDiscount * (moments resolved with no AI)
  *   score     = reliance - discount
  *
- * Four properties follow, and each is a fix for a measured defect:
+ * Four properties follow, and every one of them is a fix for a defect that
+ * shipped:
  *
  * 1. CONTRIBUTORS COUNT ACTS, NOT SHARES. Intensity is the RATE of a dependent
- *    behavior per day, so it only ever rises when behavior gets worse. Measuring
- *    each behavior as a share of AI uses reported average severity per AI use,
- *    which produced three confirmed absurdities: nine gate sessions solved alone
- *    plus one delegated use scored 77 "Running on AI"; eliminating an entire
- *    dependency pattern moved a user 67 -> 96 and demoted them a band; and
- *    converting an independent moment into an AI use LOWERED the score, because
- *    a lower-weight kind diluted a higher-weight one.
+ *    behavior per day, so it only ever rises when behavior gets worse. Shares
+ *    of AI use reported average severity per AI use, which produced three
+ *    confirmed absurdities: nine gate sessions solved alone plus one delegated
+ *    use scored 77 "Running on AI"; eliminating an entire dependency pattern
+ *    moved a user 67 -> 96 and demoted them a band; and converting an
+ *    independent moment into an AI use LOWERED the score (ADR-0006).
  *
- * 2. NORMALIZED BY ATTAINABLE CAPACITY. Any given AI use is either delegation or
- *    reassurance, never both, so the ceiling counts only the larger of the two.
- *    Summing both would make 100 reachable only by someone exhibiting every
- *    pattern at once — a dead top band, which is the bug ADR-0005 fixed and
- *    which reappears the moment this is written as a plain sum.
+ * 2. THE CEILING IS THE PLAIN SUM OF CONTRIBUTOR WEIGHTS. Every contributor is
+ *    independently saturable now that they are rates, so a user can be pinned
+ *    on delegation and reassurance at once. Normalizing by
+ *    max(delegation, emotionalDependency) was correct only while those were
+ *    shares of one partition; carried over to rates, reliance reached 122.
  *
- * 3. REDUCERS DISCOUNT, THEY DO NOT SUBTRACT. A bounded multiplicative discount
- *    can shrink reliance but never cancel it, never drive the score negative,
- *    and never invert a contributor's marginal effect.
+ * 3. EXACTLY ONE REDUCER, AND IT COUNTS MOMENTS WITH NO AI IN THEM. A reducer
+ *    whose numerator can be raised by an AI use inverts that use's marginal
+ *    effect: `deliberateUsage` handed back ~0.24 points of discount for an act
+ *    that added ~0.03 points of reliance, so logging one more AI use was the
+ *    cheapest way out of "Running on AI". No weight small enough to fix that
+ *    exists -- any non-zero weight can still tip the rounding -- so the fix is
+ *    zero, and reflection and deliberate use became reported context instead
+ *    of score inputs (ADR-0007).
  *
- * 4. EVERY SIGNAL HAS ONE HOME. `independentAttempt` reads moments resolved with
- *    no AI at all, not the complement of `lackOfAttempt`.
+ * 4. THE REDUCER DISCOUNTS, IT DOES NOT SUBTRACT. A bounded multiplicative
+ *    discount can shrink reliance but never cancel it, never drive the score
+ *    negative, and never invert a contributor's marginal effect.
  *
- * Reducers remain proportional on purpose: they describe the SHAPE of what you
- * did, while contributors measure the AMOUNT. Their influence is bounded well
- * below a band width so in-app activity cannot buy a better label.
+ * Together these give the guarantee three previous models each claimed and
+ * each failed to hold, now by a one-line argument rather than by a sweep:
+ * adding an AI use raises reliance weakly and strictly lowers the only
+ * reducer, so it can never lower the score; worsening a flag or a category
+ * raises a count and touches no reducer, so it can never lower the score; and
+ * only a moment resolved WITHOUT AI can lower it, by at most
+ * reducerMaxDiscount.
  *
  * Determinism: same (events, config, referenceTime) => identical output. No
  * clock reads, no randomness, and no transcendental math anywhere in the path
@@ -111,6 +121,9 @@ function clamp01(n: number): number {
   return Math.min(1, Math.max(0, n));
 }
 
+/** See the rounding note in computeDependencyScore. */
+const ROUND_EPSILON = 1e-9;
+
 export function computeDependencyScore(
   events: readonly AIUsageEvent[],
   config: ScoringConfig,
@@ -152,13 +165,11 @@ export function computeDependencyScore(
     delegation: rate(stats.counts.delegation, 'delegation'),
     lackOfAttempt: rate(stats.counts.lackOfAttempt, 'lackOfAttempt'),
     emotionalDependency: rate(stats.counts.emotionalDependency, 'emotionalDependency'),
-    // Reducers: the SHAPE of what you did, all over the same denominator (all
-    // moments). Mixing denominators let a strictly worse change -- turning an
-    // independently-resolved moment into a deliberate AI use -- raise a reducer
-    // faster than it raised reliance, and so lower the score.
+    // The only reducer, and the only signal an AI use cannot raise. Reflection
+    // and deliberate-use shares used to sit here; both could be raised by
+    // adding an AI use, which made the score fall when reliance rose
+    // (ADR-0007). They are still reported -- they just do not move the dial.
     independentAttempt: clamp01(stats.fractionResolvedWithoutAI),
-    reflection: clamp01(stats.fractionWithReflection),
-    deliberateUsage: clamp01(stats.fractionMomentsDeliberate),
   };
 
   // Scale every contributor by the same factor when the raw total exceeds the
@@ -223,7 +234,15 @@ export function computeDependencyScore(
   // reliance <= 100 by the clamp factor above, and discount < reliance because
   // reducerMaxDiscount < 1, so this stays in range; the clamp guards a
   // hand-edited config.
-  const score = Math.round(Math.min(100, Math.max(0, reliance - discount)));
+  const exact = Math.min(100, Math.max(0, reliance - discount));
+  // Nudge before rounding. Above the clamp, reliance is pinned to 100 to
+  // within an ulp, so two DIFFERENT behaviors can have the same exact score
+  // and disagree only in the last bits -- and when that score lands on x.5,
+  // Math.round sends them to different integers, which read as the worse
+  // behavior scoring lower. ROUND_EPSILON is far below any difference the
+  // model can express (the smallest is ~0.03 points) and far above the
+  // ~1e-14 of float noise, so a tie always resolves the same way.
+  const score = Math.round(exact + ROUND_EPSILON);
 
   return { status: 'ok', score, band: bandForScore(score, config), ...base };
 }

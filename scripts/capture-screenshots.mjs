@@ -129,7 +129,18 @@ async function main() {
     mobile: true,
   });
 
-  const demo = JSON.stringify(buildDemoData(new Date().toISOString().slice(0, 10)));
+  // LOCAL calendar day, matching apps/mobile/src/lib/clock.ts. Using the UTC
+  // date here put the fixture a day behind the app in any timezone ahead of
+  // UTC, which shifted every demo dateKey back one day: the shipped Home
+  // screenshot showed Brain Score 68 and an unfinished challenge where the
+  // fixture defines 72 and a completed one.
+  const now = new Date();
+  const todayKey = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+  const demo = JSON.stringify(buildDemoData(todayKey));
 
   for (const shot of SHOTS) {
     // Seed on the app origin, then load the route so state is already there.

@@ -1,6 +1,13 @@
 # ADR-0006: The score counts dependent acts, not shares of AI use
 
-Status: Accepted · Date: 2026-08-19 · Fixes [issue #5](https://github.com/madeofroc-arch/AI-Detox-Center/issues/5) · Supersedes the contributor semantics in [ADR-0005](0005-dependency-score-recalibration.md)
+Status: Accepted, amended by [ADR-0007](0007-one-reducer.md) · Date: 2026-08-19 · Fixes [issue #5](https://github.com/madeofroc-arch/AI-Detox-Center/issues/5) · Supersedes the contributor semantics in [ADR-0005](0005-dependency-score-recalibration.md)
+
+> **Amended.** The contributor half of this ADR stands. The reducer half does
+> not: `reflection` and `deliberateUsage` could each be raised by adding an AI
+> use, which made the dial FALL when reliance rose — the same class of defect
+> this ADR claims to have made impossible, found by review for the third time.
+> ADR-0007 removes them and leaves one reducer. Where this document says
+> "reducers" plural, or quotes `reducerMaxDiscount` as 0.30, read ADR-0007.
 
 ## Context
 
@@ -48,7 +55,7 @@ capacity    = Σ all contributor weights
 raw         = (100 / capacity) * Σ (w_f * int_f)
 points_f    = (100 / capacity) * w_f * int_f * min(1, 100/raw)
 reliance    = Σ points_f                       -- summed, never recomputed
-discount    = reliance * reducerMaxDiscount * Σ (w_r * int_r) / Σ w_r
+discount    = reliance * reducerMaxDiscount * Σ (w_r * int_r) / Σ w_r   -- one term only, see ADR-0007
 score       = round(reliance - discount)
 ```
 
@@ -153,6 +160,10 @@ Measured, reflection moves a delegating profile by 2 points — which can still
 straddle a cut point if the user happens to sit on one. That is the point of
 stating a magnitude instead: the claim is now true.
 
+**Superseded by ADR-0007.** Stating the magnitude was still the wrong
+guarantee: it constrained how far reflection could move the dial, not which
+direction. Reflection now moves it by zero.
+
 ### The denominator is the fixed window, and that is a deliberate trade
 
 Rates divide by `windowDays`, never by the observed span of the user's history.
@@ -170,12 +181,18 @@ A dedicated `scoring-monotonicity.test.ts` enumerates, against the real engine:
 every conversion between every pair of categories in a range of bulk contexts
 and volumes; converting an independently-resolved moment into every kind of AI
 use under every flag combination; dropping the attempt before a use; adding one
-more dependent act; and eliminating a whole pattern. Roughly 8,800 comparisons.
+more dependent act; and eliminating a whole pattern. **Correction:** this was published as
+"roughly 8,800 comparisons"; enumerating the loop bounds gives 3,258. The file
+was later rewritten (ADR-0007) to enumerate the event space rather than sample
+it, at about 29,600 comparisons with the per-block counts asserted in the test
+so the published figure cannot drift again.
 
 Two successive models shipped monotonicity breaks their own tests could not see
 — the first only ever worsened toward the single heaviest category, the second
 swept categories but held the flags fixed — so the sweep is deliberately
-exhaustive rather than sampled.
+exhaustive rather than sampled. It was not exhaustive enough: this version only
+ever *converted* one act into another, and the next defect appeared when one was
+*added* alongside (ADR-0007).
 
 Also:
 

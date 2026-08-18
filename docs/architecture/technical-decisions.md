@@ -15,6 +15,7 @@ This file is the index and the current-state summary.
 | Scoring | Deterministic, config-driven; no LLM in core paths | [ADR-0004](adr/0004-deterministic-scoring-no-llm-core.md) |
 | Score calibration | Capacity-normalized reliance; reducers as a bounded discount | [ADR-0005](adr/0005-dependency-score-recalibration.md) |
 | Score semantics | Contributors count dependent acts per day, not shares of AI use | [ADR-0006](adr/0006-score-counts-dependent-acts-not-shares.md) |
+| Score reducers | Exactly one, and an AI use can never raise it | [ADR-0007](adr/0007-one-reducer.md) |
 | Testing | Vitest for core; typecheck + build gate for app | [ADR-0002](adr/0002-monorepo-npm-workspaces.md) |
 | CI | GitHub Actions: lint, typecheck, test, build | — |
 | License | MIT | — |

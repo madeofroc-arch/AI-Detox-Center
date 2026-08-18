@@ -57,6 +57,37 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- **The dependency score has exactly one lowering factor: moments you resolved
+  without AI** (config semantics version 4, see
+  [ADR-0007](docs/architecture/adr/0007-one-reducer.md), fixes the third
+  incarnation of [#5](https://github.com/madeofroc-arch/AI-Detox-Center/issues/5)).
+
+  An independent review refuted ADR-0006's central claim with an ordinary
+  counter-example: 18 reassurance-seeking uses scored 51 "Leaning on AI", and
+  the same 18 plus **one honest attempted-first lookup** scored 50 "Balanced".
+  Nothing was removed, no count fell, reliance rose, and the dial went down —
+  logging one more AI use was the cheapest way to a better label. `reflection`
+  had the same shape.
+
+  The cause is general enough to be worth stating: a lowering factor whose
+  numerator can be raised by an AI use inverts that use's marginal effect,
+  because the use itself contributes almost no reliance. A deliberate lookup
+  added ~0.03 points and handed back ~0.24. No small-enough weight exists —
+  the score is rounded, so any non-zero weight can still tip a boundary — so
+  reflection and deliberate use now carry zero weight and are **reported
+  instead of rewarded**, under a Brain Report heading that says so.
+
+  **No persona's score changes**: the discount cap moved 30% to 15% so the
+  surviving factor keeps exactly the ceiling it had. What changes is that
+  reflecting no longer moves the number, which is the point — a score you can
+  improve without changing your behavior outside the app is worth less.
+
+  Also fixed: above the top of the scale two mathematically equal scores could
+  round to different integers, so the worse behavior read a point lower (280
+  confirmed cases); and `sanitizeScoringConfig` no longer rejects configs
+  weighting reassurance above delegation, a rule whose stated reason ADR-0006
+  had already removed.
+
 - **The dependency score now counts dependent acts per day rather than shares
   of AI use** (config semantics version 3, see
   [ADR-0006](docs/architecture/adr/0006-score-counts-dependent-acts-not-shares.md),
@@ -79,7 +110,10 @@ project adheres to [Semantic Versioning](https://semver.org/).
   reintroduced the same class of bug by three other routes — a per-factor clamp,
   a capacity term carried over from the share model, and an observation window
   derived from the events themselves. All three are described in the ADR, and
-  a dedicated ~8,800-comparison monotonicity sweep now guards against a fourth.
+  a dedicated monotonicity sweep now guards against a fourth. (A fourth was
+  found anyway, by the review above; the sweep was rewritten to enumerate the
+  event space rather than sample it. It was also described here as ~8,800
+  comparisons, which was wrong — the version it described ran 3,258.)
 
 - **Recalibrated the AI Dependency Score** (config semantics version 2, see
   [ADR-0005](docs/architecture/adr/0005-dependency-score-recalibration.md)).
@@ -98,7 +132,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
   **Your number will read differently after this update even though your
   behavior has not changed.** A mid-journey profile that previously scored 23
-  now scores around 52. Heavy but deliberate use — where you think first — still
+  scored around 52 under ADR-0005, and 66 under ADR-0006, which is what ships. Heavy but deliberate use — where you think first — still
   scores low, by design and by test.
 
 - Band captions: the lowest band is now **"Mostly your own"** rather than

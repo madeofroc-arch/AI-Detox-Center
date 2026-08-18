@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CONTRIBUTOR_FACTORS,
   DEFAULT_SCORING_CONFIG,
+  REDUCER_FACTORS,
   computeBrainScore,
   computeDependencyScore,
   bandForScore,
@@ -30,7 +32,7 @@ describe('computeDependencyScore', () => {
     expect(result.status).toBe('insufficient_data');
     expect(result.score).toBeNull();
     expect(result.band).toBeNull();
-    expect(result.factors).toHaveLength(8);
+    expect(result.factors).toHaveLength(CONTRIBUTOR_FACTORS.length + REDUCER_FACTORS.length);
   });
 
   it('scores dependent behavior higher than deliberate behavior', () => {
@@ -101,8 +103,6 @@ describe('computeDependencyScore', () => {
         lackOfAttempt: 0,
         emotionalDependency: 0,
         independentAttempt: 0,
-        reflection: 0,
-        deliberateUsage: 0,
       },
     };
     const events = Array.from({ length: 12 }, (_, i) =>

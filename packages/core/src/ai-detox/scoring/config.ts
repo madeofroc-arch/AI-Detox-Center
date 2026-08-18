@@ -18,8 +18,20 @@ export type ContributorFactor =
   | 'lackOfAttempt'
   | 'emotionalDependency';
 
-/** Factors that lower the dependency score. */
-export type ReducerFactor = 'independentAttempt' | 'reflection' | 'deliberateUsage';
+/**
+ * Factors that lower the dependency score.
+ *
+ * There is exactly one, and that is a correctness property rather than a
+ * simplification (ADR-0007). A reducer whose numerator can be raised by an AI
+ * use inverts the marginal effect of that use: a deliberate, attempted-first
+ * lookup adds ~0.03 points of reliance (weight 4 of 120, saturating at 8/day)
+ * but raised the old `deliberateUsage` share by 1/(n+1), worth ~0.24 points of
+ * discount at n=19. The score fell when AI use rose. No weight small enough to
+ * fix that exists, because rounding can be tipped by any non-zero weight --
+ * only zero works. `independentAttempt` counts moments resolved with NO AI, so
+ * an AI use can only ever lower it.
+ */
+export type ReducerFactor = 'independentAttempt';
 
 export type ScoringFactor = ContributorFactor | ReducerFactor;
 
@@ -28,7 +40,7 @@ export type ScoringFactor = ContributorFactor | ReducerFactor;
  * changes; `migrateAppData` upgrades stored configs below this version by
  * replacing them with the defaults (see ADR-0005).
  */
-export const SCORING_CONFIG_VERSION = 3;
+export const SCORING_CONFIG_VERSION = 4;
 
 export interface ScoringConfig {
   /** Semantics version. Stored configs below SCORING_CONFIG_VERSION are replaced. */
@@ -48,7 +60,7 @@ export interface ScoringConfig {
   /** Below this many events the score reports insufficient data. */
   minEventsForScore: number;
   /**
-   * The largest share of measured reliance that reducers may discount, in
+   * The largest share of measured reliance the reducer may discount, in
    * [0, 1). Strictly below 1 by design: at 1 a perfect reducer profile could
    * cancel reliance entirely, which is the blanket-cancellation pathology
    * ADR-0005 removes.
@@ -78,7 +90,7 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   version: SCORING_CONFIG_VERSION,
   windowDays: 14,
   minEventsForScore: 10,
-  reducerMaxDiscount: 0.3,
+  reducerMaxDiscount: 0.15,
   // Stated so they can be argued with:
   //   delegation 1           handing over a whole task every day
   //   lackOfAttempt 2        two AI uses a day with no attempt first
@@ -109,10 +121,11 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
     delegation: 40,
     lackOfAttempt: 40,
     emotionalDependency: 22,
-    // Reducers: relative shares of the discount, not absolute points.
+    // The only reducer. Its weight is a relative share of one, so the discount
+    // it can reach is exactly reducerMaxDiscount -- 15 points at the top of
+    // the scale, unchanged from ADR-0006 (which reached the same 15 as
+    // 0.30 x 50/100).
     independentAttempt: 50,
-    reflection: 20,
-    deliberateUsage: 30,
   },
 };
 
@@ -124,11 +137,7 @@ export const CONTRIBUTOR_FACTORS: readonly ContributorFactor[] = [
   'emotionalDependency',
 ] as const;
 
-export const REDUCER_FACTORS: readonly ReducerFactor[] = [
-  'independentAttempt',
-  'reflection',
-  'deliberateUsage',
-] as const;
+export const REDUCER_FACTORS: readonly ReducerFactor[] = ['independentAttempt'] as const;
 
 /** Plain-language descriptions used by the Brain Report UI. */
 export const FACTOR_DESCRIPTIONS: Record<ScoringFactor, string> = {
@@ -138,8 +147,6 @@ export const FACTOR_DESCRIPTIONS: Record<ScoringFactor, string> = {
   lackOfAttempt: 'AI used without trying yourself first.',
   emotionalDependency: 'AI asked to reassure or confirm what you already know.',
   independentAttempt: 'Moments you resolved without using AI at all.',
-  reflection: 'Uses you paused to reflect on.',
-  deliberateUsage: 'Intentional, tool-like uses (translate, look up, review your own work).',
 };
 
 function isPositiveFinite(n: unknown): n is number {
@@ -218,12 +225,12 @@ export function sanitizeScoringConfig(raw: unknown): ScoringConfig | null {
     if (typeof w !== 'number' || !Number.isFinite(w) || w < 0) return null;
   }
 
-  // Structural invariant, not a preference: delegation and emotionalDependency
-  // are mutually exclusive shares of one usage-kind partition, so scoring
-  // normalizes by max(delegation, emotionalDependency). If reassurance were
-  // weighted above whole-task handover, the top of the scale would silently
-  // become unreachable for the heavier behavior.
-  if ((weights.emotionalDependency as number) > (weights.delegation as number)) return null;
+  // NOTE: ADR-0005 rejected any config weighting emotionalDependency above
+  // delegation, because the ceiling was then max(delegation, emotional) and
+  // the top of the scale would have been unreachable for the heavier
+  // behavior. ADR-0006 made the ceiling the plain sum of contributor weights,
+  // so that consequence no longer follows and the check is gone. Do not
+  // reinstate it without a live reason.
 
   return {
     version: c.version,

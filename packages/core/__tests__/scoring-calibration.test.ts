@@ -207,24 +207,17 @@ describe('reducers discount but never cancel', () => {
     expect(discount).toBeLessThanOrEqual(reliance * config.reducerMaxDiscount + 1e-9);
   });
 
-  it('reflection is bounded to a fraction of a band, and cannot be relied on to stay inside one', () => {
-    // Deliberately NOT `expect(a.band).toBe(b.band)`. The previous version of
-    // this test asserted exactly that, and passed only because its fixture sat
-    // 6 points clear of a cut point -- the "pinned far from the boundary"
-    // pattern that let the original bug through. Any factor with non-zero
-    // influence can cross a cut point if the user is standing on one, so the
-    // guarantee is stated as a magnitude derived from config.
-    const reducerTotal =
-      config.weights.independentAttempt + config.weights.reflection + config.weights.deliberateUsage;
-    const ceiling = 100 * config.reducerMaxDiscount * (config.weights.reflection / reducerTotal);
-    expect(ceiling).toBeLessThan((config.bandBalancedMax - config.bandIndependentMax) / 2);
-
+  it('reflection does not move the number, in either direction', () => {
+    // This test used to assert a bounded swing, and before that that reflection
+    // "cannot cross a band". Both were wrong in the same way: any non-zero
+    // reward for an act that carries almost no reliance inverts that act's
+    // marginal effect, and rounding can carry the inversion across a cut point
+    // however small the weight. ADR-0007 sets the weight to zero, so the
+    // assertion is equality.
     for (const n of [12, 28, 42]) {
       const none = rep(n, () => ev('direct_delegation', { immediate: true }));
       const all = rep(n, () => ev('direct_delegation', { immediate: true, reflect: true }));
-      const swing = score(none).score! - score(all).score!;
-      expect(swing).toBeGreaterThan(0); // it still counts for something
-      expect(swing).toBeLessThanOrEqual(ceiling + 1);
+      expect(score(all).score).toBe(score(none).score);
     }
   });
 

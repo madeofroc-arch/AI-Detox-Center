@@ -48,12 +48,15 @@ describe('sanitizeScoringConfig', () => {
     }
   });
 
-  it('rejects weights that would make the top of the scale unreachable', () => {
-    // delegation and emotionalDependency are mutually exclusive shares of one
-    // usage-kind partition, so scoring normalizes by the larger of the two.
+  it('no longer rejects emotionalDependency weighted above delegation', () => {
+    // ADR-0005 rejected this, because the ceiling was then
+    // max(delegation, emotionalDependency) and the top of the scale would have
+    // been unreachable for the heavier behavior. ADR-0006 made the ceiling the
+    // plain sum of contributor weights, so the consequence no longer follows.
+    // Pinned as a test so the check is not reinstated from the old comment.
     const inverted = defaultScoringConfig();
     inverted.weights.emotionalDependency = inverted.weights.delegation + 1;
-    expect(sanitizeScoringConfig(inverted)).toBeNull();
+    expect(sanitizeScoringConfig(inverted)).not.toBeNull();
   });
 
   it('keeps every field through a JSON round-trip (nothing silently dropped)', () => {
