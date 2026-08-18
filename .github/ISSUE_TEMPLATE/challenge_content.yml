@@ -1,0 +1,45 @@
+name: New challenge proposal
+description: Propose a Human Challenge for the catalog (great first contribution, no code needed)
+labels: [challenge content, good first issue]
+body:
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [Thinking, Creativity, Writing, Memory, Decision Making, Problem Solving, Communication, Learning, Focus]
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty (1 easy - 5 hard)
+      options: ["1", "2", "3", "4", "5"]
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Title
+      placeholder: "20 uses for a pen"
+    validations:
+      required: true
+  - type: textarea
+    id: instructions
+    attributes:
+      label: Instructions
+      description: Must be doable without AI; concrete and self-contained.
+    validations:
+      required: true
+  - type: input
+    id: success
+    attributes:
+      label: Success condition
+      description: How does the user know they are done?
+    validations:
+      required: true
+  - type: textarea
+    id: reflection
+    attributes:
+      label: Two reflection questions
+    validations:
+      required: true

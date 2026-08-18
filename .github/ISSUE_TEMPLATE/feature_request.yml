@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose a feature (it will be checked against the product philosophy)
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user problem, not the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: philosophy
+    attributes:
+      label: Philosophy check
+      description: docs/product/vision.md — proposals conflicting with these are reshaped or declined
+      options:
+        - label: This does not add shame, fear, or guilt mechanics
+          required: true
+        - label: This does not add engagement-maximizing loops
+          required: true
+        - label: This does not collect or transmit personal data by default
+          required: true

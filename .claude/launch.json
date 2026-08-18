@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "human-mode-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "web", "--workspace", "@ai-detox/mobile", "--", "--port", "8123"],
+      "port": 8123,
+      "autoPort": false
+    }
+  ]
+}
