@@ -1,0 +1,24 @@
+{
+  "name": "@ai-detox/core",
+  "version": "0.1.0",
+  "description": "Pure TypeScript domain layer for AI Detox Center: dependency scoring, AI Gate, detox sessions, human challenges, local-first storage.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint src __tests__",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "eslint": "^9.21.0",
+    "typescript": "~5.7.3",
+    "typescript-eslint": "^8.24.0",
+    "vitest": "^3.0.5"
+  }
+}
