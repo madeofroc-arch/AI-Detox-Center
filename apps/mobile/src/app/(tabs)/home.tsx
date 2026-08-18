@@ -59,8 +59,11 @@ export default function Home() {
   // people it was written to protect. When there is nothing to credit, the line
   // points at the next concrete step instead.
   const strongestStrength = useMemo(() => {
+    // Guard on the ROUNDED value, not the raw one: an intensity of 0.004 is
+    // above zero but prints as "0%", which under a high band reads worse than
+    // the fallback line it was meant to replace.
     const best = dependency.factors
-      .filter((f) => f.role === 'reducer' && f.intensity > 0)
+      .filter((f) => f.role === 'reducer' && Math.round(f.intensity * 100) >= 1)
       .sort((a, b) => b.intensity - a.intensity)[0];
     if (best) {
       const percent = Math.round(best.intensity * 100);

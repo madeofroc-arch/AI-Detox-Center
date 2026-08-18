@@ -69,10 +69,20 @@ export function migrateAppData(raw: unknown): AppData {
   // how the upgrade reaches users who already have stored data — without this
   // step a recalibration would only ever apply to fresh installs (ADR-0005).
   const config = sanitizeScoringConfig(result.scoringConfig);
+  // Structural guard for the collections. The v0 step validates these, but it
+  // does not run when the stored document already claims the current schema —
+  // so a hand-edited or partially-written blob could previously deliver a
+  // non-array straight into the scoring path and white-screen every render.
+  const asArray = <T,>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
   return {
     ...emptyAppData(),
     ...result,
     schemaVersion: SCHEMA_VERSION,
+    events: asArray(result.events),
+    gateSessions: asArray(result.gateSessions),
+    detoxSessions: asArray(result.detoxSessions),
+    reflections: asArray(result.reflections),
+    challengeHistory: asArray(result.challengeHistory),
     scoringConfig: config ?? defaultScoringConfig(),
     settings: {
       onboardingComplete: result.settings?.onboardingComplete === true,

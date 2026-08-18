@@ -1,6 +1,6 @@
 # ADR-0005: Recalibrate the dependency score — capacity normalization and bounded reducer discount
 
-Status: Accepted · Date: 2026-08-19 · Supersedes the weighting in [ADR-0004](0004-deterministic-scoring-no-llm-core.md) (its determinism and no-LLM rules stand unchanged)
+Status: Accepted, with known defects (see issue #5) · Date: 2026-08-19 · Supersedes the weighting in [ADR-0004](0004-deterministic-scoring-no-llm-core.md) (its determinism and no-LLM rules stand unchanged)
 
 ## Context
 
@@ -93,6 +93,22 @@ Storage `SCHEMA_VERSION` stays 1: the document's *shape* did not change, only
 the meaning of numbers inside it. Config semantics and storage shape are
 versioned separately on purpose.
 
+## Known defects found after acceptance
+
+An adversarial review after this ADR was accepted confirmed that three of its
+claims are false as written, all traced to one structural cause: every
+behavioral intensity is a share of `aiUseCount`, so the model measures average
+severity per AI use rather than how much dependency there is. Consequences
+include a 90%-independent user scoring 77 "Running on AI", and a user who
+eliminates a whole dependency pattern being punished 67 → 96. The specific
+claims that do not hold — reflection cannot cross a band, padding cannot buy a
+band, and monotonicity — are documented with reproductions in **issue #5**,
+which also explains why the tests here could not observe any of it.
+
+The structural fixes in this ADR (bounded discount, capacity normalization,
+config-version delivery, single-homed `independentAttempt`) stand. The
+denominator choice does not, and needs its own ADR.
+
 ## Consequences
 
 Measured, against the eight baseline personas (dependency score, and the Home
@@ -122,9 +138,11 @@ Brain Score at 3 of 7 practice days):
   exactly 30 points, before and after.
 - **Home no longer shows a band alone.** The dial caption is paired with one
   additive fact drawn from the user's strongest reducer.
-- **Explainability improved.** Contributor points minus reducer points now
-  equals the displayed score exactly, and `points = intensity × maxPoints` holds
-  for every factor. The v1 clamp made both false (one persona's factors summed
+- **Explainability improved**, with one caveat found after acceptance.
+  Contributor points minus reducer points equals the displayed score exactly in
+  unrounded values, and `points = intensity × maxPoints` holds for every factor.
+  The UI rounds each row independently, so the *displayed* integers reconcile
+  with the dial only about half the time — see issue #6. The v1 clamp made both false (one persona's factors summed
   to −17.8 and displayed 0). The Brain Report can honestly claim the numbers add
   up, and does.
 - **No transcendental math in the scoring path.** The design considered response

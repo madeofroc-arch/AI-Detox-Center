@@ -24,7 +24,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
   prompts; challenge engine with 27-challenge seed catalog, deterministic
   daily selection, adaptive difficulty, and non-punitive streak/XP;
   local-first storage with versioned schema, migrations, and corrupt-data
-  backup. 73 unit tests.
+  backup. Unit tested throughout.
 - `@ai-detox/mobile`: Expo app (Android/iOS/Web) with onboarding, home,
   AI gate, detox, daily challenge, challenge result, reflection, brain
   report, progress, and settings screens; local AsyncStorage persistence;
@@ -77,8 +77,25 @@ project adheres to [Semantic Versioning](https://semver.org/).
   Values are unchanged; they were previously hardcoded in the algorithm body,
   which ADR-0004 forbids.
 
+### Known issues
+
+- The dependency score derives its behavioral factors as a share of AI uses,
+  which mislabels highly independent users and can punish genuine improvement.
+  Confirmed with reproductions in
+  [#5](https://github.com/madeofroc-arch/AI-Detox-Center/issues/5); needs a
+  follow-up ADR rather than a patch. Three claims in ADR-0005 do not hold as
+  written and are annotated there.
+- The Brain Report's rounded factor rows do not always sum to the dial
+  ([#6](https://github.com/madeofroc-arch/AI-Detox-Center/issues/6)). The copy
+  no longer claims they do.
+
 ### Fixed
 
+- The Home additive line could render "You handled 0% of these moments without
+  AI." under a high band; it now falls back to the encouraging line.
+- `migrateAppData` passed non-array collections straight through when the
+  stored document already claimed the current schema version, which could
+  white-screen every render. All collections are now structurally guarded.
 - Stored scoring configs are now actually upgraded. `ScoringConfig.version` was
   read by nothing — migrations keyed only on storage shape — so any
   recalibration would have reached new installs and nobody else.

@@ -69,7 +69,8 @@ work fully without any LLM API.
 5. **Scoring weights, band cut points, and Brain Score shares all live in
    `ScoringConfig`** — never hardcode them in algorithm bodies. Score output
    must keep its per-factor breakdown, and the breakdown must sum exactly to
-   the displayed score (ADR-0005 pins both). Reducers discount reliance by at
+   the displayed score in unrounded points (ADR-0005 pins both; note the
+   rounded values shown in the UI do not always reconcile — see issue #5). Reducers discount reliance by at
    most `reducerMaxDiscount`; they never subtract freely. Changing scoring
    semantics means bumping `SCORING_CONFIG_VERSION` — `sanitizeScoringConfig`
    rejects stale versions, which is how the change reaches existing users.

@@ -58,7 +58,7 @@ to make itself less necessary.
 - **AI Dependency Score** — deterministic, transparent, config-driven; built
   from behavior patterns (did you try first? who decided?), never from raw
   usage time. Heavy but deliberate use scores low by design. Every score comes
-  with a per-factor breakdown that adds up to exactly the number on the dial.
+  with a per-factor breakdown explaining how it was reached.
 - **AI Gate** — a self-directed pause before using AI: name your intention,
   optionally attempt first for three minutes, then choose. The gate never
   blocks and never shames.

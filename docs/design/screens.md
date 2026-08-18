@@ -79,8 +79,9 @@ lists its empty/error/loading state. Copy shown is canonical.
 - "How this is calculated" -> methodology text derived from core config. It must
   state what the formula actually does: factors add up to reliance, and the
   lowering factors discount that reliance by at most `reducerMaxDiscount`,
-  never erase it. The factor numbers add up to exactly the score on the dial —
-  the report says so, and a test pins it.
+  never erase it. The factor numbers add up to the score on the dial in
+  unrounded points; the UI rounds each row, so the copy must not promise the
+  displayed integers reconcile exactly.
 - Empty: "Not enough data yet — the report unlocks after about N recorded uses"
   where N is `minEventsForScore` read from config (never hardcoded in copy).
 

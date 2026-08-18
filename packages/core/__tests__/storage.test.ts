@@ -134,3 +134,31 @@ describe('AppRepository', () => {
     expect(json).toContain('\n');
   });
 });
+
+describe('structural guards on stored collections', () => {
+  it('replaces a non-array collection instead of passing it into the scoring path', () => {
+    // Regression: a blob already claiming the current schemaVersion skipped the
+    // v0 validation, so `events: "oops"` reached computeDependencyScore and
+    // threw during render on every launch.
+    const corrupt = { ...emptyAppData(), schemaVersion: SCHEMA_VERSION, events: 'oops' };
+    const migrated = migrateAppData(corrupt);
+    expect(Array.isArray(migrated.events)).toBe(true);
+    expect(migrated.events).toEqual([]);
+  });
+
+  it('guards every collection, not just events', () => {
+    const corrupt = {
+      ...emptyAppData(),
+      schemaVersion: SCHEMA_VERSION,
+      gateSessions: 42,
+      detoxSessions: null,
+      reflections: 'nope',
+      challengeHistory: { not: 'an array' },
+    };
+    const migrated = migrateAppData(corrupt);
+    for (const key of ['gateSessions', 'detoxSessions', 'reflections', 'challengeHistory'] as const) {
+      expect(Array.isArray(migrated[key]), key).toBe(true);
+      expect(migrated[key]).toEqual([]);
+    }
+  });
+});
