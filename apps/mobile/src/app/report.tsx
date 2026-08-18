@@ -64,10 +64,15 @@ export default function Report() {
 
       <Card alt>
         <Text style={[type.caption, { color: colors.inkMuted }]}>
-          How this works: each factor is measured from your last {result.windowDays} days of
-          recorded uses ({result.eventCount} events, {result.aiUseCount} with AI), weighted by an
-          adjustable configuration, and summed. Nothing here judges how MUCH you use AI — only
-          the patterns around it. Computed entirely on this device.
+          How this works: each factor above is measured from your last {result.windowDays} days of
+          recorded uses ({result.eventCount} moments, {result.aiUseCount} of them with AI). The
+          factors that add up form your reliance; the ones that lower it can reduce that reliance
+          by up to {Math.round(data.scoringConfig.reducerMaxDiscount * 100)}%, never erase it. The
+          numbers above add up to exactly the score on the dial.
+        </Text>
+        <Text style={[type.caption, { color: colors.inkMuted, marginTop: spacing.md }]}>
+          Nothing here judges how MUCH you use AI — only the patterns around it. Heavy, deliberate
+          use where you think first scores low by design. Computed entirely on this device.
         </Text>
       </Card>
     </Screen>

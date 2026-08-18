@@ -61,7 +61,9 @@ uses surface contrast instead of shadows. Never heavy drop shadows.
   default. Loading state = subtle opacity + spinner. Disabled = 40% opacity.
 - **Card** — surface bg, radius `lg`, padding 16-20, optional hairline border.
 - **ScoreDial** — circular progress ring for Brain Score; ring in accent, track
-  in `line`; center: display number + caption label. No red zones.
+  in `line`; center: display number + caption label. No red zones — no band,
+  however high, is ever rendered in `danger`. Optional `footnote` under the
+  caption carries one additive fact, so a band label never stands alone.
 - **FactorBar** — horizontal bar per scoring factor: label (micro), value bar
   (accent for reducers, amber for contributors), plain-language note.
 - **ProgressRing / ProgressBar** — accent on `line` track.

@@ -8,6 +8,8 @@ interface ScoreDialProps {
   value: number | null;
   label: string;
   caption?: string;
+  /** An additive fact shown under the caption, so a band never stands alone. */
+  footnote?: string;
   size?: number;
 }
 
@@ -16,7 +18,7 @@ interface ScoreDialProps {
  * color deepens with the value; the number carries the information
  * (color-independence, see docs/design/accessibility.md).
  */
-export function ScoreDial({ value, label, caption, size = 160 }: ScoreDialProps) {
+export function ScoreDial({ value, label, caption, footnote, size = 160 }: ScoreDialProps) {
   const { colors } = useTheme();
   const hasValue = value !== null;
   return (
@@ -42,6 +44,11 @@ export function ScoreDial({ value, label, caption, size = 160 }: ScoreDialProps)
       {caption ? (
         <Text style={[type.caption, { color: colors.inkMuted, textAlign: 'center' }]}>
           {caption}
+        </Text>
+      ) : null}
+      {footnote ? (
+        <Text style={[type.caption, { color: colors.accent, textAlign: 'center' }]}>
+          {footnote}
         </Text>
       ) : null}
     </View>

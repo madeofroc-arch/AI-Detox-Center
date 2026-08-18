@@ -13,6 +13,7 @@ This file is the index and the current-state summary.
 | Domain layer | `@ai-detox/core`: pure TS, zero platform deps | [ADR-0002](adr/0002-monorepo-npm-workspaces.md) |
 | Storage | Local-first via `StoragePort`; AsyncStorage adapter in app | [ADR-0003](adr/0003-local-first-storage.md) |
 | Scoring | Deterministic, config-driven; no LLM in core paths | [ADR-0004](adr/0004-deterministic-scoring-no-llm-core.md) |
+| Score calibration | Capacity-normalized reliance; reducers as a bounded discount | [ADR-0005](adr/0005-dependency-score-recalibration.md) |
 | Testing | Vitest for core; typecheck + build gate for app | [ADR-0002](adr/0002-monorepo-npm-workspaces.md) |
 | CI | GitHub Actions: lint, typecheck, test, build | — |
 | License | MIT | — |

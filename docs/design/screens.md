@@ -15,6 +15,14 @@ lists its empty/error/loading state. Copy shown is canonical.
 ## 2. Home (`/`)
 - Header: date + short greeting (time-of-day, neutral).
 - ScoreDial card: Brain Score + caption "Tap to see why" -> Brain Report.
+  When a band is shown here it must be paired with one additive line. That line
+  MUST always resolve — a reducer-only version of it goes blank for exactly the
+  users facing the highest band and the lowest headline, leaving a bare verdict
+  for the people the rule exists to protect. Order: strongest reducer with any
+  signal ("You handled 34% of these moments without AI."), else recent practice
+  ("You practised on 3 of the last 7 days."), else the next concrete step ("One
+  gate where you try first will start moving this."). A band label alone on the
+  first screen reads as a verdict.
 - Today's Challenge card: category tag, title, duration, difficulty dots,
   primary action "Open".
 - Quick actions row: "AI Gate" and "Detox" secondary buttons.
@@ -61,12 +69,20 @@ lists its empty/error/loading state. Copy shown is canonical.
   device."
 
 ## 8. Brain Report (`/report`)
-- ScoreDial large + band label: Independent / Balanced / Leaning on AI /
-  Dependent (calm wording, no colors-of-doom; all bands in ink/accent).
+- ScoreDial large + band label: Mostly your own / Balanced / Leaning on AI /
+  Running on AI (calm wording, no colors-of-doom; all bands in ink/accent).
+  The bottom band describes behavior rather than claiming an identity — an
+  identity compliment there makes losing it feel like demotion when a score
+  sharpens (see ADR-0005).
 - FactorBar list: each factor with plain sentence, e.g. "Delegation — 3 of
   12 uses this week handed the whole task to AI."
-- "How this is calculated" -> expandable methodology text (from core config).
-- Empty: "Not enough data yet — the report unlocks after ~5 recorded uses."
+- "How this is calculated" -> methodology text derived from core config. It must
+  state what the formula actually does: factors add up to reliance, and the
+  lowering factors discount that reliance by at most `reducerMaxDiscount`,
+  never erase it. The factor numbers add up to exactly the score on the dial —
+  the report says so, and a test pins it.
+- Empty: "Not enough data yet — the report unlocks after about N recorded uses"
+  where N is `minEventsForScore` read from config (never hardcoded in copy).
 
 ## 9. Progress (`/progress`)
 - Week summary card: challenges + independent attempts (additive copy).

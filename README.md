@@ -53,7 +53,8 @@ to make itself less necessary.
 
 - **AI Dependency Score** — deterministic, transparent, config-driven; built
   from behavior patterns (did you try first? who decided?), never from raw
-  usage time. Every score comes with a per-factor explanation.
+  usage time. Heavy but deliberate use scores low by design. Every score comes
+  with a per-factor breakdown that adds up to exactly the number on the dial.
 - **AI Gate** — a self-directed pause before using AI: name your intention,
   optionally attempt first for three minutes, then choose. The gate never
   blocks and never shames.
@@ -98,7 +99,7 @@ More: [docs/architecture/technical-decisions.md](docs/architecture/technical-dec
 
 <table>
   <tr>
-    <td width="25%"><img src="docs/assets/screenshots/01-home.png" alt="Home screen showing a Brain Score of 77 and today's challenge"></td>
+    <td width="25%"><img src="docs/assets/screenshots/01-home.png" alt="Home screen showing the Brain Score, AI reliance band and today's challenge"></td>
     <td width="25%"><img src="docs/assets/screenshots/02-report.png" alt="Brain Report showing the AI reliance score broken down by factor"></td>
     <td width="25%"><img src="docs/assets/screenshots/05-gate.png" alt="AI Gate asking what you are about to ask AI"></td>
     <td width="25%"><img src="docs/assets/screenshots/04-history.png" alt="Progress history listing challenges, gates and detox sessions"></td>

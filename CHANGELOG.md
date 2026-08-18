@@ -39,9 +39,49 @@ project adheres to [Semantic Versioning](https://semver.org/).
   a dependency-free PNG encoder rather than committed as opaque binaries.
 - Documentation screenshots generated from demo data (`npm run screenshots`)
   via headless Chrome over the DevTools Protocol, embedded in the README.
+- Property-based test coverage for the scoring engine: determinism across JSON
+  round-trips and deep clones, range safety, the factor-sum identity, and
+  monotonicity, all fuzzed over a fixed-seed corpus so failures reproduce.
+
+### Changed
+
+- **Recalibrated the AI Dependency Score** (config semantics version 2, see
+  [ADR-0005](docs/architecture/adr/0005-dependency-score-recalibration.md)).
+  Contributor signals now form *reliance*, normalized by the capacity that is
+  actually attainable, and reducers *discount* that reliance by at most 45%
+  instead of subtracting from it freely.
+
+  This is a measurement fix, not a stricter policy. Some signals were
+  cancelling each other out: the same `attemptedFirst` bit was scored twice with
+  opposite signs, so below roughly 40% delegation the model was effectively
+  rewarding people for handing tasks over. Behavior that a reasonable person
+  would call moderate reliance was reported as "Independent", three very
+  different users all collapsed onto a score of 0, and the top of the scale was
+  mathematically unreachable (80 of 100).
+
+  **Your number will read differently after this update even though your
+  behavior has not changed.** A mid-journey profile that previously scored 23
+  now scores around 52. Heavy but deliberate use — where you think first — still
+  scores low, by design and by test.
+
+- Band captions: the lowest band is now **"Mostly your own"** rather than
+  "Independent". It describes what you are doing instead of claiming an
+  identity, so a sharper score costs a description rather than a compliment.
+- Reflections can no longer move the score across a band on their own. Logging
+  activity inside the app is an awareness signal, not a way to buy a better
+  number (previously it was worth a full band).
+- The report is unlocked after 10 recorded moments rather than 5; six delegated
+  events used to produce a confident verdict that outranked users with ten times
+  the evidence.
+- Band cut points and the Brain Score composition moved into `ScoringConfig`.
+  Values are unchanged; they were previously hardcoded in the algorithm body,
+  which ADR-0004 forbids.
 
 ### Fixed
 
+- Stored scoring configs are now actually upgraded. `ScoringConfig.version` was
+  read by nothing — migrations keyed only on storage shape — so any
+  recalibration would have reached new installs and nobody else.
 - `dist` output is now importable from plain Node ESM: relative specifiers get
   explicit `.js` extensions in a post-build step, while source stays
   extensionless for Metro. Previously any non-bundler consumer (a future CLI or

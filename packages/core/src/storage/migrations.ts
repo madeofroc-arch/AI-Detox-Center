@@ -3,8 +3,7 @@
  * corrupt input is NOT silently discarded — the repository backs it up and
  * reports a warning (no silent data loss, ever).
  */
-import { sanitizeScoringConfig } from '../ai-detox/scoring/config';
-import { DEFAULT_SCORING_CONFIG } from '../ai-detox/scoring/config';
+import { defaultScoringConfig, sanitizeScoringConfig } from '../ai-detox/scoring/config';
 import type { AppData } from './schema';
 import { SCHEMA_VERSION, emptyAppData } from './schema';
 
@@ -63,15 +62,18 @@ export function migrateAppData(raw: unknown): AppData {
 
   // Post-migration hardening of the pieces core actively interprets.
   const result = data as unknown as AppData;
+  // Scoring SEMANTICS are versioned separately from storage SHAPE: the stored
+  // document's shape is unchanged when weights change meaning, so this is a
+  // config-version concern, not a schemaVersion one. sanitizeScoringConfig
+  // rejects any config whose version is not current, and rejection is exactly
+  // how the upgrade reaches users who already have stored data — without this
+  // step a recalibration would only ever apply to fresh installs (ADR-0005).
   const config = sanitizeScoringConfig(result.scoringConfig);
   return {
     ...emptyAppData(),
     ...result,
     schemaVersion: SCHEMA_VERSION,
-    scoringConfig: config ?? {
-      ...DEFAULT_SCORING_CONFIG,
-      weights: { ...DEFAULT_SCORING_CONFIG.weights },
-    },
+    scoringConfig: config ?? defaultScoringConfig(),
     settings: {
       onboardingComplete: result.settings?.onboardingComplete === true,
       focusCategories: Array.isArray(result.settings?.focusCategories)

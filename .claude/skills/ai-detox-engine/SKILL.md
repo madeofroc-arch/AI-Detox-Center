@@ -40,20 +40,22 @@ co-owned with open-source-engineer), feature scope (product-architect).
 
 ## Scoring framework
 
-Conceptual model (weights live in a versioned, JSON-serializable
-`ScoringConfig` — never hardcoded in the algorithm body):
+Conceptual model (all weights, band cut points and normalization parameters
+live in a versioned, JSON-serializable `ScoringConfig` — never hardcoded in the
+algorithm body). Contributors form *reliance*; reducers *discount* it:
 
-    AI Dependency Score =
-        + frequency
-        + immediacy
-        + delegation
-        + lack_of_attempt
-        + emotional_dependency
-        - independent_attempt
-        - reflection
-        - deliberate_usage
+    behaviorCapacity = immediacy + lackOfAttempt + max(delegation, emotionalDependency)
+    capacity         = frequency + behaviorCapacity
+    reliance         = (100 / capacity) * SUM(contributor weight * observed fraction)
+    discount         = reliance * reducerMaxDiscount * weighted reducer share
+    score            = round(reliance - discount)
 
 Rules:
+
+0. **Reducers discount, they never cancel.** Bounded by `reducerMaxDiscount`
+   (< 1). A plain weighted subtraction let complements cancel to zero, made
+   three very different users indistinguishable, and even inverted the
+   delegation axis below ~44% (see ADR-0005). Do not reintroduce it.
 
 1. **Deterministic**: same events + same config + same reference time =
    identical output. No `Date.now()`, no randomness inside compute functions.
@@ -65,6 +67,19 @@ Rules:
    classification, reflection support, or personalization - it must never
    produce or control core score data, and all core features must work with
    no LLM API available.
+5. **One signal, one home.** Never let two factors read the same underlying
+   bit with opposite signs — that is what compressed the v1 range. Check any
+   new factor against the existing eight before adding it.
+6. **The factors must add up to the score.** `points = intensity * maxPoints`
+   for every factor, and contributors minus reducers equals the displayed
+   score. The Brain Report states this to the user, and tests pin it.
+7. **No transcendental math.** Only +, -, *, / (exact in IEEE-754). `Math.pow`
+   and friends are implementation-approximated per ECMA-262 and can differ in
+   the last ULP between JS engines, which would break determinism across iOS
+   and web.
+8. **Calibrate the algorithm to the bands, never the bands to the algorithm.**
+   Cut points are the contract with the user. If a change crowds a band, fix
+   the weights.
 
 ## Inputs
 
@@ -91,7 +106,10 @@ Rules:
 
 ## Prohibitions
 
-- Never implement "usage time = badness".
+- Never implement "usage time = badness". A heavy but deliberate user who
+  attempts first must stay in the lowest band — there is a test for this.
+- Never let in-app activity (reflections logged, sessions started) move the
+  score across a band. That is an engagement loop, which principle 8 forbids.
 - Never make scoring non-deterministic or LLM-dependent.
 - Never hardcode weights inside algorithms.
 - Never punish the user in the domain model (no penalty mechanics for

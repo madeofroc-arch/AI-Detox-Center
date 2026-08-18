@@ -66,8 +66,13 @@ work fully without any LLM API.
    The single `AppData` document is schema-versioned; changing its shape
    requires a migration in `migrations.ts` + tests. Corrupt data gets backed
    up, never silently dropped.
-5. **Scoring weights live in `ScoringConfig`** — never hardcode weights in
-   algorithm bodies. Score output must keep its per-factor breakdown.
+5. **Scoring weights, band cut points, and Brain Score shares all live in
+   `ScoringConfig`** — never hardcode them in algorithm bodies. Score output
+   must keep its per-factor breakdown, and the breakdown must sum exactly to
+   the displayed score (ADR-0005 pins both). Reducers discount reliance by at
+   most `reducerMaxDiscount`; they never subtract freely. Changing scoring
+   semantics means bumping `SCORING_CONFIG_VERSION` — `sanitizeScoringConfig`
+   rejects stale versions, which is how the change reaches existing users.
 6. **Business rules never live in components.** Screens read the zustand
    store (`apps/mobile/src/state/store.ts`), call core functions, render.
    Styles come from theme tokens (`apps/mobile/src/theme/tokens.ts`), never

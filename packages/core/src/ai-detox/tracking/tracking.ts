@@ -35,6 +35,15 @@ export interface UsageStats {
   /** Over ALL events. */
   fractionAttemptedFirst: number;
   fractionWithReflection: number;
+  /**
+   * Moments resolved with no AI at all, over ALL events. This is the only
+   * independence signal no contributor factor reads, which is why scoring
+   * uses it rather than fractionAttemptedFirst (that one shares its source
+   * bit with the lackOfAttempt contributor — see ADR-0005).
+   */
+  fractionResolvedWithoutAI: number;
+  /** Reflections attached to AI uses, over AI USES (not all events). */
+  fractionAIUsesWithReflection: number;
 }
 
 export function computeUsageStats(
@@ -72,6 +81,11 @@ export function computeUsageStats(
     fractionWithReflection: frac(
       events.filter((e) => e.reflectionId !== undefined).length,
       total,
+    ),
+    fractionResolvedWithoutAI: frac(total - nAI, total),
+    fractionAIUsesWithReflection: frac(
+      aiUses.filter((e) => e.reflectionId !== undefined).length,
+      nAI,
     ),
   };
 }

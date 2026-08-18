@@ -6,7 +6,7 @@ import type { GateSession } from '../ai-detox/ai-gate/gate';
 import type { DetoxSession } from '../ai-detox/detox/detox';
 import type { ReflectionEntry } from '../ai-detox/reflection/reflection';
 import type { ScoringConfig } from '../ai-detox/scoring/config';
-import { DEFAULT_SCORING_CONFIG } from '../ai-detox/scoring/config';
+import { defaultScoringConfig } from '../ai-detox/scoring/config';
 import type { AIUsageEvent } from '../ai-detox/tracking/types';
 import type { ChallengeAttempt, ChallengeCategory } from '../challenges/types';
 
@@ -36,7 +36,7 @@ export function emptyAppData(): AppData {
     detoxSessions: [],
     reflections: [],
     challengeHistory: [],
-    scoringConfig: { ...DEFAULT_SCORING_CONFIG, weights: { ...DEFAULT_SCORING_CONFIG.weights } },
+    scoringConfig: defaultScoringConfig(),
     settings: { onboardingComplete: false, focusCategories: [] },
   };
 }
