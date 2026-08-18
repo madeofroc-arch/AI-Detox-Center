@@ -4,6 +4,11 @@ node_modules/
 # builds
 dist/
 build/
+
+# ...but the skill's generated artifacts ARE the deliverable: people copy them
+# straight off GitHub into ChatGPT, Gemini and their own AGENTS.md.
+!skill/dist/
+!skill/dist/**
 .expo/
 web-build/
 expo-env.d.ts
