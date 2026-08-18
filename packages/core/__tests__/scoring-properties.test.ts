@@ -106,7 +106,10 @@ describe('properties that hold for every input', () => {
         (total, f) => total + (f.role === 'contributor' ? f.points : -f.points),
         0,
       );
-      expect(Math.round(Math.min(100, Math.max(0, sum)))).toBe(result.score);
+      // NO clamp here. Applying the same clamp to the sum before comparing is
+      // what let this test pass while the breakdown disagreed with the dial in
+      // 4.7% of corpora by up to 14 points: the clamp erased the evidence.
+      expect(Math.round(sum)).toBe(result.score);
       for (const factor of result.factors) {
         expect(factor.points).toBeCloseTo(factor.intensity * factor.maxPoints, 9);
       }

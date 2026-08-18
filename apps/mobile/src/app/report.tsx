@@ -72,8 +72,10 @@ export default function Report() {
           point or two from the dial.
         </Text>
         <Text style={[type.caption, { color: colors.inkMuted, marginTop: spacing.md }]}>
-          Nothing here judges how MUCH you use AI — only the patterns around it. Heavy, deliberate
-          use where you think first scores low by design. Computed entirely on this device.
+          What counts is how much thinking you handed over, not how much you used AI. Heavy,
+          deliberate use where you think first scores low by design — but handing over twice as
+          many whole tasks does count as twice as much. Early on the number reads low while the
+          {' '}{result.windowDays} days fill up. Computed entirely on this device.
         </Text>
       </Card>
     </Screen>

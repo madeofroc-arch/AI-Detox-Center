@@ -119,15 +119,31 @@ export function computeDependencyScore(
   const windowed = eventsInWindow(events, nowIso, config.windowDays);
   const stats = computeUsageStats(windowed, config.windowDays);
   const w = config.weights;
-  const days = config.windowDays;
 
-  const capacity =
-    w.frequency + w.immediacy + w.lackOfAttempt + Math.max(w.delegation, w.emotionalDependency);
+  // Every contributor is independently saturable now that they are rates, so
+  // the ceiling is the full sum. Using max(delegation, emotionalDependency) was
+  // correct while those were shares of one partition; as rates a user can be
+  // saturated on both at once, and reliance reached 122.
+  const capacity = CONTRIBUTOR_FACTORS.reduce((sum, f) => sum + w[f], 0);
   const scale = capacity > 0 ? 100 / capacity : 0;
 
-  /** A dependent act's rate per day, against the rate that counts as saturated. */
+  // The denominator is the FIXED window, never the observed span. A span-based
+  // denominator is not a function of behavior: removing events shrinks the span
+  // and therefore RAISES every rate, so a user who stopped doing something
+  // could score worse. Monotonicity is a correctness property and wins; the
+  // cost is that a brand-new user's number starts conservative and converges
+  // upward as the window fills, which the report copy states plainly.
+  const observedDays = config.windowDays;
+
+  /**
+   * A dependent act's rate per day against its saturation rate. Deliberately
+   * NOT clamped per factor: clamping each axis broke monotonicity, because once
+   * the heavier axis pinned at 1.0 a conversion into it gained nothing while
+   * the lighter axis lost its whole weight. The total is clamped instead, which
+   * is monotone.
+   */
   const rate = (count: number, factor: keyof typeof config.saturation): number =>
-    clamp01(count / days / config.saturation[factor]);
+    count / observedDays / config.saturation[factor];
 
   const intensities: Record<ScoringFactor, number> = {
     // Contributors: how MUCH dependent behavior there was.
@@ -136,15 +152,25 @@ export function computeDependencyScore(
     delegation: rate(stats.counts.delegation, 'delegation'),
     lackOfAttempt: rate(stats.counts.lackOfAttempt, 'lackOfAttempt'),
     emotionalDependency: rate(stats.counts.emotionalDependency, 'emotionalDependency'),
-    // Reducers: the SHAPE of what you did. independentAttempt reads a signal no
-    // contributor reads (see property 4 above).
+    // Reducers: the SHAPE of what you did, all over the same denominator (all
+    // moments). Mixing denominators let a strictly worse change -- turning an
+    // independently-resolved moment into a deliberate AI use -- raise a reducer
+    // faster than it raised reliance, and so lower the score.
     independentAttempt: clamp01(stats.fractionResolvedWithoutAI),
-    reflection: clamp01(stats.fractionAIUsesWithReflection),
-    deliberateUsage: clamp01(stats.fractionDeliberate),
+    reflection: clamp01(stats.fractionWithReflection),
+    deliberateUsage: clamp01(stats.fractionMomentsDeliberate),
   };
 
+  // Scale every contributor by the same factor when the raw total exceeds the
+  // scale, so the breakdown still sums to the dial after clamping.
+  const rawReliance = CONTRIBUTOR_FACTORS.reduce(
+    (sum, f) => sum + scale * w[f] * intensities[f],
+    0,
+  );
+  const clampFactor = rawReliance > 100 ? 100 / rawReliance : 1;
+
   const contributors: FactorScore[] = CONTRIBUTOR_FACTORS.map((factor) => {
-    const maxPoints = scale * w[factor];
+    const maxPoints = scale * w[factor] * clampFactor;
     return {
       factor,
       role: 'contributor' as const,
@@ -156,6 +182,10 @@ export function computeDependencyScore(
     };
   });
 
+  // Everything downstream derives from the SUMMED points, never from a
+  // separately-computed total: adding the same quantities in a different
+  // association order differs in the last bits, which was enough to make the
+  // dial disagree with its own breakdown by a point near a .5 boundary.
   const reliance = contributors.reduce((sum, f) => sum + f.points, 0);
 
   // Reducer weights are relative shares of the allowed discount.
@@ -190,9 +220,9 @@ export function computeDependencyScore(
   }
 
   const discount = reducers.reduce((sum, f) => sum + f.points, 0);
-  // Provably within [0, 100]: reliance <= 100 by capacity normalization and
-  // discount < reliance because reducerMaxDiscount < 1. The clamp is kept as
-  // defence in depth against a hand-edited config.
+  // reliance <= 100 by the clamp factor above, and discount < reliance because
+  // reducerMaxDiscount < 1, so this stays in range; the clamp guards a
+  // hand-edited config.
   const score = Math.round(Math.min(100, Math.max(0, reliance - discount)));
 
   return { status: 'ok', score, band: bandForScore(score, config), ...base };

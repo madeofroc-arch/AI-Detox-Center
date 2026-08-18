@@ -80,16 +80,18 @@ export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
   minEventsForScore: 10,
   reducerMaxDiscount: 0.3,
   // Stated so they can be argued with:
-  //   delegation 0.7    handing over a whole task most days
-  //   lackOfAttempt 4   four AI uses a day with no attempt first
-  //   immediacy 2        reaching for AI instantly twice a day
+  //   delegation 1           handing over a whole task every day
+  //   lackOfAttempt 2        two AI uses a day with no attempt first
+  //   immediacy 3            reaching for AI instantly three times a day
   //   emotionalDependency 1  seeking reassurance daily
-  //   frequency 8       sheer volume, deliberately the weakest axis
+  //   frequency 8            sheer volume, deliberately the weakest axis
+  // Intensities are NOT capped at these rates -- exceeding one keeps adding,
+  // and only the total is bounded. See scoring.ts for why.
   saturation: {
     frequency: 8,
-    immediacy: 2,
-    delegation: 0.7,
-    lackOfAttempt: 4,
+    immediacy: 3,
+    delegation: 1,
+    lackOfAttempt: 2,
     emotionalDependency: 1,
   },
   bandIndependentMax: 25,

@@ -23,7 +23,12 @@ export function eventsInWindow(
  * share of AI uses rises when you stop doing something else (ADR-0006).
  */
 export interface DependentActCounts {
-  /** AI uses reached for with no pause. */
+  /**
+   * AI uses reached for with no pause. Counts the `proceededImmediately` FLAG
+   * only. Counting the instant_help CATEGORY here too meant that converting
+   * such an act into a whole-task delegation — strictly worse — removed it from
+   * this axis, so worsening behavior could lower the score (ADR-0006).
+   */
   immediacy: number;
   /** Whole tasks or decisions handed to AI. */
   delegation: number;
@@ -62,6 +67,13 @@ export interface UsageStats {
   fractionResolvedWithoutAI: number;
   /** Reflections attached to AI uses, over AI USES (not all events). */
   fractionAIUsesWithReflection: number;
+  /**
+   * Deliberate, tool-like AI uses over ALL moments. Scoring uses this rather
+   * than the share of AI uses: sharing a denominator with AI uses meant that
+   * turning an independently-resolved moment into a deliberate AI use raised
+   * the reducer and LOWERED the score (ADR-0006).
+   */
+  fractionMomentsDeliberate: number;
 }
 
 export function computeUsageStats(
@@ -82,8 +94,7 @@ export function computeUsageStats(
   const frac = (n: number, d: number): number => (d === 0 ? 0 : n / d);
 
   const counts: DependentActCounts = {
-    immediacy: aiUses.filter((e) => e.proceededImmediately || kindOf(e.category) === 'immediate')
-      .length,
+    immediacy: aiUses.filter((e) => e.proceededImmediately).length,
     delegation: byKind.delegation,
     lackOfAttempt: aiUses.filter((e) => !e.attemptedFirst).length,
     emotionalDependency: byKind.emotional,
@@ -110,6 +121,7 @@ export function computeUsageStats(
       total,
     ),
     fractionResolvedWithoutAI: frac(total - nAI, total),
+    fractionMomentsDeliberate: frac(byKind.deliberate, total),
     fractionAIUsesWithReflection: frac(
       aiUses.filter((e) => e.reflectionId !== undefined).length,
       nAI,

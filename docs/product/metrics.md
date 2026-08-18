@@ -8,10 +8,12 @@ not growing engagement.
 **Independent Attempt Rate** — share of AI-usage events where the user
 attempted first (self-reported via gate/tracking). Success = trending up.
 
-This is deliberately the most responsive lever in the dependency score: it has
-exactly one home in the model (`lackOfAttempt`) and carries the largest single
-weight alongside delegation. Sweeping it from 0% to 100% moves the score by more
-than a band. See [ADR-0005](../architecture/adr/0005-dependency-score-recalibration.md).
+This is deliberately one of the most responsive levers in the dependency score:
+it has exactly one home in the model (`lackOfAttempt`) and carries the largest
+single weight alongside delegation. How far it moves the score depends on how
+much AI use there is to attempt first — the factor counts acts per day, so a
+light user has less of it to move. See
+[ADR-0006](../architecture/adr/0006-score-counts-dependent-acts-not-shares.md).
 
 ## Supporting metrics (all computed locally, shown to the user)
 
@@ -20,8 +22,12 @@ than a band. See [ADR-0005](../architecture/adr/0005-dependency-score-recalibrat
 - Challenge completion consistency (weekly active practice, not daily guilt)
 - Capability spread: number of categories practiced per month
 - Reflection rate: share of sessions with a reflection attached — an awareness
-  signal, never a proxy for independence. Its authority in the score is capped
-  precisely so that logging reflections cannot buy a better band.
+  signal, never a proxy for independence. Its authority in the score is bounded
+  to a small fraction of a band width, so logging reflections cannot
+  meaningfully improve the number. It is deliberately *not* claimed that it can
+  never cross a cut point: any factor with non-zero influence can, if the user
+  happens to be standing on one, and asserting otherwise once produced a test
+  that passed while the property was false.
 
 ## Anti-metrics (we explicitly do NOT optimize these)
 

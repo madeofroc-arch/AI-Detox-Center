@@ -11,9 +11,20 @@ interface ProgressBarProps {
   valueText?: string;
   /** amber for contributing factors, accent (default) for positives. */
   tone?: 'accent' | 'amber';
+  /**
+   * What a screen reader should say. Defaults to a percentage of the bar, which
+   * is only honest when `fraction` really is a share of something nameable.
+   */
+  announce?: string;
 }
 
-export function ProgressBar({ fraction, label, valueText, tone = 'accent' }: ProgressBarProps) {
+export function ProgressBar({
+  fraction,
+  label,
+  valueText,
+  tone = 'accent',
+  announce,
+}: ProgressBarProps) {
   const { colors } = useTheme();
   const clamped = Math.min(1, Math.max(0, fraction));
   const fill = tone === 'amber' ? colors.amber : colors.accent;
@@ -32,7 +43,9 @@ export function ProgressBar({ fraction, label, valueText, tone = 'accent' }: Pro
         </View>
       ) : null}
       <View
-        accessibilityLabel={label ? `${label}: ${Math.round(clamped * 100)} percent` : undefined}
+        accessibilityLabel={
+          announce ?? (label ? `${label}: ${Math.round(clamped * 100)} percent` : undefined)
+        }
         style={{
           height: 8,
           borderRadius: radius.full,

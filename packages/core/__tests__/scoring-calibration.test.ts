@@ -207,15 +207,25 @@ describe('reducers discount but never cancel', () => {
     expect(discount).toBeLessThanOrEqual(reliance * config.reducerMaxDiscount + 1e-9);
   });
 
-  it('reflection alone cannot move a user across a band (no engagement loop)', () => {
-    // Principle 8: using the app more must not improve your number materially.
-    // The old model moved this fixture a full band (71 -> 56) on reflection alone.
-    const none = rep(42, () => ev('direct_delegation', { immediate: true }));
-    const all = rep(42, () => ev('direct_delegation', { immediate: true, reflect: true }));
-    const a = score(none);
-    const b = score(all);
-    expect(b.score!).toBeLessThan(a.score!); // it still counts for something
-    expect(a.band).toBe(b.band); // but never buys a band
+  it('reflection is bounded to a fraction of a band, and cannot be relied on to stay inside one', () => {
+    // Deliberately NOT `expect(a.band).toBe(b.band)`. The previous version of
+    // this test asserted exactly that, and passed only because its fixture sat
+    // 6 points clear of a cut point -- the "pinned far from the boundary"
+    // pattern that let the original bug through. Any factor with non-zero
+    // influence can cross a cut point if the user is standing on one, so the
+    // guarantee is stated as a magnitude derived from config.
+    const reducerTotal =
+      config.weights.independentAttempt + config.weights.reflection + config.weights.deliberateUsage;
+    const ceiling = 100 * config.reducerMaxDiscount * (config.weights.reflection / reducerTotal);
+    expect(ceiling).toBeLessThan((config.bandBalancedMax - config.bandIndependentMax) / 2);
+
+    for (const n of [12, 28, 42]) {
+      const none = rep(n, () => ev('direct_delegation', { immediate: true }));
+      const all = rep(n, () => ev('direct_delegation', { immediate: true, reflect: true }));
+      const swing = score(none).score! - score(all).score!;
+      expect(swing).toBeGreaterThan(0); // it still counts for something
+      expect(swing).toBeLessThanOrEqual(ceiling + 1);
+    }
   });
 
   it('attempting first remains the most responsive lever (the north-star)', () => {

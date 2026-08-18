@@ -75,11 +75,18 @@ project adheres to [Semantic Versioning](https://semver.org/).
   over seven tasks is half as much outsourced thinking as fourteen), and
   mid-journey scores rise again, so the Home number falls for those users.
 
+  An adversarial review of the first attempt at this fix found that it had
+  reintroduced the same class of bug by three other routes — a per-factor clamp,
+  a capacity term carried over from the share model, and an observation window
+  derived from the events themselves. All three are described in the ADR, and
+  a dedicated ~8,800-comparison monotonicity sweep now guards against a fourth.
+
 - **Recalibrated the AI Dependency Score** (config semantics version 2, see
   [ADR-0005](docs/architecture/adr/0005-dependency-score-recalibration.md)).
   Contributor signals now form *reliance*, normalized by the capacity that is
-  actually attainable, and reducers *discount* that reliance by at most 45%
-  instead of subtracting from it freely.
+  actually attainable, and reducers *discount* that reliance instead of
+  subtracting from it freely. (The discount cap was later lowered to 30% by
+  ADR-0006.)
 
   This is a measurement fix, not a stricter policy. Some signals were
   cancelling each other out: the same `attemptedFirst` bit was scored twice with
@@ -97,9 +104,11 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - Band captions: the lowest band is now **"Mostly your own"** rather than
   "Independent". It describes what you are doing instead of claiming an
   identity, so a sharper score costs a description rather than a compliment.
-- Reflections can no longer move the score across a band on their own. Logging
-  activity inside the app is an awareness signal, not a way to buy a better
-  number (previously it was worth a full band).
+- Reflection's influence on the score is bounded to a small fraction of a band
+  width, so logging activity inside the app cannot meaningfully buy a better
+  number (previously it was worth a full band). The stronger phrasing this
+  entry originally used — that reflection can never cross a band — was retired
+  by ADR-0006 as unachievable.
 - The report is unlocked after 10 recorded moments rather than 5; six delegated
   events used to produce a confident verdict that outranked users with ten times
   the evidence.
