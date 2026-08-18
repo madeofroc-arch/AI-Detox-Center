@@ -64,9 +64,14 @@ claude plugin install human-mode@ai-detox
 
 Codex 讀同一份 manifest（`codex plugin marketplace add
 madeofroc-arch/AI-Detox-Center --ref main`）；ChatGPT、Gemini、Cursor 和
-claude.ai 的「複製貼上」說明在 [skill/README.md](skill/README.md)。
+claude.ai 的「複製貼上」說明在 [skill/README.md](skill/README.md)，
+中文版指令在 [`skill/dist/zh-TW/`](skill/dist/zh-TW/)——
+你應該看得懂你貼進去的東西。
+
 教學方法本身放在 [`skill/method/*.yaml`](skill/method/)，任何人都可以用 PR 改進它——
-每個平台的產出物都是從那些檔案生成的。
+每個平台、每個語言的產出物都是從那些檔案生成的。翻譯是「疊加層」而不是分支：
+每一條規則都用 id 對回英文原文，少翻一個 key，build 就會失敗，
+所以翻譯不可能悄悄偏離教學方法本身。
 
 ## App（應用程式）
 

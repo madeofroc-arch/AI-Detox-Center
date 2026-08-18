@@ -8,6 +8,21 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **The Human Mode skill in 繁體中文.** Copy-paste instruction files for
+  ChatGPT, Gemini, AGENTS.md and tight instruction boxes, generated from the
+  same method as the English ones. Translations are **overlays, not forks**:
+  every rung, signal, domain and worked example is matched to the English
+  source by id, and the build fails on anything missing, so a translation
+  cannot silently drift away from the pedagogy. Punctuation is translatable
+  too — a Chinese list joined with "; " and closed with "." reads like machine
+  output.
+
+  There is deliberately no per-language `SKILL.md`: two installable skills with
+  near-identical descriptions would make the agent guess which to load. The one
+  skill is now told to answer in whatever language the person writes in, which
+  is also the honest division — the ladder is about how much of the thinking it
+  hands back, not which language it hands it back in.
+
 - **繁體中文 (Traditional Chinese), and the machinery to add more languages.**
   Every screen, all nine capability names, the whole AI-usage taxonomy, the ten
   reflection prompts and all 27 challenges — translated, not machine-generated.

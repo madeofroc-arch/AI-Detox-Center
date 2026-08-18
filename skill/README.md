@@ -95,6 +95,30 @@ Append [`dist/AGENTS.md`](dist/AGENTS.md) to your project's `AGENTS.md`. That
 one file is honored by Codex, Cursor, Gemini CLI, Copilot's coding agent,
 Windsurf, Aider, Zed, and around twenty other tools.
 
+## Other languages
+
+繁體中文: [`dist/zh-TW/chatgpt.md`](dist/zh-TW/chatgpt.md) ·
+[`dist/zh-TW/gemini.md`](dist/zh-TW/gemini.md) ·
+[`dist/zh-TW/compact.md`](dist/zh-TW/compact.md) ·
+[`dist/zh-TW/AGENTS.md`](dist/zh-TW/AGENTS.md)
+
+These are for the platforms where a human reads the instructions before pasting
+them — you should be able to read what you are installing.
+
+There is deliberately **no per-language `SKILL.md`**. Two installable skills
+with near-identical descriptions would make the agent guess which to load, so
+there is one skill, and it is told to answer in whatever language you write in.
+That is also the honest division: the ladder is about how much of the thinking
+it hands back, not which language it hands it back in.
+
+To add a language, copy [`method/i18n/zh-TW.yaml`](method/i18n/zh-TW.yaml) and
+translate it. It is an **overlay, not a fork**: rungs, signals, domains and
+examples are matched to the English source by id, and the build fails on
+anything missing, so a translation cannot silently drift away from the
+pedagogy. Punctuation is part of the translation — the list separator, colon,
+full stop and quotation marks are all translatable keys, because a Chinese list
+joined with "; " and closed with "." reads like machine output.
+
 ## Improving the method — this is the point
 
 The pedagogy lives in [`method/`](method/) as YAML, not buried in prose inside a
@@ -105,7 +129,11 @@ edit reaches all of them:
 method/ladder.yaml          the five rungs: what each gives and withholds
 method/signals.yaml         when to skip the ladder, descend, ascend, and never
 method/domains/*.yaml       calibration for coding, writing, deciding, learning
+method/i18n/*.yaml          translations, matched to the above by id
 ```
+
+Change the pedagogy in the English files and update every `i18n/` file in the
+same PR — the build will tell you exactly which keys you left behind.
 
 To change how it teaches:
 
@@ -137,6 +165,9 @@ Codex's validator all accept. Claude Code allows many more fields, but any one
 of them makes the file a hard error on the other two platforms. One file, every
 install path.
 
-The generated artifacts are also ASCII-only, because they get pasted into web
+The English artifacts are also ASCII-only, because they get pasted into web
 instruction boxes and read by tools that open files without declaring an
-encoding.
+encoding — Anthropic's own validator does exactly that and throws on a cp950
+Windows locale. Translated artifacts obviously cannot be, which is another
+reason the installable `SKILL.md` stays English: it is the one file those
+validators read.

@@ -70,9 +70,11 @@ claude plugin install human-mode@ai-detox
 Codex reads the same manifests (`codex plugin marketplace add
 madeofroc-arch/AI-Detox-Center --ref main`), and there are copy-paste
 instructions for ChatGPT, Gemini, Cursor and claude.ai in
-[skill/README.md](skill/README.md). The teaching method itself lives in
+[skill/README.md](skill/README.md) — in
+[English](skill/dist/chatgpt.md) or
+[繁體中文](skill/dist/zh-TW/chatgpt.md). The teaching method itself lives in
 [`skill/method/*.yaml`](skill/method/) so anyone can improve it by PR — every
-platform's artifact is generated from those files.
+platform's artifact, in every language, is generated from those files.
 
 **The app** measures what happened afterwards, on your device, and trains the
 capabilities that atrophy first.
