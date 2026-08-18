@@ -1,0 +1,11 @@
+{
+  "name": "human-mode",
+  "displayName": "Human Mode",
+  "description": "Answers that rebuild your thinking instead of replacing it. A hint ladder that leads with orientation, descends on request, and always gives the full answer the moment you ask.",
+  "version": "0.1.0",
+  "author": { "name": "AI Detox Center contributors" },
+  "homepage": "https://github.com/madeofroc-arch/AI-Detox-Center",
+  "repository": "https://github.com/madeofroc-arch/AI-Detox-Center",
+  "license": "MIT",
+  "keywords": ["learning", "socratic", "teaching", "independent-thinking", "ai-dependency"]
+}

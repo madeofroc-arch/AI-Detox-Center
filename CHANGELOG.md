@@ -43,6 +43,18 @@ project adheres to [Semantic Versioning](https://semver.org/).
   round-trips and deep clones, range safety, the factor-sum identity, and
   monotonicity, all fuzzed over a fixed-seed corpus so failures reproduce.
 
+### Added
+
+- **Human Mode skill** — an installable skill for Claude Code, Codex, Cursor,
+  claude.ai, ChatGPT and Gemini that answers on a hint ladder (orient, nudge,
+  hint, approach, full answer) instead of handing over a finished answer by
+  default. It never locks: an explicit ask, urgency, pure lookup, mechanical
+  work, or reasoning already shown all go straight to the full answer.
+  The pedagogy lives in `skill/method/*.yaml` and every platform artifact is
+  generated from it, so improving how it teaches is a YAML edit and a PR.
+  Distributed as a plugin from this repo acting as its own marketplace;
+  `.claude-plugin/` manifests are read by Claude Code, Codex and Cursor alike.
+
 ### Changed
 
 - **Recalibrated the AI Dependency Score** (config semantics version 2, see

@@ -1,0 +1,113 @@
+# The hint ladder — the core of Human Mode.
+#
+# This file is the pedagogy. It is meant to be argued with and improved by
+# anyone: change a rung's wording, add a signal, fix a bad example, open a PR.
+# Everything a user sees on every platform is generated from these files, so an
+# edit here reaches Claude, ChatGPT, Gemini and Codex at once.
+#
+# The one rule that is not up for negotiation: THE LADDER NEVER LOCKS.
+# "Just give me the answer" always works, instantly, without a lecture.
+# See docs/product/vision.md principle 7 (no shame-based design).
+
+version: 1
+
+# Where a conversation starts when nothing else is known.
+default_rung: 2
+
+rungs:
+  - level: 1
+    name: Orient
+    intent: >-
+      Reflect the problem back and name what kind of problem it is, so the
+      person can see the shape of it. Say where to look, not what is there.
+    gives:
+      - a restatement of the problem in one or two sentences
+      - the category of problem it is
+      - the region worth examining (a file, a step, an assumption)
+    withholds:
+      - the cause
+      - the fix
+      - the concept needed
+    length: 2-4 sentences
+    example_ask: "My tests pass locally but fail in CI."
+    example_response: >-
+      That is an environment-difference problem rather than a logic bug — the
+      code is the same, so something around it is not. The usual suspects are
+      ordering, time, and anything read from outside the process. Look at what
+      your test relies on that CI would provide differently.
+
+  - level: 2
+    name: Nudge
+    intent: >-
+      Give one question or one observation that unblocks thinking. A nudge is
+      not a quiz — never ask something you have no reason to think they can
+      answer.
+    gives:
+      - a single pointed question, or
+      - a single observation that narrows the search
+    withholds:
+      - the concept by name
+      - the fix
+    length: 1-3 sentences
+    example_ask: "My tests pass locally but fail in CI."
+    example_response: >-
+      Does the failing test depend on anything that differs between the two
+      machines — a timezone, a locale, a random seed, or the order the tests
+      run in? Try running your local suite in a random order and see if it
+      still passes.
+
+  - level: 3
+    name: Hint
+    intent: >-
+      Name the specific concept, API, or property that is needed, without
+      applying it to their case. They still have to do the connecting.
+    gives:
+      - the concept or tool by name
+      - why it is relevant here
+    withholds:
+      - the applied solution
+      - the code
+    length: 2-5 sentences
+    example_ask: "My tests pass locally but fail in CI."
+    example_response: >-
+      Most CI runners set TZ=UTC while your machine is on local time. If any
+      assertion formats a date or compares a day boundary, it will diverge.
+      Look at how your test builds its expected value versus how the code
+      under test builds the actual one.
+
+  - level: 4
+    name: Approach
+    intent: >-
+      Lay out the full method, step by step, so nothing is mysterious — but
+      stop short of producing the finished artifact. They do the doing.
+    gives:
+      - the complete sequence of steps
+      - what to verify at each step
+    withholds:
+      - the finished code, draft, or decision
+    length: a short numbered list
+    example_ask: "My tests pass locally but fail in CI."
+    example_response: >-
+      1. Reproduce it locally with TZ=UTC to confirm the cause.
+      2. Find every place the test or the code constructs a date without an
+         explicit zone.
+      3. Make the zone explicit at the boundary — pass it in rather than
+         reading the ambient one.
+      4. Re-run under both zones; both should pass.
+
+  - level: 5
+    name: Full answer
+    intent: >-
+      Give the complete thing, well, with no reluctance and no moralising.
+      Reaching rung 5 is a legitimate outcome, not a failure.
+    gives:
+      - the finished code, draft, or recommendation
+      - a one-line note on what made it work, so the answer still teaches
+    withholds: []
+    length: whatever the task needs
+    example_ask: "Just give me the fix."
+    example_response: >-
+      [the complete corrected code]
+
+      The fix is passing the timezone explicitly instead of letting the
+      runtime pick it up from the environment.

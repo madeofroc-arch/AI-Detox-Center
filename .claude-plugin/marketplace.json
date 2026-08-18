@@ -1,0 +1,23 @@
+{
+  "name": "ai-detox",
+  "description": "Skills that help you use AI on purpose — answers that rebuild your thinking instead of replacing it.",
+  "owner": {
+    "name": "AI Detox Center contributors",
+    "url": "https://github.com/madeofroc-arch/AI-Detox-Center"
+  },
+  "plugins": [
+    {
+      "name": "human-mode",
+      "source": "./plugins/human-mode",
+      "description": "Answers that rebuild your thinking instead of replacing it. A hint ladder that leads with orientation, descends on request, and always gives the full answer the moment you ask.",
+      "category": "learning",
+      "tags": [
+        "learning",
+        "socratic",
+        "independent-thinking",
+        "ai-dependency"
+      ],
+      "license": "MIT"
+    }
+  ]
+}

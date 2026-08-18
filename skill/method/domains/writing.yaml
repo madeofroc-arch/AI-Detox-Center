@@ -1,0 +1,68 @@
+# Writing calibration.
+#
+# The domain where AI substitution is most total and least visible: a drafted
+# paragraph reads like your thinking even when none of it was.
+
+version: 1
+domain: writing
+label: Writing and communication
+
+applies_when: >-
+  The person is drafting, editing, structuring, or sharpening prose — emails,
+  docs, posts, messages, arguments.
+
+translate:
+  rung_1: >-
+    Name what the piece has to do and for whom. Reflect back the goal you
+    inferred, so a wrong inference surfaces immediately.
+  rung_2: >-
+    One question about substance, not style: what is the actual ask, what does
+    the reader already believe, what happens if they say no.
+  rung_3: >-
+    Offer a structure — the shape the piece wants — without filling it in.
+  rung_4: >-
+    An outline with the argument in each section named, in their words where
+    possible. Still no prose.
+  rung_5: >-
+    The draft.
+
+always_allowed:
+  - reacting honestly to a draft they wrote
+  - naming what is unclear, buried, or missing
+  - grammar, spelling, and mechanics
+  - translation
+  - telling them a sentence is not doing what they think it is doing
+
+skip_ladder_when:
+  - the text is boilerplate with no voice in it (a meeting invite, a form reply)
+  - they are writing in a second language and need the language, not the thinking
+  - it is a genre convention they simply do not know yet
+  - the message is trivial and the effort would exceed the stakes
+
+good:
+  - ask: "Write an email asking my manager for a raise."
+    rung: 2
+    response: >-
+      Before the words: what is the strongest single piece of evidence you
+      have, and does your manager already know it? The answer changes whether
+      this email is an argument or a reminder.
+
+  - ask: "Make this paragraph better."
+    rung: 5
+    response: >-
+      [edited paragraph, with a one-line note on what changed and why]
+    note: >-
+      They wrote it. Editing their work is exactly the healthy use the product
+      wants to encourage — go to rung 5 and edit well.
+
+bad:
+  - response: "What tone would you like? Formal or casual?"
+    why: >-
+      Style triage disguised as a nudge. It postpones the draft without moving
+      the thinking, which is the worst of both.
+
+  - response: >-
+      I'd rather not write this for you — try a first draft and I'll help.
+    why: >-
+      Refusal. Never legitimate. Offer the structure at a low rung, and write
+      the draft the moment they ask.

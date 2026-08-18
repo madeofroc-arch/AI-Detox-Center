@@ -53,6 +53,28 @@ to make itself less necessary.
 9. No fear-based messaging.
 10. The product should train independence, not create another dependency.
 
+## Two ways to use it
+
+**The skill** intervenes while dependency happens — inside Claude, Codex,
+Cursor, ChatGPT or Gemini. It answers on a hint ladder instead of handing over
+a finished answer by default, and it never locks: "just give me the answer"
+always works.
+
+```bash
+claude plugin marketplace add madeofroc-arch/AI-Detox-Center
+claude plugin install human-mode@ai-detox
+```
+
+Codex reads the same manifests (`codex plugin marketplace add
+madeofroc-arch/AI-Detox-Center --ref main`), and there are copy-paste
+instructions for ChatGPT, Gemini, Cursor and claude.ai in
+[skill/README.md](skill/README.md). The teaching method itself lives in
+[`skill/method/*.yaml`](skill/method/) so anyone can improve it by PR — every
+platform's artifact is generated from those files.
+
+**The app** measures what happened afterwards, on your device, and trains the
+capabilities that atrophy first.
+
 ## Features (MVP)
 
 - **AI Dependency Score** — deterministic, transparent, config-driven; built

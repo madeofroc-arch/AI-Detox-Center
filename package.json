@@ -2,7 +2,7 @@
   "name": "ai-detox-center",
   "version": "0.1.0",
   "private": true,
-  "description": "AI Detox Center (Human Mode) \u2014 AI dependency management and independent thinking training. AI should augment human thinking, not replace it.",
+  "description": "AI Detox Center (Human Mode) — AI dependency management and independent thinking training. AI should augment human thinking, not replace it.",
   "license": "MIT",
   "workspaces": [
     "packages/*",
@@ -14,9 +14,13 @@
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "icons": "node scripts/generate-icons.mjs",
-    "screenshots": "node scripts/capture-screenshots.mjs"
+    "screenshots": "node scripts/capture-screenshots.mjs",
+    "build:skill": "node skill/build.mjs"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "yaml": "^2.9.0"
   }
 }
