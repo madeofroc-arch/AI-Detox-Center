@@ -50,11 +50,18 @@ export const EN = {
       hard: 'Hard',
       ultimate: 'Ultimate',
     },
+    /** The school level each mode draws from. The claim the mode makes. */
+    tierLevel: {
+      easy: 'Primary school',
+      normal: 'Secondary school',
+      hard: 'High school',
+      ultimate: 'University',
+    },
     tierBlurb: {
-      easy: 'The wrong answers sit a long way from the right one, and the questions are the friendliest in the set.',
-      normal: 'The same spacing over a wider spread of questions — and the host starts arguing badly.',
-      hard: 'The gaps between the answers shrink to their square root. A rough idea stops being enough.',
-      ultimate: 'The tightest boards in the game: often only two or three times between one answer and the next.',
+      easy: 'Things a curious ten-year-old has met, and the wrong answers sit a long way from the right one.',
+      normal: 'General knowledge and one step of arithmetic — and the host starts arguing badly.',
+      hard: 'You paid attention in science or social studies. A real chain of reasoning, and the answers sit closer together.',
+      ultimate: 'Domain knowledge, or a careful multi-step estimate. The answers are close and the host lies half the time.',
     },
     /** Stated before the run, because a mode you cannot see the shape of is a trap. */
     tierSpec: (levels: number, lives: number, items: number): string =>
@@ -181,8 +188,6 @@ export const EN = {
     seedNote: 'Same seed, same run. A bug report is a seed.',
     playAgain: 'Play again',
     seePrescription: 'What this says about your AI',
-    englishOnly:
-      'The questions are in English for now — the arguments need writing in each language rather than translating, so they are not ready in 繁體中文 yet.',
 
     // ── The prescription ───────────────────────────────────────────────────
     prescriptionTitle: 'Your settings',

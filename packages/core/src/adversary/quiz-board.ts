@@ -44,7 +44,7 @@
  */
 import { hashString } from '../challenges/selection';
 import type { QuizConfig, TierConfig } from './quiz-config';
-import type { AdversaryRound } from './types';
+import type { AdversaryRound, SchoolBand } from './types';
 import type { AudienceShares, FriendCall, HostCall, QuizLevel } from './quiz-types';
 
 /**
@@ -122,11 +122,34 @@ export function allowedSlots(round: AdversaryRound, tier: TierConfig): number[] 
   return slots;
 }
 
-/** Whether this round can be shown at this tier at all. */
+/**
+ * Whether this round can be shown at this tier at all.
+ *
+ * Only feasibility now. Modes used to filter on displacement as well, to give
+ * four modes four board widths out of one flat catalog; the bands do that job
+ * directly, because an elementary bluff is authored to land far from the truth
+ * and a university one close to it. Filtering on both would drop rounds twice
+ * for the same reason.
+ */
 export function fitsTier(round: AdversaryRound, tier: TierConfig): boolean {
-  const d = displacement(round);
-  if (d < tier.minDisplacement || d > tier.maxDisplacement) return false;
-  return allowedSlots(round, tier).length > 0;
+  return round.band === tier.band && allowedSlots(round, tier).length > 0;
+}
+
+/**
+ * How hard a round is on one absolute scale, for the lifelines that need one.
+ *
+ * The band dominates and the within-band difficulty nudges: a gentle university
+ * question is still harder than a hard elementary one, which is the whole point
+ * of banding.
+ */
+export function absoluteDifficulty(round: AdversaryRound): number {
+  const anchors: Record<SchoolBand, number> = {
+    elementary: 1.4,
+    middle: 2.4,
+    high: 3.6,
+    university: 4.6,
+  };
+  return anchors[round.band] + (round.difficulty - 3) * 0.15;
 }
 
 /** Build one level's board. Deterministic in `(seed, round, tier)`. */
@@ -195,7 +218,7 @@ function toWholePercents(weights: readonly number[]): number[] {
   return whole;
 }
 
-/** Linear interpolation across the catalog's 1-5 difficulty scale. */
+/** Linear interpolation across the absolute 1-5 difficulty scale. */
 function byDifficulty(difficulty: number, atEasiest: number, atHardest: number): number {
   const t = Math.min(1, Math.max(0, (difficulty - 1) / 4));
   return atEasiest + (atHardest - atEasiest) * t;
@@ -237,7 +260,7 @@ function crowdError(seed: string, level: QuizLevel): number {
  * strategy, not an exploit.
  */
 export function audienceShares(seed: string, level: QuizLevel): AudienceShares {
-  const difficulty = level.round.difficulty;
+  const difficulty = absoluteDifficulty(level.round);
   const weights = [1, 1, 1, 1];
   weights[level.correctIndex]! += byDifficulty(difficulty, 6, 0.9);
   weights[crowdError(seed, level)]! += byDifficulty(difficulty, 0.6, 2.6);
@@ -265,7 +288,7 @@ const FRIEND_CONFIDENCES = [0.5, 0.6, 0.7, 0.8, 0.9] as const;
 export function friendCall(seed: string, level: QuizLevel): FriendCall {
   const round = level.round;
   // Harder questions push the friend toward the low end of what they will claim.
-  const ceiling = Math.round(byDifficulty(round.difficulty, 4, 1));
+  const ceiling = Math.round(byDifficulty(absoluteDifficulty(round), 4, 1));
   const pick = hashString(`friend-conf:${seed}:${round.id}`) % (ceiling + 1);
   const confidence = FRIEND_CONFIDENCES[pick]!;
 

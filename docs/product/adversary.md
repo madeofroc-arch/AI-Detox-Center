@@ -30,17 +30,30 @@ produced the previous product.
 minutes in a queue. The competitive set is **scrolling**. Everything follows
 from that: one-handed, portrait, no typing, no setup, no brief to read.
 
-## The four modes
+## The four modes are four school levels
 
-Stated in full before the first question — the ladder, the lives, the lifelines,
-the fallback rung, and how often the host lies.
+Stated in full before the first question — the level, the ladder, the lives, the
+lifelines, the fallback rung, and how often the host lies.
 
-| | questions | lives | lifelines | locked at | the host |
-| --- | --- | --- | --- | --- | --- |
-| **Easy** | 8 | 3 | 5 | 4 | never lies |
-| **Normal** | 10 | 2 | 5 | 4, 8 | lies a third of the time |
-| **Hard** | 12 | 2 | 4 | 6 | lies half the time |
-| **Ultimate** | 12 | 1 | 3 | 5 | lies half the time |
+| | level | questions | lives | lifelines | locked at | the host |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Easy** | 小學 primary | 8 | 3 | 5 | 4 | never lies |
+| **Normal** | 中學 secondary | 10 | 2 | 5 | 4, 8 | lies a third of the time |
+| **Hard** | 高中 high school | 12 | 2 | 4 | 6 | lies half the time |
+| **Ultimate** | 大學 university | 12 | 1 | 3 | 5 | lies half the time |
+
+Every round carries a `band`, and a mode draws from exactly one. This replaced a
+flat 1-5 difficulty scale, and the reason is the point: on that scale every
+round in the catalog was a 1 or a 2 *relative to the others*, while every one of
+them was high-school-to-university material in absolute terms. The easiest mode
+in the game was asking about container throughput at the Port of Shanghai. **A
+relative scale cannot say a catalog is too hard; a school level can.** The
+catalog had to grow to fill the bands it exposed — there was no elementary
+content at all, because on a relative scale nothing had ever asked for any.
+
+A round's `difficulty` survives as a 1-5 ordering *within* its band, which is
+what the run ramps along — the band's gentlest question first, its hardest
+last.
 
 The escalating bluff rate is the curriculum. In Easy the host is a genuine help
 and the player learns to use it; by Ultimate it is a coin flip whether the help
@@ -80,17 +93,20 @@ Two further rules, each of which fixed a measured defect:
   eliminated themselves, and a player who knew no chemistry scored 100%. A round
   whose board cannot be built at a tier is dropped from that tier's pool.
 
-### What the modes actually vary, honestly
+### The board width follows the content, not the mode
 
-The tier sets how many option-slots separate the truth from the bluff's figure:
+The mode sets how many option-slots separate the truth from the bluff's figure:
 one slot is a wide board, two is a tight one (the step becomes the square root
 of the displacement). Three is unavailable — it would force the true answer to
 an end of the board on every round.
 
-**So the four modes differ mainly by question pool, economy and how often the
-host lies, rather than by four distinct option spacings.** The authored bluffs
-support two. Widening that needs new pushback prose, not a new multiplier, and
-that is a content project rather than a config change.
+Beyond that, **the width is whatever the authored trap makes it.** The two
+correlate, because a harder subject invites a closer trap, and the authoring
+brief asks for band-appropriate displacements. But they are not the same thing,
+and the spec does not pretend they are: a good university question is allowed an
+obvious trap. What is enforced is a floor — no board may put two options within
+a fifth of each other — and the aggregate claim the mode screen makes, that the
+answers get closer together as the level rises.
 
 ## A question
 
@@ -225,6 +241,29 @@ generator. Therefore: an authored core, with generation as variation rather than
 as the engine, and every authoring pass reviewed by a reader whose only job is
 to find a rule.
 
+### One such rule is currently in the catalog
+
+The reader checking the 繁體中文 localisation found it, which is a good argument
+for that review existing: **honest arguments open by correcting an anchor far
+more often than bluffs do.** "Anchor on people, not on shops." "The binding
+constraint here is water, not appetite." "Count the cycle, not the crank." A
+player who simply picks the option whose first sentence tells them where *not*
+to anchor wins more rounds than they lose, without reading either argument to
+the end.
+
+Measured across the 56 rounds now shipped, that opener fronts 15 honest
+arguments and 4 bluffs. It fires on a third of the catalog and is right four
+times in five when it does — an improvement on the 12–0 it scored over the
+first thirty, which is what the expansion bought, and still an edge nobody
+should have.
+
+It is not fixed here, and pretending otherwise would be worse than recording it.
+The fix is to move that shape onto some bluffs — which are themselves wrong
+anchors, so it fits them naturally — and off an equal number of honest openings,
+in both languages. A secondary tell points the same way: the self-licensing
+clause ("the only figure that is hard here", "the one part you can actually
+measure") appears only in bluffs.
+
 ### Authoring with a model is allowed. Inference at runtime is not.
 
 - **The shipped product performs no inference and requires no key.** Keep,
@@ -232,13 +271,33 @@ to find a rule.
 - *The shipped content was authored without a model.* Never claimed, not worth
   claiming.
 
-### 繁體中文 is a second authoring effort, not a translation
+### The catalog is translated through core's i18n, per round
 
-Questions, units and true values are portable. **Pushbacks and verdicts are
-authored independently per language** against the same two bars, and are allowed
-to differ in substance. This is a deliberate departure from CLAUDE.md rule 6 and
-is limited to adversarial argument. The chrome is translated; the arguments are
-not yet, and the mode screen says so.
+`CoreStrings.adversaryRounds` carries a `RoundText` per round id — question,
+unit, source note, and both arguments and verdicts. `localizeRound` swaps those
+and **nothing else**: the true value, the axis, the band, both directions and
+the bluff's own figure stay canonical, because a board that depended on the
+display language would deal the same person different questions in English and
+繁體中文 (CLAUDE.md rule 6, asserted in `i18n.test.ts`).
+
+English needs no overlay — the catalog is the English text — and a round a
+language has not reached renders in English rather than as a hole, so the
+catalog can be translated a few rounds at a time.
+
+All 56 rounds now carry 繁體中文, pinned by `zh-catalog.test.ts`, which fails
+the build on a missing round and on ten style and safety rules besides.
+**Not every round has been read twice.** The first thirty were localised and
+then re-read by a second reviewer whose only job was consistency — that pass
+is what found the corrective-opener tell above. Of the twenty-six added with
+the school-band expansion, two were re-read; the other twenty-four have the
+translation and the automated gates but not the second reader. That is the
+known gap in this content, and it is the first thing to close.
+
+The original spec said pushbacks would be **authored** independently per
+language rather than translated, on the grounds that persuasiveness lives in
+idiom. That remains the higher bar and is still true of the best version. What
+ships is a careful localisation reviewed against the same two bars, which is an
+honest description of the work actually done.
 
 ## Acceptance criteria
 
@@ -269,12 +328,12 @@ not yet, and the mode screen says so.
 
 ## Known limits, stated rather than discovered
 
-- **Four modes, two board widths.** See above. Fixing it is a content project.
+- **Two board widths across four modes.** The `bluffSteps` knob has two usable
+  values; the rest of the variation comes from the authored traps.
 - **Sample size.** The findings that matter need several runs. The screen says
   so and shows exactly how many observations are missing.
-- **Ultimate's pool skews easier on question difficulty** than its name
-  suggests, because the rounds with the tightest boards are not the hardest
-  questions. Its difficulty is the board, and the copy says so.
+- **Board width and school level are only correlated.** A university round with
+  an obvious trap is a wide board in the hardest mode, and that is allowed.
 - **The copied block contains the player's own tallies.** It is on screen in
   full, selectable, before anything is copied. That is informed consent rather
   than a solved problem.

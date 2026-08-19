@@ -43,11 +43,17 @@ export const ZH_TW: AppStrings = {
       hard: '困難',
       ultimate: '終極',
     },
+    tierLevel: {
+      easy: '小學',
+      normal: '中學',
+      hard: '高中',
+      ultimate: '大學',
+    },
     tierBlurb: {
-      easy: '錯的答案離正解很遠，題目也是整批裡最好猜的。',
-      normal: '一樣的間距，題目範圍更廣——而且主持人開始會講錯。',
-      hard: '答案之間的距離縮成平方根。「大概知道」已經不夠用。',
-      ultimate: '全遊戲最緊的板子：一個答案跟下一個常常只差兩三倍。',
+      easy: '十歲小孩碰過的東西，而且錯的答案離正解很遠。',
+      normal: '一般常識加一步計算——而且主持人開始會講錯。',
+      hard: '自然或社會有在聽的程度。要一整串推理，答案也靠得比較近。',
+      ultimate: '需要領域知識，或一次小心的多步估算。答案很近，而主持人有一半在唬你。',
     },
     /** 開始前就講清楚。看不出形狀的模式是陷阱。 */
     tierSpec: (levels: number, lives: number, items: number): string =>
@@ -165,8 +171,6 @@ export const ZH_TW: AppStrings = {
     seedNote: '同一個 seed，同一場。回報問題只要附 seed。',
     playAgain: '再來一場',
     seePrescription: '這對你的 AI 說了什麼',
-    englishOnly:
-      '題目目前是英文——那些論證要各語言各自寫過，不能用翻譯的，所以繁體中文版還沒好。',
 
     // ── 處方 ────────────────────────────────────────────────────────────────
     prescriptionTitle: '你的設定',

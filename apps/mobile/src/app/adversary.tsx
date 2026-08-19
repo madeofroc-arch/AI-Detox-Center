@@ -19,6 +19,7 @@ import {
   hostCall,
   ladder,
   lifelineCount,
+  localizeRound,
   lockInstinct,
   playedRoundIds,
   selectOption,
@@ -35,7 +36,7 @@ import { OptionRow } from '../components/game/OptionRow';
 import type { OptionState } from '../components/game/OptionRow';
 import { useI18n } from '../i18n/useI18n';
 import { todayKey } from '../lib/clock';
-import { exactFormatter } from '../lib/numbers';
+import { compactFormatter, exactFormatter } from '../lib/numbers';
 import { useAppStore } from '../state/store';
 import { MIN_TOUCH_TARGET, decorative, group } from '../theme/a11y';
 import { gamePalette, gameRadius, gameSpace, gameType } from '../theme/game';
@@ -55,8 +56,24 @@ import { gamePalette, gameRadius, gameSpace, gameType } from '../theme/game';
 const config = DEFAULT_QUIZ_CONFIG;
 
 export default function Adversary() {
-  const { t, locale } = useI18n();
+  const { t, locale, core } = useI18n();
   const exact = useMemo(() => exactFormatter(locale), [locale]);
+  /**
+   * Options are compact, and that is not decoration.
+   *
+   * Rendered in full, four magnitudes an order apart become four rows of zeros
+   * to count — 28,000,000,000 against 290,000,000,000 — which is cognitive work
+   * with nothing to do with the reasoning the game is about. Compact notation
+   * is also where the locale earns its keep: the same value reads as 130B in
+   * English and 1300億 in 繁體中文, and a reader comparing four magnitudes needs
+   * them in the grouping they actually think in.
+   *
+   * The revealed answer stays exact. It is one number, it is the payoff, and
+   * the source note beside it carries the precision.
+   */
+  const compact = useMemo(() => compactFormatter(locale), [locale]);
+  /** One more significant figure, for the answer itself. */
+  const answer = useMemo(() => compactFormatter(locale, 4), [locale]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -141,9 +158,14 @@ export default function Adversary() {
                 gap: gameSpace.sm,
               }}
             >
-              <Text style={[gameType.question, { color: gamePalette.ink, fontSize: 21 }]}>
-                {t.game.tierName[id]}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: gameSpace.sm }}>
+                <Text style={[gameType.question, { color: gamePalette.ink, fontSize: 21 }]}>
+                  {t.game.tierName[id]}
+                </Text>
+                <Text style={[gameType.label, { color: gamePalette.gold }]}>
+                  {t.game.tierLevel[id]}
+                </Text>
+              </View>
               <Text style={[gameType.body, { color: gamePalette.inkMuted }]}>
                 {t.game.tierBlurb[id]}
               </Text>
@@ -169,7 +191,6 @@ export default function Adversary() {
           );
         })}
 
-        <Text style={[gameType.caption, { color: gamePalette.quiet }]}>{t.game.englishOnly}</Text>
 
         {history.length > 0 ? (
           <GameButton
@@ -211,6 +232,16 @@ export default function Adversary() {
   const result = run.lastResult;
   const revealing = run.phase === 'reveal';
 
+  /**
+   * The round's words in the reader's language. Everything the board was built
+   * from stays canonical — `localizeRound` swaps text and nothing else — so the
+   * same seed deals the same questions in either language (CLAUDE.md rule 6).
+   *
+   * Called plainly rather than memoized: it is one shallow spread, and it sits
+   * below an early return where a hook cannot go.
+   */
+  const round = localizeRound(board.round, core);
+
   const spentIds = new Set(run.spent.map((u) => u.id));
   const audience = spentIds.has('audience') ? audienceShares(run.seed, board) : null;
   const friend = spentIds.has('friend') ? friendCall(run.seed, board) : null;
@@ -240,7 +271,7 @@ export default function Adversary() {
   };
 
   const optionLabel = (index: number): string => {
-    const parts = [`${t.game.optionLetter(index)}. ${exact(board.options[index]!)}`];
+    const parts = [`${t.game.optionLetter(index)}. ${compact(board.options[index]!)}`];
     if (audience) parts.push(`${audience[index]}%`);
     if (friend?.index === index) parts.push(t.game.friendLead);
     if (host?.index === index) parts.push(t.game.hostLead);
@@ -249,6 +280,12 @@ export default function Adversary() {
     if (state === 'correct') parts.push(t.game.gotIt);
     if (state === 'chosenWrong') parts.push(t.game.missedIt);
     return parts.join(', ');
+  };
+
+  /** A kept bluff, in the reader's language. The record outlives its run. */
+  const keptBluff = (roundId: string) => {
+    const found = ADVERSARY_CATALOG.find((c) => c.id === roundId);
+    return found ? localizeRound(found, core) : null;
   };
 
   // ── The record ───────────────────────────────────────────────────────────
@@ -334,9 +371,11 @@ export default function Adversary() {
                 }}
               >
                 <Text style={[gameType.caption, { color: gamePalette.inkMuted }]}>
-                  {ADVERSARY_CATALOG.find((c) => c.id === r.roundId)?.question ?? r.roundId}
+                  {keptBluff(r.roundId)?.question ?? r.roundId}
                 </Text>
-                <Text style={[gameType.body, { color: gamePalette.ink }]}>{r.host?.argument}</Text>
+                <Text style={[gameType.body, { color: gamePalette.ink }]}>
+                  {keptBluff(r.roundId)?.bluff.argument ?? r.host?.argument}
+                </Text>
               </View>
             ))
           )}
@@ -412,16 +451,16 @@ export default function Adversary() {
       </View>
 
       <Text accessibilityRole="header" style={[gameType.question, { color: gamePalette.ink }]}>
-        {board.round.question}
+        {round.question}
       </Text>
-      <Text style={[gameType.caption, { color: gamePalette.quiet }]}>{board.round.unit}</Text>
+      <Text style={[gameType.caption, { color: gamePalette.quiet }]}>{round.unit}</Text>
 
       <View accessibilityRole="radiogroup" style={{ gap: gameSpace.sm }}>
         {[0, 1, 2, 3].map((index) => (
           <OptionRow
             key={index}
             letter={t.game.optionLetter(index)}
-            value={exact(board.options[index]!)}
+            value={compact(board.options[index]!)}
             state={optionState(index)}
             disabled={revealing}
             hostPick={host?.index === index}
@@ -450,7 +489,10 @@ export default function Adversary() {
           tone={gamePalette.opponent}
           lead={askedHost ? t.game.hostLead : t.game.hostLeadUnasked}
         >
-          {t.game.hostSays(t.game.optionLetter(host.index), host.argument)}
+          {t.game.hostSays(
+            t.game.optionLetter(host.index),
+            (board.hostKind === 'bluff' ? round.bluff : round.honest).argument,
+          )}
         </Card>
       ) : null}
 
@@ -462,10 +504,13 @@ export default function Adversary() {
             </Text>
             <Text style={[gameType.label, { color: gamePalette.quiet }]}>{t.game.theAnswer}</Text>
             <Text style={[gameType.figure, { color: gamePalette.gold }]}>
-              {exact(board.round.trueValue)}
+              {answer(round.trueValue)}
             </Text>
+            {/* The figure in full sits under the compact one rather than
+                replacing it: the compact form is what compares against the
+                options, and the exact one is what a player would check. */}
             <Text style={[gameType.caption, { color: gamePalette.inkMuted }]}>
-              {board.round.unit}
+              {exact(round.trueValue)} {round.unit}
             </Text>
           </View>
 
@@ -487,11 +532,11 @@ export default function Adversary() {
                   : t.game.hostWasSound
             }
           >
-            {(board.hostKind === 'bluff' ? board.round.bluff : board.round.honest).verdict}
+            {(board.hostKind === 'bluff' ? round.bluff : round.honest).verdict}
           </Card>
 
           <Text style={[gameType.caption, { color: gamePalette.quiet }]}>
-            {board.round.sourceNote}
+            {round.sourceNote}
           </Text>
 
           <Text style={[gameType.figure, { color: result.correct ? gamePalette.you : gamePalette.quiet }]}>

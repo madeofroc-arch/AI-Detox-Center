@@ -48,8 +48,30 @@ export interface Pushback {
   bluffValue?: number;
 }
 
+/**
+ * How much schooling a question assumes, which is the one thing a player can
+ * judge about a mode before playing it.
+ *
+ * This replaced a flat 1-5 difficulty scale, and the reason is worth keeping:
+ * on that scale every round in the catalog was a 1 or a 2 relative to *each
+ * other*, while all thirty were high-school-to-university material in absolute
+ * terms. The easiest mode in the game was asking about container throughput at
+ * the Port of Shanghai. A relative scale cannot say that, and a school level
+ * can.
+ */
+export type SchoolBand = 'elementary' | 'middle' | 'high' | 'university';
+
+export const SCHOOL_BANDS: readonly SchoolBand[] = [
+  'elementary',
+  'middle',
+  'high',
+  'university',
+];
+
 export interface AdversaryRound {
   id: string;
+  /** Which mode this round belongs to. Exactly one. */
+  band: SchoolBand;
   domain: string;
   /** One line, every dimension pinned. Ambiguity here breaks the reveal. */
   question: string;
@@ -68,6 +90,11 @@ export interface AdversaryRound {
    */
   axisMin: number;
   axisMax: number;
+  /**
+   * How hard this round is *within its band*, which is a different question
+   * from how much schooling it assumes. Used to ramp a run from its band's
+   * gentlest question to its hardest, and nothing else.
+   */
   difficulty: 1 | 2 | 3 | 4 | 5;
   honest: Pushback;
   bluff: Pushback;

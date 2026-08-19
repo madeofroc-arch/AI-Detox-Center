@@ -11,6 +11,7 @@ import {
   fitsTier,
   friendCall,
   hostCall,
+  SCHOOL_BANDS,
   ladder,
   levelValue,
   nearestByDifficulty,
@@ -108,14 +109,100 @@ describe('the board', () => {
 
   it('drops a round from a tier rather than building it an impossible board', () => {
     for (const tier of tiers) {
-      const byDifficulty = ADVERSARY_CATALOG.filter(
-        (r) => r.difficulty >= tier.minDifficulty && r.difficulty <= tier.maxDifficulty,
-      );
+      const inBand = ADVERSARY_CATALOG.filter((r) => r.band === tier.band);
       const pool = tierPool(ADVERSARY_CATALOG, tier);
-      expect(pool.length).toBeLessThanOrEqual(byDifficulty.length);
+      expect(pool.length).toBeLessThanOrEqual(inBand.length);
       // Enough left to fill the ladder and still have something to swap to.
       expect(pool.length).toBeGreaterThan(tier.levels);
       for (const round of pool) expect(fitsTier(round, tier)).toBe(true);
+    }
+  });
+
+  /**
+   * The reason bands exist. On the old flat 1-5 scale every round in the
+   * catalog was a 1 or a 2 relative to the others, while all thirty were
+   * high-school-to-university material in absolute terms — so the easiest mode
+   * asked about container throughput at the Port of Shanghai.
+   */
+  /**
+   * Legibility is this content's death condition: once a player can
+   * pattern-match the generator instead of reading the argument, the product is
+   * dead while still appearing to work. Two rounds committing the same error in
+   * different clothes is how that starts.
+   */
+  it('never commits the same fallacy twice', () => {
+    const seen = new Map<string, string>();
+    for (const round of ADVERSARY_CATALOG) {
+      const key = (round.bluff.fallacy ?? '').toLowerCase().replace(/[^a-z ]/g, '').trim();
+      expect(key, `${round.id} has no fallacy label`).not.toBe('');
+      const first = seen.get(key);
+      expect(first, `${round.id} repeats the fallacy of ${first}: "${key}"`).toBeUndefined();
+      seen.set(key, round.id);
+    }
+  });
+
+  it('never asks the same question twice', () => {
+    const ids = ADVERSARY_CATALOG.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const questions = ADVERSARY_CATALOG.map((r) => r.question.toLowerCase().slice(0, 60));
+    expect(new Set(questions).size).toBe(questions.length);
+  });
+
+  /**
+   * The gap between neighbouring options, which is what a player actually
+   * faces — not the displacement it is derived from.
+   *
+   * Testing the displacement directly conflated two things. The band is a claim
+   * about how much schooling the question assumes; the step is how close the
+   * answers sit. They correlate, because harder subjects invite closer traps,
+   * but a mode's `bluffSteps` takes the square root for the harder two, so the
+   * same displacement is a different board in different modes. What must hold
+   * is that no board is razor-thin.
+   */
+  it('gives each band the board width its name promises', () => {
+    // The floor a mode owes its reader. `elementary` is the one that matters:
+    // the complaint that started this banding was that the easiest mode was
+    // too hard, and a three-times-apart board is what "room to be wrong" means.
+    // 1.2x is the global limit — below it, four two-significant-figure numbers
+    // stop reading as visibly different at all.
+    const FLOOR: Record<string, number> = {
+      elementary: 3,
+      middle: 1.75,
+      high: 1.3,
+      university: 1.2,
+    };
+    for (const tier of tiers) {
+      for (const round of tierPool(ADVERSARY_CATALOG, tier)) {
+        const step = stepFor(round, tier);
+        expect(
+          step,
+          `${round.id} is ${round.band} but its options are only ${step.toFixed(2)}x apart`,
+        ).toBeGreaterThan(FLOOR[round.band]!);
+      }
+    }
+  });
+
+  /**
+   * The claim the mode screen makes: the answers get closer together as the
+   * schooling assumed goes up. An aggregate rather than a per-round rule,
+   * because board width follows the authored trap and a good university
+   * question is allowed an obvious one.
+   */
+  it('puts the answers closer together as the band gets harder', () => {
+    const median = (tierId: 'easy' | 'ultimate') => {
+      const tier = config.tiers[tierId];
+      const steps = tierPool(ADVERSARY_CATALOG, tier)
+        .map((r) => stepFor(r, tier))
+        .sort((a, b) => a - b);
+      return steps[Math.floor(steps.length / 2)]!;
+    };
+    expect(median('easy')).toBeGreaterThan(median('ultimate'));
+  });
+
+  it('gives every band enough questions to fill the mode built for it', () => {
+    for (const band of SCHOOL_BANDS) {
+      const inBand = ADVERSARY_CATALOG.filter((r) => r.band === band);
+      expect(inBand.length, `band "${band}" has ${inBand.length} rounds`).toBeGreaterThan(8);
     }
   });
 
@@ -143,19 +230,25 @@ describe('the board', () => {
     }
   });
 
-  it('gives the same seed the same board, and different tiers different boards', () => {
-    const round = tierPool(ADVERSARY_CATALOG, config.tiers.hard)[0]!;
+  it('gives the same seed the same board, and a different seed a different one', () => {
     const hard = config.tiers.hard;
+    const round = tierPool(ADVERSARY_CATALOG, hard)[0]!;
     expect(buildLevel('same', round, hard, 1, 100, true)).toEqual(
       buildLevel('same', round, hard, 1, 100, true),
     );
 
-    // Replaying a seed on another mode must not hand back the same answer
-    // slots, or one run would be a partial map of every other run on that seed.
-    const slots = TIER_ORDER.filter((id) => fitsTier(round, config.tiers[id])).map(
-      (id) => buildLevel('same', round, config.tiers[id], 1, 100, true).correctIndex,
+    // A round now belongs to exactly one mode, so the seed is the only thing
+    // that can move the answer's slot — and it has to, or a replayed seed
+    // would be a map of the run before it.
+    const slots = new Set(
+      Array.from({ length: 12 }, (_, i) =>
+        tierPool(ADVERSARY_CATALOG, hard)
+          .slice(0, 6)
+          .map((r) => buildLevel(`s${i}`, r, hard, 1, 100, true).correctIndex)
+          .join(''),
+      ),
     );
-    expect(new Set(slots).size).toBeGreaterThan(1);
+    expect(slots.size).toBeGreaterThan(1);
   });
 
   it('puts the truth in every slot the bluff direction allows, across the catalog', () => {
@@ -177,18 +270,14 @@ describe('the audience', () => {
   });
 
   it('is a good guide on easy questions and a trap on hard ones', () => {
-    const easiest = tierPool(ADVERSARY_CATALOG, config.tiers.normal).find(
-      (r) => r.difficulty === 1,
-    )!;
-    const hardest = tierPool(ADVERSARY_CATALOG, config.tiers.hard).find(
-      (r) => r.difficulty === 5,
-    )!;
+    const easiest = tierPool(ADVERSARY_CATALOG, config.tiers.easy)[0]!;
+    const hardest = tierPool(ADVERSARY_CATALOG, config.tiers.ultimate)[0]!;
 
-    const easyLevel = buildLevel('aud', easiest, config.tiers.normal, 1, 100, true);
+    const easyLevel = buildLevel('aud', easiest, config.tiers.easy, 1, 100, true);
     const easyShares = audienceShares('aud', easyLevel);
     expect(easyShares[easyLevel.correctIndex]!).toBeGreaterThan(easyShares[easyLevel.bluffIndex]!);
 
-    const hardLevel = buildLevel('aud', hardest, config.tiers.hard, 1, 100, true);
+    const hardLevel = buildLevel('aud', hardest, config.tiers.ultimate, 1, 100, true);
     // The crowd's favourite on a hard question is a wrong one -- usually the
     // intuitive reading the bluff argues for. That is the lifeline's lesson.
     const hardShares = audienceShares('aud', hardLevel);
@@ -227,19 +316,21 @@ describe('the friend', () => {
     }
   });
 
-  it('claims less on harder questions', () => {
-    const stated = (difficulty: number) => {
-      const round = tierPool(ADVERSARY_CATALOG, config.tiers.hard).find(
-        (r) => r.difficulty === difficulty,
-      )!;
+  it('claims less on questions that assume more schooling', () => {
+    const stated = (tierId: 'easy' | 'ultimate') => {
+      const tier = config.tiers[tierId];
+      const pool = tierPool(ADVERSARY_CATALOG, tier);
       let sum = 0;
-      for (let s = 0; s < 200; s += 1) {
-        const level = buildLevel(`c${s}`, round, config.tiers.hard, 1, 100, true);
-        sum += friendCall(`c${s}`, level).confidence;
+      let n = 0;
+      for (let s = 0; s < 60; s += 1) {
+        for (const round of pool) {
+          sum += friendCall(`c${s}`, buildLevel(`c${s}`, round, tier, 1, 100, true)).confidence;
+          n += 1;
+        }
       }
-      return sum / 200;
+      return sum / n;
     };
-    expect(stated(2)).toBeGreaterThan(stated(5));
+    expect(stated('easy')).toBeGreaterThan(stated('ultimate'));
   });
 
   it('is wrong the way a thoughtful person is wrong', () => {
@@ -317,18 +408,31 @@ describe('the ladder and the plan', () => {
     }
   });
 
-  it('ramps across the whole of the tier difficulty slice', () => {
+  it('draws every rung from its own school band, and nothing else', () => {
     for (const tier of tiers) {
       const plan = planRun('ramp', ADVERSARY_CATALOG, [], tier, config);
       expect(plan.levels).toHaveLength(tier.levels);
-
-      const difficulties = plan.levels.map((l) => l.round.difficulty);
-      expect(Math.min(...difficulties)).toBe(tier.minDifficulty);
-      // A sort would fill every rung from the easiest end of the pool and the
-      // hardest questions would never appear in the mode built for them.
-      expect(Math.max(...difficulties)).toBe(tier.maxDifficulty);
-      expect(difficulties[0]!).toBeLessThanOrEqual(difficulties[difficulties.length - 1]!);
+      for (const level of plan.levels) expect(level.round.band).toBe(tier.band);
+      for (const spare of plan.reserve) expect(spare.band).toBe(tier.band);
     }
+  });
+
+  it('ramps from the gentlest question in the band to the hardest', () => {
+    for (const tier of tiers) {
+      const plan = planRun('ramp', ADVERSARY_CATALOG, [], tier, config);
+      const difficulties = plan.levels.map((l) => l.round.difficulty);
+      // A sort would look like a ramp and quietly truncate it: every rung
+      // filled from the gentle end, and the band's hardest never shown.
+      const half = Math.floor(difficulties.length / 2);
+      const front = difficulties.slice(0, half).reduce((a, b) => a + b, 0) / half;
+      const back = difficulties.slice(-half).reduce((a, b) => a + b, 0) / half;
+      expect(back).toBeGreaterThanOrEqual(front);
+    }
+  });
+
+  it('gives every mode a different band, so no question can appear in two', () => {
+    const bands = tiers.map((t) => t.band);
+    expect(new Set(bands).size).toBe(bands.length);
   });
 
   it('never shows the same question twice in a run, and keeps a reserve for swaps', () => {
@@ -356,9 +460,12 @@ describe('the ladder and the plan', () => {
       planRun('same', ADVERSARY_CATALOG, [], tier, config),
     );
 
-    const played = tierPool(ADVERSARY_CATALOG, tier)
-      .slice(0, 6)
-      .map((r) => r.id);
+    // Only as many as the pool can spare: the preference relaxes rather than
+    // failing once too few fresh rounds are left to fill the ladder, which is
+    // what stops a player who has seen a band being handed an error.
+    const pool = tierPool(ADVERSARY_CATALOG, tier);
+    const played = pool.slice(0, pool.length - tier.levels).map((r) => r.id);
+    expect(played.length).toBeGreaterThan(0);
     const plan = planRun('avoid', ADVERSARY_CATALOG, played, tier, config);
     for (const level of plan.levels) expect(played).not.toContain(level.round.id);
   });

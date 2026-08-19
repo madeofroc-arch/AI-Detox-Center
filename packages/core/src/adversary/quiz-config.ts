@@ -5,15 +5,22 @@
  * (CLAUDE.md rule 5). The tier table is the difficulty curve, and it is meant
  * to be read as one: each row is a claim about what that mode asks of a player.
  */
+import type { SchoolBand } from './types';
 import type { Inventory, LifelineId, TierId } from './quiz-types';
 
 export const QUIZ_CONFIG_VERSION = 1;
 
 export interface TierConfig {
   id: TierId;
-  /** Rounds are drawn from this slice of the catalog's difficulty scale. */
-  minDifficulty: number;
-  maxDifficulty: number;
+  /**
+   * The school level this mode draws from, one band per mode.
+   *
+   * An earlier version drew from an overlapping slice of a 1-5 difficulty
+   * scale, which let the easiest mode ask a university question that merely
+   * happened to be the easiest university question in the catalog. A band is an
+   * absolute claim about the reader, and it is the claim the mode screen makes.
+   */
+  band: SchoolBand;
   /**
    * How many option-slots separate the truth from the figure the bluff argues
    * for, which is what sets the gap between neighbouring options.
@@ -28,13 +35,6 @@ export interface TierConfig {
    * differ mainly by pool, economy and how often the host lies.
    */
   bluffSteps: 1 | 2;
-  /**
-   * Bounds on the round's own displacement, so a mode can prefer boards whose
-   * trap sits far from the truth or close to it. `easy` takes only the wide
-   * ones; `ultimate` only the tight ones.
-   */
-  minDisplacement: number;
-  maxDisplacement: number;
   /**
    * How far outside the round's authored axis an option may sit.
    *
@@ -111,11 +111,8 @@ export const DEFAULT_QUIZ_CONFIG: QuizConfig = {
   tiers: {
     easy: {
       id: 'easy',
-      minDifficulty: 1,
-      maxDifficulty: 3,
+      band: 'elementary',
       bluffSteps: 1,
-      minDisplacement: 2.5,
-      maxDisplacement: Infinity,
       axisTolerance: 4,
       levels: 8,
       lives: 3,
@@ -127,11 +124,8 @@ export const DEFAULT_QUIZ_CONFIG: QuizConfig = {
     },
     normal: {
       id: 'normal',
-      minDifficulty: 1,
-      maxDifficulty: 4,
+      band: 'middle',
       bluffSteps: 1,
-      minDisplacement: 1,
-      maxDisplacement: Infinity,
       axisTolerance: 4,
       levels: 10,
       lives: 2,
@@ -143,11 +137,8 @@ export const DEFAULT_QUIZ_CONFIG: QuizConfig = {
     },
     hard: {
       id: 'hard',
-      minDifficulty: 2,
-      maxDifficulty: 5,
+      band: 'high',
       bluffSteps: 2,
-      minDisplacement: 1,
-      maxDisplacement: Infinity,
       axisTolerance: 4,
       levels: 12,
       lives: 2,
@@ -159,13 +150,8 @@ export const DEFAULT_QUIZ_CONFIG: QuizConfig = {
     },
     ultimate: {
       id: 'ultimate',
-      minDifficulty: 2,
-      maxDifficulty: 5,
+      band: 'university',
       bluffSteps: 2,
-      minDisplacement: 1,
-      // Only rounds whose trap lands close to the truth, which is what makes
-      // the board tight enough that a rough idea cannot survive it.
-      maxDisplacement: 8,
       axisTolerance: 4,
       levels: 12,
       lives: 1,

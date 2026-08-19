@@ -49,12 +49,7 @@ export function tierPool(
   catalog: readonly AdversaryRound[],
   tier: TierConfig,
 ): AdversaryRound[] {
-  return catalog.filter(
-    (r) =>
-      r.difficulty >= tier.minDifficulty &&
-      r.difficulty <= tier.maxDifficulty &&
-      fitsTier(r, tier),
-  );
+  return catalog.filter((r) => r.band === tier.band && fitsTier(r, tier));
 }
 
 /**
@@ -80,12 +75,12 @@ export function bluffLevels(seed: string, tier: TierConfig): number[] {
 /**
  * Plan a run.
  *
- * The ramp assigns each rung a target difficulty spread evenly across the
- * tier's slice, then takes the nearest unplayed round to that target. Sorting
- * the pool by difficulty instead would look like a ramp and quietly truncate
- * it: `ultimate` draws from difficulty 3-5 over twelve levels, and a sort would
- * fill all twelve from the eighteen easiest rounds available, so difficulty 5
- * would never appear in the mode built for it.
+ * Every mode draws from exactly one school band, so the ramp runs across that
+ * band's own 1-5 spread rather than across the catalog's: each rung takes the
+ * unplayed round nearest its target, gentlest first. Sorting the pool instead
+ * would look like a ramp and quietly truncate it — a twelve-rung mode would
+ * fill every rung from the gentlest end and the hardest questions in the band
+ * would never appear in it.
  *
  * Unplayed rounds are preferred and the constraint relaxes rather than failing
  * — a player who has seen the whole catalog gets repeats, not an error.
@@ -101,7 +96,7 @@ export function planRun(
   if (eligible.length === 0) {
     throw new Error(
       `No catalog rounds can produce a board for tier ${tier.id} ` +
-        `(difficulty ${tier.minDifficulty}-${tier.maxDifficulty}, ${tier.bluffSteps} bluff step(s))`,
+        `(band ${tier.band}, ${tier.bluffSteps} bluff step(s))`,
     );
   }
 
@@ -122,8 +117,9 @@ export function planRun(
   const span = tier.levels > 1 ? tier.levels - 1 : 1;
 
   for (let i = 0; i < tier.levels; i += 1) {
-    const targetDifficulty =
-      tier.minDifficulty + ((tier.maxDifficulty - tier.minDifficulty) * i) / span;
+    // The ramp runs across the band's own 1-5 spread: gentlest question in the
+    // band first, hardest last.
+    const targetDifficulty = 1 + (4 * i) / span;
     const chosen = nearestByDifficulty(remaining, targetDifficulty);
     if (chosen === null) break;
     remaining.splice(remaining.indexOf(chosen), 1);

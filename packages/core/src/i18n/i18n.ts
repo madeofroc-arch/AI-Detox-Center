@@ -3,6 +3,7 @@
  * to a complete `CoreStrings`, because a partial translation falls back to
  * English key by key rather than leaving a hole in the UI.
  */
+import type { AdversaryRound } from '../adversary/types';
 import type { Challenge } from '../challenges/types';
 import type { ReflectionPrompt } from '../ai-detox/reflection/reflection';
 import type { AIUsageCategory, CategoryInfo } from '../ai-detox/tracking/types';
@@ -44,6 +45,7 @@ export function getCoreStrings(locale: Locale | string | undefined): CoreStrings
     challengeCategories: mergeTable(EN_STRINGS.challengeCategories, over.challengeCategories),
     reflectionPrompts: mergeTable(EN_STRINGS.reflectionPrompts, over.reflectionPrompts),
     challenges: mergeTable(EN_STRINGS.challenges, over.challenges),
+    adversaryRounds: mergeTable(EN_STRINGS.adversaryRounds, over.adversaryRounds),
   };
   CACHE.set(key, merged);
   return merged;
@@ -64,6 +66,36 @@ export function localizeChallenge(challenge: Challenge, strings: CoreStrings): C
     instructions: text.instructions,
     successCondition: text.successCondition,
     reflectionQuestions: text.reflectionQuestions,
+  };
+}
+
+/**
+ * A round with its text in the requested language.
+ *
+ * Id, band, domain, difficulty, true value, axis, and both pushback directions
+ * are untouched, along with the bluff's own figure — those are what the board
+ * is built from, and a board that depended on the display language would deal
+ * the same person different questions in English and 繁體中文.
+ *
+ * A language that has not reached this round yet gets the English text rather
+ * than a hole, which is what lets the catalog be translated a few rounds at a
+ * time.
+ */
+export function localizeRound(round: AdversaryRound, strings: CoreStrings): AdversaryRound {
+  const text = strings.adversaryRounds[round.id];
+  if (!text) return round;
+  return {
+    ...round,
+    question: text.question,
+    unit: text.unit,
+    sourceNote: text.sourceNote,
+    honest: { ...round.honest, argument: text.honest.argument, verdict: text.honest.verdict },
+    bluff: {
+      ...round.bluff,
+      argument: text.bluff.argument,
+      verdict: text.bluff.verdict,
+      fallacy: text.bluff.fallacy,
+    },
   };
 }
 
