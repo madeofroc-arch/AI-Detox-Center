@@ -101,8 +101,12 @@ It was run by a sighted developer with the browser's accessibility tree, a
 contrast calculator and a keyboard — **not with a screen reader, and not by
 anyone who uses assistive technology daily**. VoiceOver and TalkBack rotor
 behaviour, focus order on a real device, and how the grouped bar rows actually
-sound are all unverified. A report from someone who uses AT is worth more than
-this table, and [#4](../../../../issues/4) stays open to that.
+sound are all unverified.
+
+That is the open half of this. A report from someone who uses AT is worth more
+than this table, and it is the single most useful contribution the project can
+receive on accessibility right now — a comment saying what a screen reader
+actually says on any one of these ten screens is enough to act on.
 
 ## Review checklist (run per screen before "done")
 
