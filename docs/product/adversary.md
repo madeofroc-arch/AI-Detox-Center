@@ -252,10 +252,33 @@ to anchor wins more rounds than they lose, without reading either argument to
 the end.
 
 Measured across the 56 rounds now shipped, that opener fronts 15 honest
-arguments and 4 bluffs. It fires on a third of the catalog and is right four
-times in five when it does — an improvement on the 12–0 it scored over the
-first thirty, which is what the expansion bought, and still an edge nobody
-should have.
+arguments and 4 bluffs — but the aggregate hides the useful fact. Split by
+band:
+
+| band | honest opens correctively | bluff does | rounds |
+| --- | --- | --- | --- |
+| elementary | 0 | 1 | 13 |
+| middle | 2 | 1 | 12 |
+| high | 5 | 1 | 14 |
+| university | 8 | 1 | 17 |
+
+**簡單 is clean. 終極 carries almost all of it.** The expansion did not dilute
+the tell evenly; it added two bands that never had it, and the university band
+still opens eight honest arguments correctively against one bluff. So the fix
+is smaller and better aimed than it looked: move the shape onto some
+university-band bluffs — which are themselves wrong anchors, so it fits them
+naturally — and off an equal number of honest openings there.
+
+A second measurement bounds how much it currently costs. All 24 newly
+localised rounds were put to blind readers who saw the question and the two
+arguments with every answer stripped out — no verdict, no fallacy name, no
+direction, and the flawed side alternating between the two labels. They got
+24 of 24, and **none of them decided a round on wording**: 23 on domain
+knowledge, 1 on arithmetic. Several named the corrective-opener asymmetry
+unprompted and then went and did the arithmetic anyway — and in the
+elementary band they kept finding it on the *sound* side, which is what the
+table above says. A reader who knows the answers is not the player this game
+is for, so this bounds the tell rather than clearing it.
 
 It is not fixed here, and pretending otherwise would be worse than recording it.
 The fix is to move that shape onto some bluffs — which are themselves wrong
@@ -285,13 +308,27 @@ language has not reached renders in English rather than as a hole, so the
 catalog can be translated a few rounds at a time.
 
 All 56 rounds now carry 繁體中文, pinned by `zh-catalog.test.ts`, which fails
-the build on a missing round and on ten style and safety rules besides.
-**Not every round has been read twice.** The first thirty were localised and
-then re-read by a second reviewer whose only job was consistency — that pass
-is what found the corrective-opener tell above. Of the twenty-six added with
-the school-band expansion, two were re-read; the other twenty-four have the
-translation and the automated gates but not the second reader. That is the
-known gap in this content, and it is the first thing to close.
+the build on a missing round and on ten style and safety rules besides. Every
+round has now been read twice: the first thirty when they were written, and
+the twenty-six added with the school-band expansion in a second pass that read
+twenty-four of them (two had already been read back when they were written) and
+corrected twelve.
+
+Two of the twelve were the same defect and it is worth naming, because it is a
+process failure rather than a translation one. Three English verdicts were
+rewritten — a blue whale cube-scaled to 320 t, a bathtub counted as 360
+bottles that is 240, a tree of 720,000 sheets called 8,300 — *after* the
+localisation batches had been dispatched against the old text. One of the
+three was caught by its own batch's reviewer; the other two shipped stale, so
+the Chinese reveal did arithmetic that no longer reached the answer the game
+displays. **A content edit after a translation is dispatched desyncs the two
+catalogs silently** — nothing in the type system or the tests can see it,
+because both files are individually well-formed. The read-back is the only
+thing that catches it.
+
+The same pass found a factual error in the *English*: the Sun at 1.41 g/cm³
+was described as lighter than water. It is not — that is Saturn. Fixed in both
+languages.
 
 The original spec said pushbacks would be **authored** independently per
 language rather than translated, on the grounds that persuasiveness lives in

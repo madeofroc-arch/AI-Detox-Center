@@ -30,13 +30,23 @@
  * correcting an anchor ("Anchor on people, not on shops", "The binding
  * constraint here is water, not appetite") far more often than bluffs do. A
  * player who picks the corrective opener wins more than they lose without
- * reading either argument. Measured over the 56 rounds shipped here that
- * opener fronts 15 honest arguments and 4 bluffs: the heuristic fires on a
- * third of the catalog and is right four times in five when it does. Better
- * than the 12-0 it scored over the first thirty, and still an edge nobody
- * should have. Fixing it means moving that shape onto some bluffs — which are
- * themselves wrong anchors — and off an equal number of honest openings, in
- * both languages. See docs/product/adversary.md.
+ * reading either argument. Measured over the 56 rounds shipped here it fronts
+ * 15 honest arguments and 4 bluffs — but the split by band is the useful
+ * number, because the tell is not spread evenly:
+ *
+ *   band         honest / bluff / rounds
+ *   elementary        0 / 1 / 13
+ *   middle            2 / 1 / 12
+ *   high              5 / 1 / 14
+ *   university        8 / 1 / 17
+ *
+ * 簡單 is clean and 終極 carries almost all of it. Fixing it means moving that
+ * shape onto some university bluffs — which are themselves wrong anchors — and
+ * off an equal number of honest openings there, in both languages. A blind
+ * read of all 24 newly localised rounds, given the two arguments with the
+ * answers stripped out, decided none of them on wording; the readers named the
+ * asymmetry unprompted and then went and did the arithmetic anyway.
+ * See docs/product/adversary.md.
  *
  * The `honest` and `bluff` arguments for a round may push the SAME direction.
  * That is deliberate. If the sound argument always disagreed with the bluff
@@ -1162,7 +1172,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       argument:
         'Use the ratio every astronomy table actually carries: the Sun holds 333,000 times the Earth\'s mass. Both are balls of ordinary matter held together by their own gravity, so counting Earths by mass and counting Earths by volume is the same count done twice. The Sun is 333,000 Earths, and a figure up in the millions has counted the same Earths several times over.',
       verdict:
-        'That was a bluff, and the 333,000 is exact. Mass and volume are the same count only if the two bodies share a density, and these two are nowhere near: Earth is compressed rock and iron at 5.51 grams per cubic centimetre, the Sun is hot hydrogen and helium at 1.41 — a quarter as dense, and lighter than water. So each solar Earth-mass takes up about 3.9 Earth-volumes, and 333,000 masses fill 1.3 million volumes. The check that needs no density at all: the Sun is 109 Earth radii, and 109 cubed is 1.3 million.',
+        'That was a bluff, and the 333,000 is exact. Mass and volume are the same count only if the two bodies share a density, and these two are nowhere near: Earth is compressed rock and iron at 5.51 grams per cubic centimetre, the Sun is hot hydrogen and helium at 1.41 — a quarter as dense, and barely denser than water. So each solar Earth-mass takes up about 3.9 Earth-volumes, and 333,000 masses fill 1.3 million volumes. The check that needs no density at all: the Sun is 109 Earth radii, and 109 cubed is 1.3 million.',
       fallacy: 'mass and volume treated as the same count — the density ratio silently set to one',
       bluffValue: 333_000,
     },
