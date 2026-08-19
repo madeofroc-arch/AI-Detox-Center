@@ -20,6 +20,13 @@ export * from './ai-detox/detox/detox';
 // reflection
 export * from './ai-detox/reflection/reflection';
 
+// the adversary (docs/product/adversary.md)
+export * from './adversary/types';
+export * from './adversary/config';
+export * from './adversary/scoring';
+export * from './adversary/selection';
+export * from './adversary/catalog';
+
 // challenges
 export * from './challenges/types';
 export * from './challenges/catalog';
