@@ -1,0 +1,69 @@
+# Dependency updates.
+#
+# Alerts on the Security tab are a badge nobody reads. Pull requests get
+# reviewed. This file turns the former into the latter, and groups the noisy
+# parts so a weekly run does not open fifteen PRs for one Expo release.
+version: 2
+updates:
+  - package-ecosystem: npm
+    # One lockfile at the root covers both workspaces.
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    groups:
+      # Expo and React Native release as a coordinated set; a PR per package
+      # is noise, and each one alone would fail `expo install --check`.
+      expo-react-native:
+        patterns:
+          - "expo"
+          - "expo-*"
+          - "@expo/*"
+          - "react-native"
+          - "react-native-*"
+          - "@react-native/*"
+          - "metro"
+          - "metro-*"
+        update-types:
+          - minor
+          - patch
+      dev-tooling:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+          - "@testing-library/*"
+          - "jsdom"
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "typescript"
+          - "typescript-eslint"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # An Expo SDK major is a migration, not a version bump: it moves React
+      # Native, Metro, the config plugins and the native runtime together, and
+      # the supported path is `npx expo install --fix` plus a manual read of
+      # the upgrade notes. A Dependabot PR that bumps one package out of that
+      # set produces a broken tree that CI cannot repair.
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(ci)"
