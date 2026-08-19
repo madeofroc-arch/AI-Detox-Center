@@ -211,8 +211,10 @@ keep CI green.
 Good places to start, in rough order of how little setup they need:
 
 - **[Propose a Human Challenge](../../issues/1)** — no code at all; fill in a form
-- **[Run the accessibility checklist](../../issues/4)** — never yet executed against the built app
-- **[Add UI tests for the app](../../issues/2)** — the largest coverage gap in the repo
+- **[Tell us what a screen reader says](../../issues/7)** — no code either. The
+  accessibility audit was run with a keyboard and a contrast calculator, not
+  with assistive technology; one screen's worth of "here is what I actually
+  heard" is directly actionable
 - **[Add a language](CONTRIBUTING.md#adding-a-language)** — two data files and a
   compiler-checked contract; English and 繁體中文 ship today
 

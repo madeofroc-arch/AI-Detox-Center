@@ -103,10 +103,12 @@ anyone who uses assistive technology daily**. VoiceOver and TalkBack rotor
 behaviour, focus order on a real device, and how the grouped bar rows actually
 sound are all unverified.
 
-That is the open half of this. A report from someone who uses AT is worth more
-than this table, and it is the single most useful contribution the project can
-receive on accessibility right now — a comment saying what a screen reader
-actually says on any one of these ten screens is enough to act on.
+That is the open half of this, and it is tracked in
+[#7](../../../../issues/7), which lists the eight specific decisions made blind
+— whether a factor row should be one announcement or three, whether `image` is
+the right role for a bar, whether the timers still re-announce every second on
+iOS. A report from someone who uses AT is worth more than this table, and one
+screen's worth of "here is what I actually heard" is enough to act on.
 
 ## Review checklist (run per screen before "done")
 
