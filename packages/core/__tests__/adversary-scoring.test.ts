@@ -235,6 +235,24 @@ describe('the payout cannot be gamed', () => {
   });
 });
 
+describe('the interval loss itself', () => {
+  it('is the band width when the answer is inside, with no penalty at all', () => {
+    const band = { lo: 1_000, hi: 100_000 };
+    // log10(100000) - log10(1000) = 2
+    expect(intervalLoss(ROUND, band, config)).toBeCloseTo(2, 6);
+  });
+
+  it('adds 2/alpha per decade missed, which is what makes it proper', () => {
+    // alpha = 0.1, so a miss costs 20 per decade outside the band. That slope
+    // is the whole reason an honest 90% interval is the best claim.
+    const oneDecadeHigh = { lo: 100, hi: 1_000 }; // answer 10,000 is one decade above
+    expect(intervalLoss(ROUND, oneDecadeHigh, config)).toBeCloseTo(1 + 20 * 1, 6);
+
+    const twoDecadesLow = { lo: 1_000_000, hi: 1_000_000 }; // two decades below the band
+    expect(intervalLoss(ROUND, twoDecadesLow, config)).toBeCloseTo(0 + 20 * 2, 6);
+  });
+});
+
 describe('resolving a round', () => {
   it('puts an inverted or out-of-axis band back in range', () => {
     expect(normalizeBand(ROUND, { lo: 500, hi: 200 })).toEqual({ lo: 200, hi: 500 });
