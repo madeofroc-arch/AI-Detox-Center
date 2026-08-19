@@ -51,9 +51,29 @@ updates:
       # the supported path is `npx expo install --fix` plus a manual read of
       # the upgrade notes. A Dependabot PR that bumps one package out of that
       # set produces a broken tree that CI cannot repair.
+      #
+      # This list is every package the Expo SDK version-pins. The first version
+      # of this file named only expo/react-native/react/react-dom, and the very
+      # first Dependabot run opened a major bump of react-native-gesture-handler
+      # — which apps/mobile/package.json pins at `~2.32.0` precisely because
+      # Expo 57 requires that line. Groups only cover minor and patch, so a
+      # major always falls out into its own PR; the ignore list is what catches
+      # it, and it has to cover the whole pinned set.
       - dependency-name: "expo"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "expo-*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@expo/*"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native-*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-native/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "metro"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "metro-*"
         update-types: ["version-update:semver-major"]
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
