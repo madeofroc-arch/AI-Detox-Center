@@ -79,6 +79,17 @@ export interface FactorScore {
   maxPoints: number;
   /** intensity * maxPoints. Sign-neutral; `role` carries the direction. */
   points: number;
+  /**
+   * The whole-point value to SHOW for this factor. Sign-neutral like `points`.
+   *
+   * Displayed values are apportioned so that
+   * `sum(contributors) - sum(reducers) === score`, exactly, always. Rounding
+   * each row on its own instead reconciled with the dial only about half the
+   * time, because rounding a list of numbers and rounding their sum are
+   * different operations (#6). Every value here is its exact `points` floored
+   * or ceiled, so no row is ever off by a whole point.
+   */
+  displayPoints: number;
   description: string;
 }
 
@@ -123,6 +134,63 @@ function clamp01(n: number): number {
 
 /** See the rounding note in computeDependencyScore. */
 const ROUND_EPSILON = 1e-9;
+
+/** A factor before its displayed integer has been apportioned. */
+type FactorPoints = Omit<FactorScore, 'displayPoints'>;
+
+/**
+ * Whole-point values for the breakdown that add up to the dial.
+ *
+ * The exact identity `sum(contributors) - sum(reducers) = score` holds on
+ * unrounded points and is pinned in the calibration tests. The DISPLAYED
+ * integers are a different question, and the honest answer used to be "about
+ * half the time": rounding each row independently and rounding their sum are
+ * different operations, so a reachable profile showed rows adding to 71 beside
+ * a dial reading 70 (#6).
+ *
+ * Largest-remainder apportionment (Hamilton's method) restores the identity
+ * without lying about any row. Each factor gets its exact value floored, then
+ * the points still owed to the dial go to the factors with the largest
+ * fractional parts — so every displayed value is its true value floored or
+ * ceiled, no row moves by a whole point, and the sum is exact by construction
+ * rather than by luck.
+ *
+ * Reducers enter negative, because the identity the report actually claims to
+ * the user is `what adds - what lowers = the number on the dial`.
+ */
+function withDisplayPoints(factors: readonly FactorPoints[], target: number): FactorScore[] {
+  const rows = factors.map((factor, index) => {
+    const signed = factor.role === 'reducer' ? -factor.points : factor.points;
+    const whole = Math.floor(signed);
+    return { index, whole, remainder: signed - whole };
+  });
+
+  // Largest fractional part first; ties broken by position, so the same score
+  // always produces the same breakdown (determinism is a hard rule here).
+  const byRemainder = [...rows].sort((a, b) => b.remainder - a.remainder || a.index - b.index);
+  let leftover = target - rows.reduce((sum, row) => sum + row.whole, 0);
+  for (const row of byRemainder) {
+    if (leftover <= 0) break;
+    row.whole += 1;
+    leftover -= 1;
+  }
+  // Unreachable from any config sanitize accepts (the dial is clamped into
+  // 0..100 and the floors can only undershoot), but a hand-edited config must
+  // not be able to break the invariant this function exists to hold.
+  for (let i = byRemainder.length - 1; i >= 0 && leftover < 0; i -= 1) {
+    const row = byRemainder[i];
+    if (!row) continue;
+    row.whole -= 1;
+    leftover += 1;
+  }
+
+  return factors.map((factor, index) => {
+    const whole = rows[index]?.whole ?? 0;
+    const displayPoints = factor.role === 'reducer' ? -whole : whole;
+    // Math.floor(-0) is -0, and -0 reads as a different value to Object.is.
+    return { ...factor, displayPoints: displayPoints === 0 ? 0 : displayPoints };
+  });
+}
 
 export function computeDependencyScore(
   events: readonly AIUsageEvent[],
@@ -180,7 +248,7 @@ export function computeDependencyScore(
   );
   const clampFactor = rawReliance > 100 ? 100 / rawReliance : 1;
 
-  const contributors: FactorScore[] = CONTRIBUTOR_FACTORS.map((factor) => {
+  const contributors: FactorPoints[] = CONTRIBUTOR_FACTORS.map((factor) => {
     const maxPoints = scale * w[factor] * clampFactor;
     return {
       factor,
@@ -201,7 +269,7 @@ export function computeDependencyScore(
 
   // Reducer weights are relative shares of the allowed discount.
   const reducerWeightTotal = REDUCER_FACTORS.reduce((sum, f) => sum + w[f], 0);
-  const reducers: FactorScore[] = REDUCER_FACTORS.map((factor) => {
+  const reducers: FactorPoints[] = REDUCER_FACTORS.map((factor) => {
     const maxPoints =
       reducerWeightTotal > 0
         ? (reliance * config.reducerMaxDiscount * w[factor]) / reducerWeightTotal
@@ -217,19 +285,6 @@ export function computeDependencyScore(
     };
   });
 
-  const factors = [...contributors, ...reducers];
-  const base = {
-    factors,
-    eventCount: stats.totalEvents,
-    aiUseCount: stats.aiUseCount,
-    windowDays: config.windowDays,
-    configVersion: config.version,
-  };
-
-  if (stats.totalEvents < config.minEventsForScore) {
-    return { status: 'insufficient_data', score: null, band: null, ...base };
-  }
-
   const discount = reducers.reduce((sum, f) => sum + f.points, 0);
   // reliance <= 100 by the clamp factor above, and discount < reliance because
   // reducerMaxDiscount < 1, so this stays in range; the clamp guards a
@@ -243,6 +298,21 @@ export function computeDependencyScore(
   // model can express (the smallest is ~0.03 points) and far above the
   // ~1e-14 of float noise, so a tie always resolves the same way.
   const score = Math.round(exact + ROUND_EPSILON);
+
+  // Apportioned against the dial even when the score is withheld: the numbers
+  // in the breakdown must agree with the number the dial WOULD show, or the
+  // report would start disagreeing with itself the moment it unlocks.
+  const base = {
+    factors: withDisplayPoints([...contributors, ...reducers], score),
+    eventCount: stats.totalEvents,
+    aiUseCount: stats.aiUseCount,
+    windowDays: config.windowDays,
+    configVersion: config.version,
+  };
+
+  if (stats.totalEvents < config.minEventsForScore) {
+    return { status: 'insufficient_data', score: null, band: null, ...base };
+  }
 
   return { status: 'ok', score, band: bandForScore(score, config), ...base };
 }

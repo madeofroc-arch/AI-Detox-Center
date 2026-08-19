@@ -112,13 +112,33 @@ export default function Detox() {
   const mm = Math.floor(remaining / 60);
   const ss = remaining % 60;
   const timeUp = isTimeUp(session, nowIso());
+  // Coarse on purpose. This label used to carry mm:ss on a view that
+  // re-renders every second, which is exactly what the accessibility spec
+  // says a timer must not announce (#4). Minutes changes it 25 times a
+  // session instead of 1,500, and still answers "how long left?".
+  const spokenRemaining =
+    remaining >= 60 ? t.common.minutesLeft(Math.round(remaining / 60)) : t.common.underAMinuteLeft;
+  const status = timeUp
+    ? t.detox.statusTimeUp
+    : session.state === 'running'
+      ? t.detox.statusRunning
+      : t.detox.statusPaused;
 
   return (
     <Screen title={t.detox.title}>
       <Card>
         <View style={{ alignItems: 'center', gap: spacing.lg, paddingVertical: spacing.xxl }}>
+          {/* The only thing here that changes at a human pace, so it is the
+              only thing announced when it changes. Paused was previously
+              legible only as "the digits stopped moving". */}
           <Text
-            accessibilityLabel={t.detox.timeRemaining(mm, ss)}
+            accessibilityLiveRegion="polite"
+            style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}
+          >
+            {status}
+          </Text>
+          <Text
+            accessibilityLabel={spokenRemaining}
             style={[type.display, { color: colors.ink, fontSize: 56, lineHeight: 64, fontVariant: ['tabular-nums'] }]}
           >
             {String(mm).padStart(2, '0')}:{String(ss).padStart(2, '0')}

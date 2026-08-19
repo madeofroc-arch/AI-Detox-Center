@@ -56,7 +56,10 @@ export default function Progress() {
       ) : (
         <>
           <Card>
-            <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
+            <Text
+              accessibilityRole="header"
+              style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}
+            >
               {t.progress.thisWeek}
             </Text>
             <Text style={[type.heading, { color: colors.ink, marginTop: spacing.xs }]}>
@@ -65,7 +68,10 @@ export default function Progress() {
           </Card>
 
           <Card>
-            <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
+            <Text
+              accessibilityRole="header"
+              style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}
+            >
               {t.progress.practice}
             </Text>
             <Text style={[type.heading, { color: colors.ink, marginTop: spacing.xs }]}>
@@ -92,6 +98,7 @@ export default function Progress() {
 
           <Card>
             <Text
+              accessibilityRole="header"
               style={[
                 type.micro,
                 { color: colors.inkMuted, textTransform: 'uppercase', marginBottom: spacing.md },
@@ -113,6 +120,7 @@ export default function Progress() {
 
           <Card>
             <Text
+              accessibilityRole="header"
               style={[
                 type.micro,
                 { color: colors.inkMuted, textTransform: 'uppercase', marginBottom: spacing.md },

@@ -11,15 +11,15 @@ import type { Difficulty } from '../src/index';
 import { makeAttempt } from './helpers';
 
 describe('challenge catalog', () => {
-  it('has at least 3 challenges in every category', () => {
+  it('has at least 6 challenges in every category', () => {
     for (const category of CHALLENGE_CATEGORIES) {
       const inCategory = CHALLENGE_CATALOG.filter((c) => c.category === category);
-      expect(inCategory.length, category).toBeGreaterThanOrEqual(3);
+      expect(inCategory.length, category).toBeGreaterThanOrEqual(6);
     }
   });
 
-  it('has 27+ challenges with unique ids and complete schemas', () => {
-    expect(CHALLENGE_CATALOG.length).toBeGreaterThanOrEqual(27);
+  it('has 55+ challenges with unique ids and complete schemas', () => {
+    expect(CHALLENGE_CATALOG.length).toBeGreaterThanOrEqual(55);
     const ids = new Set(CHALLENGE_CATALOG.map((c) => c.id));
     expect(ids.size).toBe(CHALLENGE_CATALOG.length);
     for (const c of CHALLENGE_CATALOG) {
@@ -33,9 +33,28 @@ describe('challenge catalog', () => {
     }
   });
 
-  it('covers every difficulty 1-5 somewhere in the catalog', () => {
-    const difficulties = new Set(CHALLENGE_CATALOG.map((c) => c.difficulty));
-    for (const d of [1, 2, 3, 4, 5]) expect(difficulties.has(d as Difficulty), `difficulty ${d}`).toBe(true);
+  it('covers difficulty 1-5 inside EVERY category, not merely somewhere', () => {
+    // The old version of this test asked whether each difficulty existed
+    // anywhere in the catalog, which it always did — while `focus` had nothing
+    // above 3 and five other categories were missing their easy end. A user
+    // who picks one focus capability lives inside one of these lists, so that
+    // is the list the range has to cover (#1).
+    for (const category of CHALLENGE_CATEGORIES) {
+      const present = new Set(
+        CHALLENGE_CATALOG.filter((c) => c.category === category).map((c) => c.difficulty),
+      );
+      for (const d of [1, 2, 3, 4, 5]) {
+        expect(present.has(d as Difficulty), `${category} has no difficulty ${d}`).toBe(true);
+      }
+    }
+  });
+
+  it('has no two challenges wearing the same title', () => {
+    // The cheapest catchable form of "duplicating or lightly rewording an
+    // existing challenge", which the contribution guidance forbids.
+    const titles = CHALLENGE_CATALOG.map((c) => c.title.trim().toLowerCase());
+    const duplicated = titles.filter((t, i) => titles.indexOf(t) !== i);
+    expect(duplicated).toEqual([]);
   });
 });
 

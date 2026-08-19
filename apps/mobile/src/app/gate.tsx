@@ -15,6 +15,7 @@ import { AppTextInput } from '../components/AppTextInput';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Screen } from '../components/Screen';
+import { SectionHeading } from '../components/SectionHeading';
 import { Tag } from '../components/Tag';
 import { useI18n } from '../i18n/useI18n';
 import type { AppStrings } from '../i18n/en';
@@ -66,7 +67,7 @@ export default function Gate() {
     <Screen title={t.gate.title} subtitle={t.gate.subtitle}>
       {session.step === 'intention' ? (
         <View style={{ gap: spacing.lg }}>
-          <Text style={[type.heading, { color: colors.ink }]}>{t.gate.askWhat}</Text>
+          <SectionHeading>{t.gate.askWhat}</SectionHeading>
           <AppTextInput
             area
             value={question}
@@ -81,6 +82,7 @@ export default function Gate() {
                 key={info.category}
                 label={info.label}
                 selected={category === info.category}
+                selectionRole="radio"
                 onPress={() => setCategory(info.category)}
               />
             ))}
@@ -94,7 +96,7 @@ export default function Gate() {
 
       {session.step === 'attempt_check' ? (
         <View style={{ gap: spacing.lg }}>
-          <Text style={[type.heading, { color: colors.ink }]}>{t.gate.triedYet}</Text>
+          <SectionHeading>{t.gate.triedYet}</SectionHeading>
           <Button
             label={t.gate.yesTried}
             onPress={() => setSession((s) => answerTriedFirst(s, true))}
@@ -113,10 +115,13 @@ export default function Gate() {
             <View style={{ alignItems: 'center', gap: spacing.md }}>
               <Text style={[type.caption, { color: colors.inkMuted }]}>{t.gate.attemptBlurb}</Text>
               <Text
-                accessibilityLabel={t.gate.timeRemaining(
-                  Math.floor(secondsLeft / 60),
-                  secondsLeft % 60,
-                )}
+                // Minutes, not mm:ss: this text re-renders every second, and
+                // a label that changes with it is announced every second (#4).
+                accessibilityLabel={
+                  secondsLeft >= 60
+                    ? t.common.minutesLeft(Math.round(secondsLeft / 60))
+                    : t.common.underAMinuteLeft
+                }
                 style={[type.display, { color: colors.ink, fontVariant: ['tabular-nums'] }]}
               >
                 {String(Math.floor(secondsLeft / 60)).padStart(1, '0')}:
@@ -156,7 +161,7 @@ export default function Gate() {
 
       {session.step === 'outcome' ? (
         <View style={{ gap: spacing.md }}>
-          <Text style={[type.heading, { color: colors.ink }]}>{t.gate.howDidItGo}</Text>
+          <SectionHeading>{t.gate.howDidItGo}</SectionHeading>
           <Button
             label={t.gate.solvedMyself}
             variant="secondary"

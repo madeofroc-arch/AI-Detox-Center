@@ -26,6 +26,13 @@ export const EN = {
     cancel: 'Cancel',
     addReflection: 'Add a reflection',
     minutesShort: (n: number): string => `${n} min`,
+    // Screen-reader text for a running countdown. Deliberately coarse: the
+    // accessibility spec says a timer announces at start, pause and end, not
+    // every second, and a label that changes 1,500 times a session does the
+    // opposite of informing anyone (#4).
+    minutesLeft: (minutes: number): string =>
+      `About ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} left`,
+    underAMinuteLeft: 'Less than a minute left',
   },
 
   tabs: {
@@ -108,8 +115,6 @@ export const EN = {
     confirmSolved: 'That was all you. Noted.',
     confirmHint: 'A hint, then your own thinking. Noted.',
     confirmProceeded: 'Noted. Nice pause.',
-    timeRemaining: (minutes: number, seconds: number): string =>
-      `${minutes} minutes ${seconds} seconds remaining`,
   },
 
   detox: {
@@ -127,8 +132,9 @@ export const EN = {
     minutesNoted: (minutes: number): string => `${minutes} minutes — noted.`,
     completedBody: 'A full block of your own thinking.',
     endedEarlyBody: 'Ending early is data, not defeat. Every minute counted.',
-    timeRemaining: (minutes: number, seconds: number): string =>
-      `${minutes} minutes ${seconds} seconds remaining`,
+    statusRunning: 'Running',
+    statusPaused: 'Paused',
+    statusTimeUp: 'Time is up',
   },
 
   challenge: {
@@ -177,14 +183,14 @@ export const EN = {
     notCountedNote:
       'Neither of these moves the number. Anything you could do inside this app to lower your own score would make the score worth less, so reflecting is reported and never rewarded.',
     howItWorks: (windowDays: number, moments: number, aiUses: number, discount: number): string =>
-      `How this works: each factor above is measured from your last ${windowDays} days of recorded uses (${moments} moments, ${aiUses} of them with AI). The factors that add up form your reliance; moments you resolved without AI discount that reliance by up to ${discount}%, never erase it. Each number is rounded to whole points, so reading them off and adding them up can land a point or two from the dial.`,
+      `How this works: each factor above is measured from your last ${windowDays} days of recorded uses (${moments} moments, ${aiUses} of them with AI). The factors that add up form your reliance; moments you resolved without AI discount that reliance by up to ${discount}%, never erase it. The whole numbers are apportioned so that what adds minus what lowers is exactly the number on the dial — read them off and check.`,
     whatCounts: (windowDays: number): string =>
       `What counts is how much thinking you handed over, not how much you used AI. Heavy, deliberate use where you think first scores low by design, and handing over twice as many whole tasks counts as twice as much — until the scale runs out, above roughly two handed-over tasks a day, where the dial simply stays at 100. Early on the number reads low while the ${windowDays} days fill up. Computed entirely on this device.`,
     factorAdds: 'adds to',
     factorLowers: 'lowers',
     points: (points: number): string => `${points} pts`,
     factorA11y: (label: string, points: number, direction: string): string =>
-      `${label}: ${points} points, ${direction} the score`,
+      `${label}: ${points} ${points === 1 ? 'point' : 'points'}, ${direction} the score`,
   },
 
   progress: {

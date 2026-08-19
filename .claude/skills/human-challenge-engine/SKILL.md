@@ -29,6 +29,18 @@ Every challenge must have:
 - `id`, `category` (one of the 9), `difficulty` (1-5), `durationMinutes`,
   `title`, `instructions`, `successCondition`, `reflectionQuestions`
 
+Catalog shape, asserted in `__tests__/challenges.test.ts`:
+
+- At least 6 challenges per category, 55 in total.
+- **Every category covers difficulty 1-5 on its own.** The earlier test asked
+  whether each difficulty existed anywhere in the catalog, which was always
+  true while `focus` had nothing above 3 — and a user who picks one focus
+  capability lives inside one category's list, not the catalog's.
+- No two challenges share a title, which is the cheapest catchable form of the
+  lightly-reworded duplicate the contribution guidance forbids.
+- Every challenge needs its text in every language pack (`src/i18n/`), and the
+  i18n suite fails on a gap. Adding one here is adding one everywhere.
+
 ## Responsibility scope
 
 Owns (single source of truth):

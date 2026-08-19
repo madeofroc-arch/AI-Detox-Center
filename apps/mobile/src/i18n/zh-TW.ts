@@ -24,6 +24,8 @@ export const ZH_TW: AppStrings = {
     cancel: '取消',
     addReflection: '寫一則回顧',
     minutesShort: (n) => `${n} 分鐘`,
+    minutesLeft: (minutes) => `大約還有 ${minutes} 分鐘`,
+    underAMinuteLeft: '剩下不到一分鐘',
   },
 
   tabs: {
@@ -102,7 +104,6 @@ export const ZH_TW: AppStrings = {
     confirmSolved: '這全是你自己做到的。記下了。',
     confirmHint: '一個提示，然後是你自己的思考。記下了。',
     confirmProceeded: '記下了。這個停頓很好。',
-    timeRemaining: (minutes, seconds) => `還剩 ${minutes} 分 ${seconds} 秒`,
   },
 
   detox: {
@@ -120,7 +121,9 @@ export const ZH_TW: AppStrings = {
     minutesNoted: (minutes) => `${minutes} 分鐘——記下了。`,
     completedBody: '完整的一段，全是你自己的思考。',
     endedEarlyBody: '提早結束是資料，不是失敗。每一分鐘都算數。',
-    timeRemaining: (minutes, seconds) => `還剩 ${minutes} 分 ${seconds} 秒`,
+    statusRunning: '進行中',
+    statusPaused: '已暫停',
+    statusTimeUp: '時間到了',
   },
 
   challenge: {
@@ -166,7 +169,7 @@ export const ZH_TW: AppStrings = {
     notCountedNote:
       '這兩項都不會改變分數。任何你能在這個 App 裡做、就能讓自己分數變好看的事，都會讓這個分數變得更沒有價值——所以回顧只被記錄，不被獎勵。',
     howItWorks: (windowDays, moments, aiUses, discount) =>
-      `計算方式：上面每一項，都是從你最近 ${windowDays} 天的紀錄算出來的（${moments} 個時刻，其中 ${aiUses} 次用了 AI）。往上加的項目形成你的依賴程度；你沒有用 AI 就處理完的時刻，最多可以折抵其中的 ${discount}%，但永遠不會歸零。每個數字都取整到整數點，所以把它們讀出來相加，可能會和刻度差個一兩點。`,
+      `計算方式：上面每一項，都是從你最近 ${windowDays} 天的紀錄算出來的（${moments} 個時刻，其中 ${aiUses} 次用了 AI）。往上加的項目形成你的依賴程度；你沒有用 AI 就處理完的時刻，最多可以折抵其中的 ${discount}%，但永遠不會歸零。上面的整數經過分配，「往上加的」減掉「往下減的」剛好等於刻度上的數字——你可以自己讀下來對一遍。`,
     whatCounts: (windowDays) =>
       `真正算數的是你交出去多少思考，而不是你用了多少 AI。大量但有意識、而且先自己想過的使用，本來就會得到低分；把整件事交出去的次數變成兩倍，也就真的算成兩倍——直到刻度用完為止，大約在一天兩件以上，指針就停在 100。剛開始的那幾天，${windowDays} 天的區間還沒填滿，數字會偏低。全部在這台裝置上計算。`,
     factorAdds: '讓分數上升',

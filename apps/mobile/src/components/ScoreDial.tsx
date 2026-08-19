@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { useTheme } from '../theme/useTheme';
+import { decorative, group } from '../theme/a11y';
 import { radius, spacing, type } from '../theme/tokens';
 
 interface ScoreDialProps {
@@ -10,6 +11,8 @@ interface ScoreDialProps {
   caption?: string;
   /** An additive fact shown under the caption, so a band never stands alone. */
   footnote?: string;
+  /** Screen-reader text for the dial. Defaults to a literal reading of the number. */
+  announce?: string;
   size?: number;
 }
 
@@ -17,14 +20,30 @@ interface ScoreDialProps {
  * Circular score display. Kept dependency-free (no SVG): a ring whose border
  * color deepens with the value; the number carries the information
  * (color-independence, see docs/design/accessibility.md).
+ *
+ * The ring is one accessibility element and its digits are hidden inside it —
+ * otherwise a screen reader reads "61", then "BRAIN SCORE", then the label
+ * that was supposed to replace them. Caption and footnote stay separate and
+ * come after, which is the order they are read in and the order they mean:
+ * number, then what it means, then what you are already doing well.
  */
-export function ScoreDial({ value, label, caption, footnote, size = 160 }: ScoreDialProps) {
+export function ScoreDial({
+  value,
+  label,
+  caption,
+  footnote,
+  announce,
+  size = 160,
+}: ScoreDialProps) {
   const { colors } = useTheme();
   const hasValue = value !== null;
   return (
     <View style={{ alignItems: 'center', gap: spacing.md }}>
       <View
-        accessibilityLabel={hasValue ? `${label}: ${value} out of 100` : `${label}: not enough data yet`}
+        {...group(
+          announce ??
+            (hasValue ? `${label}: ${value} out of 100` : `${label}: not enough data yet`),
+        )}
         style={{
           width: size,
           height: size,
@@ -36,10 +55,12 @@ export function ScoreDial({ value, label, caption, footnote, size = 160 }: Score
           justifyContent: 'center',
         }}
       >
-        <Text style={[type.display, { color: colors.ink }]}>{hasValue ? value : '—'}</Text>
-        <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
-          {label}
-        </Text>
+        <View {...decorative} style={{ alignItems: 'center' }}>
+          <Text style={[type.display, { color: colors.ink }]}>{hasValue ? value : '—'}</Text>
+          <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
+            {label}
+          </Text>
+        </View>
       </View>
       {caption ? (
         <Text style={[type.caption, { color: colors.inkMuted, textAlign: 'center' }]}>

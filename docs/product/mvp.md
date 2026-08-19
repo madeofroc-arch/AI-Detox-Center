@@ -10,7 +10,7 @@ The first shippable version. Under-build rather than over-build.
 | 2 | AI Dependency Score | Deterministic score 0-100 from usage events with per-factor breakdown; configurable weights; unit-tested |
 | 3 | AI Gate | Self-directed gate flow: intention -> attempt-first (skippable) -> outcome; emits usage events; never blocks |
 | 4 | Detox Timer | Start/pause/resume/end session with intention; neutral recording of early end |
-| 5 | Daily Human Challenge | One deterministic challenge per day across 9 categories; adaptive difficulty; catalog of 27+ |
+| 5 | Daily Human Challenge | One deterministic challenge per day across 9 categories; adaptive difficulty; catalog of 55, every category covering difficulty 1-5 |
 | 6 | Reflection | Optional short reflections attached to gate/challenge/detox; stored locally only |
 | 7 | Progress Dashboard | Challenge history, capability spread, streak, XP; additive framing |
 | 8 | Local data storage | All data in on-device storage; schema versioned with migration hook |

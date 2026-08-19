@@ -13,7 +13,9 @@ export function AppTextInput({ area, style, ...props }: AppTextInputProps) {
   const { colors } = useTheme();
   return (
     <TextInput
-      placeholderTextColor={colors.inkFaint}
+      // inkMuted, not a fainter shade: placeholder text is text, and the old
+      // inkFaint sat at 1.94:1 inside this very field (#4).
+      placeholderTextColor={colors.inkMuted}
       multiline={area}
       {...props}
       style={[
@@ -23,7 +25,9 @@ export function AppTextInput({ area, style, ...props }: AppTextInputProps) {
           color: colors.ink,
           borderRadius: radius.sm,
           borderWidth: 1,
-          borderColor: colors.line,
+          // The border is what identifies this as a field — the fill is only
+          // 1.17:1 against the card behind it — so it uses the strong line.
+          borderColor: colors.lineStrong,
           paddingHorizontal: spacing.lg,
           paddingVertical: spacing.md,
           minHeight: area ? 120 : 48,

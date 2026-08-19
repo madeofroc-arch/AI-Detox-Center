@@ -85,8 +85,9 @@ claude.ai 的「複製貼上」說明在 [skill/README.md](skill/README.md)，
 - **AI 關卡**——在使用 AI 之前，一個由你自己主導的停頓：說出你的意圖，
   可以選擇先自己試三分鐘，然後再決定。這個關卡不會封鎖你，也不會羞辱你。
 - **戒斷模式**——不用 AI 的專注時段。提早結束是資料，不是失敗。
-- **每日人類練習**——九種能力各有練習題（思考、創造力、寫作、記憶、決策、
-  解決問題、溝通、學習、專注），難度會自動調整。
+- **每日人類練習**——一天一題，從 55 題裡挑，涵蓋九種能力（思考、創造力、
+  寫作、記憶、決策、解決問題、溝通、學習、專注），難度會自動調整。
+  每一種能力都從十分鐘就能開始的題目，一路備到真的要花一個下午的題目。
 - **回顧**——簡短、可選的提問，把經驗轉成覺察。
 - **進展與大腦報告**——只會累加的紀錄，以及一份永遠自己解釋自己的分數拆解。
 - **隱私控制**——一鍵匯出 JSON，以及完整刪除。
@@ -158,7 +159,7 @@ npm run start --workspace @ai-detox/mobile   # 用 Expo Go 掃描
 ```bash
 npm run lint         # 所有 workspace
 npm run typecheck    # 所有 workspace
-npm test             # core 單元測試（Vitest）
+npm test             # 兩個 workspace（Vitest）：core 領域邏輯 + App 介面
 npm run build        # core tsc build + app web export
 npm run icons        # 重新產生品牌資產（icon、splash、favicon）
 npm run screenshots  # 重新產生文件用截圖（App 必須正在執行）

@@ -122,7 +122,13 @@ export default function Home() {
         <View style={{ gap: spacing.md }}>
           <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'center' }}>
             <Tag label={core.challengeCategories[challenge.category]} />
-            <Text style={[type.caption, { color: colors.inkMuted }]}>
+            <Text
+              // Dots carry it visually; the label carries it to a screen
+              // reader, which would otherwise hear "black diamond, black
+              // diamond, white diamond" (#4).
+              accessibilityLabel={`${t.challenge.difficulty(challenge.difficulty, 5)} · ${t.common.minutesShort(challenge.durationMinutes)}`}
+              style={[type.caption, { color: colors.inkMuted }]}
+            >
               {'◆'.repeat(challenge.difficulty)}
               {'◇'.repeat(5 - challenge.difficulty)} ·{' '}
               {t.common.minutesShort(challenge.durationMinutes)}

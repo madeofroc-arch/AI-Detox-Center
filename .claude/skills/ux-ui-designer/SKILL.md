@@ -48,7 +48,17 @@ Does NOT own: what features exist (product-architect), domain logic
 2. Check tone rules (below). Draft flow in `user-flows.md`, then screen spec
    in `screens.md`, then implement with existing tokens and components.
 3. Never introduce a new color/size/radius inline — add it to the design
-   system first, with rationale.
+   system first, with rationale, AND add the pairing it will actually be
+   rendered in to `apps/mobile/__tests__/contrast.test.ts`. That suite fails
+   on a palette token no pair covers, which is how a colour stops being
+   "checked by eye once". Never write `#FFFFFF` in a component: white is the
+   right label colour on an accent fill in light mode and 2.49:1 in dark, so
+   it is `onAccent`/`onDanger`.
+3b. Accessibility props go through `src/theme/a11y.ts` (`decorative`, `group`,
+   `selectionState`). React Native and react-native-web read DIFFERENT props
+   for hiding, grouping and selection state, and the version of this fix that
+   set only the React Native ones changed the web accessibility tree not at
+   all — see docs/design/accessibility.md.
 4. Every screen must define: empty state, error state, loading state, and
    accessibility notes (labels, contrast, touch targets at least 44pt).
 5. Verify against `docs/design/accessibility.md` before declaring done.

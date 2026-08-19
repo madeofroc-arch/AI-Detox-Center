@@ -38,6 +38,7 @@ export default function Onboarding() {
               key={c}
               label={core.challengeCategories[c]}
               selected={focus.includes(c)}
+              selectionRole="checkbox"
               onPress={() =>
                 setFocus((prev) =>
                   prev.includes(c)
@@ -75,7 +76,10 @@ export default function Onboarding() {
           should not have to finish it before they can change the language. */}
       {panel === 0 ? (
         <Card alt>
-          <Text style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}>
+          <Text
+            accessibilityRole="header"
+            style={[type.micro, { color: colors.inkMuted, textTransform: 'uppercase' }]}
+          >
             {t.onboarding.languageTitle}
           </Text>
           <View
@@ -91,6 +95,7 @@ export default function Onboarding() {
                 key={option}
                 label={option === 'system' ? t.settings.languageSystem : LOCALE_NAMES[option]}
                 selected={language === option}
+                selectionRole="radio"
                 onPress={() => void setLanguage(option)}
               />
             ))}

@@ -35,12 +35,16 @@ export function Button({
         : variant === 'danger'
           ? colors.danger
           : 'transparent';
+  // Never a literal white: on the dark palette white sits at 2.49:1 on the
+  // accent, and this is the label on every primary button in the app (#4).
   const textColor =
-    variant === 'primary' || variant === 'danger'
-      ? '#FFFFFF'
-      : variant === 'ghost'
-        ? colors.accent
-        : colors.ink;
+    variant === 'primary'
+      ? colors.onAccent
+      : variant === 'danger'
+        ? colors.onDanger
+        : variant === 'ghost'
+          ? colors.accent
+          : colors.ink;
 
   return (
     <Pressable
@@ -51,7 +55,10 @@ export function Button({
       onPress={onPress}
       style={({ pressed }) => [
         {
-          height: 52,
+          // minHeight, not height: at a 1.3x font scale a fixed 52 clips the
+          // label, and the design system promises the layout tolerates it.
+          minHeight: 52,
+          paddingVertical: spacing.md,
           borderRadius: radius.md,
           backgroundColor: background,
           alignItems: 'center',
@@ -65,7 +72,7 @@ export function Button({
       ]}
     >
       {loading ? <ActivityIndicator size="small" color={textColor} /> : null}
-      <Text style={[type.bodyStrong, { color: textColor }]}>{label}</Text>
+      <Text style={[type.bodyStrong, { color: textColor, textAlign: 'center' }]}>{label}</Text>
     </Pressable>
   );
 }

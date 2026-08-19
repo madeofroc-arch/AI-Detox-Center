@@ -95,9 +95,13 @@ Rules:
 5. **One signal, one home.** Never let two factors read the same underlying
    bit with opposite signs — that is what compressed the v1 range. Check any
    new factor against the existing eight before adding it.
-6. **The factors must add up to the score.** `points = intensity * maxPoints`
-   for every factor, and contributors minus reducers equals the displayed
-   score. The Brain Report states this to the user, and tests pin it.
+6. **The factors must add up to the score, in both forms.**
+   `points = intensity * maxPoints` for every factor, and contributors minus
+   reducers equals the score — exactly on `points`, and exactly on
+   `displayPoints`, the whole numbers the UI actually renders. `displayPoints`
+   is apportioned by largest remainder; rounding each row independently instead
+   reconciled on 52.5% of profiles (#6). The Brain Report states this to the
+   user, and a fuzzed sweep pins it.
 7. **No transcendental math.** Only +, -, *, / (exact in IEEE-754). `Math.pow`
    and friends are implementation-approximated per ECMA-262 and can differ in
    the last ULP between JS engines, which would break determinism across iOS

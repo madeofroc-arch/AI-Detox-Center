@@ -6,6 +6,7 @@ import { EmptyState } from '../components/EmptyState';
 import { FactorBar } from '../components/FactorBar';
 import { ScoreDial } from '../components/ScoreDial';
 import { Screen } from '../components/Screen';
+import { SectionHeading } from '../components/SectionHeading';
 import { useI18n } from '../i18n/useI18n';
 import { nowIso } from '../lib/clock';
 import { useAppStore } from '../state/store';
@@ -56,7 +57,7 @@ export default function Report() {
         />
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>{t.report.whatAdds}</Text>
+      <SectionHeading>{t.report.whatAdds}</SectionHeading>
       <Card>
         <View style={{ gap: spacing.lg }}>
           {contributors.map((f) => (
@@ -65,7 +66,7 @@ export default function Report() {
         </View>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>{t.report.whatLowers}</Text>
+      <SectionHeading>{t.report.whatLowers}</SectionHeading>
       <Card>
         <View style={{ gap: spacing.lg }}>
           {reducers.map((f) => (
@@ -74,7 +75,7 @@ export default function Report() {
         </View>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>{t.report.notCounted}</Text>
+      <SectionHeading>{t.report.notCounted}</SectionHeading>
       <Card>
         <View style={{ gap: spacing.md }}>
           <Text style={[type.body, { color: colors.ink }]}>

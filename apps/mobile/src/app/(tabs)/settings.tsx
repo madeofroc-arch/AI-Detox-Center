@@ -6,6 +6,7 @@ import { CHALLENGE_CATEGORIES, LOCALES, LOCALE_NAMES } from '@ai-detox/core';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { Screen } from '../../components/Screen';
+import { SectionHeading } from '../../components/SectionHeading';
 import { Tag } from '../../components/Tag';
 import { useI18n } from '../../i18n/useI18n';
 import { confirmAsync } from '../../lib/confirm';
@@ -57,7 +58,7 @@ export default function Settings() {
 
   return (
     <Screen title={t.settings.title} padBottom>
-      <Text style={[type.heading, { color: colors.ink }]}>{t.settings.language}</Text>
+      <SectionHeading>{t.settings.language}</SectionHeading>
       <Card>
         <Text style={[type.caption, { color: colors.inkMuted, marginBottom: spacing.md }]}>
           {t.settings.languageNote}
@@ -68,13 +69,14 @@ export default function Settings() {
               key={option}
               label={option === 'system' ? t.settings.languageSystem : LOCALE_NAMES[option]}
               selected={language === option}
+              selectionRole="radio"
               onPress={() => void setLanguage(option)}
             />
           ))}
         </View>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>{t.settings.focus}</Text>
+      <SectionHeading>{t.settings.focus}</SectionHeading>
       <Card>
         <Text style={[type.caption, { color: colors.inkMuted, marginBottom: spacing.md }]}>
           {t.settings.focusNote}
@@ -85,13 +87,14 @@ export default function Settings() {
               key={c}
               label={core.challengeCategories[c]}
               selected={focus.includes(c)}
+              selectionRole="checkbox"
               onPress={() => toggleFocus(c)}
             />
           ))}
         </View>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>{t.settings.about}</Text>
+      <SectionHeading>{t.settings.about}</SectionHeading>
       <Card>
         <Text style={[type.body, { color: colors.ink }]}>{t.settings.aboutBody}</Text>
         <Text style={[type.caption, { color: colors.inkMuted, marginTop: spacing.md }]}>
@@ -99,7 +102,7 @@ export default function Settings() {
         </Text>
       </Card>
 
-      <Text style={[type.heading, { color: colors.ink }]}>{t.settings.dataPrivacy}</Text>
+      <SectionHeading>{t.settings.dataPrivacy}</SectionHeading>
       <Card>
         <Text style={[type.caption, { color: colors.inkMuted, marginBottom: spacing.md }]}>
           {t.settings.dataNote}

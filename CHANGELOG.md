@@ -8,6 +8,82 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **The challenge catalog doubled: 27 -> 55, and every capability now covers
+  the full difficulty range.** Six or more per capability instead of three, in
+  English and 繁體中文, written to the same bar as the seed set: doable without
+  AI, self-assessable from the success condition alone, concrete enough to
+  start in thirty seconds, and nothing that needs a purchase, another app, or
+  another person on a schedule
+  ([#1](https://github.com/madeofroc-arch/AI-Detox-Center/issues/1)).
+
+  The difficulty test used to ask whether each level 1-5 existed *anywhere* in
+  the catalog, which was always true — while `focus` had nothing above 3 and
+  five other capabilities were missing their easy end. A user who picks one
+  focus capability lives inside one category's list, so that is the list the
+  range has to cover; the test now says so, and no two challenges may share a
+  title.
+
+- **UI tests for `apps/mobile`, which had none**
+  ([#2](https://github.com/madeofroc-arch/AI-Detox-Center/issues/2)). 61 tests
+  across three files, wired into the root `npm test` so CI needed no change.
+
+  Vitest with `react-native` aliased to `react-native-web`, not jest-expo. The
+  repo already runs Vitest and CI already exports the web build, so this is one
+  runner for the monorepo and the tests render the same code path the shipped
+  web build renders. It also means `accessibilityLabel` becomes `aria-label`
+  and assertions read the real accessibility tree. The cost, stated plainly:
+  native-only behaviour — `Alert`, iOS/Android announcement differences,
+  anything under `Platform.OS !== 'web'` — is not covered and needs a device.
+
+  The first tests cover the rules nothing else can see: the Home additive line
+  resolving for a user with no positive signal at all (the defect that opened
+  the issue), the Brain Report's rows summing to its dial when parsed off the
+  screen the way a person would, the two-step delete confirmation stopping at
+  either step, and every colour pair the app renders.
+
+### Fixed
+
+- **The accessibility checklist has been run, and it found eight real defects**
+  ([#4](https://github.com/madeofroc-arch/AI-Detox-Center/issues/4)). It had
+  never been executed against the built app; the components were written to
+  follow it, and "written to follow it" turned out to mean something different
+  from "does".
+
+  The worst was the label on every primary button in the app: white on the
+  dark-mode accent is **2.49:1**. Then no visible keyboard focus anywhere on
+  web, because react-native-web sets `outline-style: none` on every Pressable —
+  18 reachable controls on the Settings screen alone, and no way to see which
+  one you were on. Then `inkFaint` at 1.94:1 doing placeholder text and the
+  inactive tab label, `inkMuted` at 4.23:1 on alt surfaces, tappable tags at
+  36pt against a promised 44, the contributor bar fill at 2.44:1 against its
+  own track, countdown timers whose labels changed once a second so a screen
+  reader announced once a second, and text fields whose only visible boundary
+  was a 1.31:1 border.
+
+  Fixed by deleting `inkFaint` (no ink light enough to feel faint clears
+  4.5:1 on these surfaces, so the token was a trap), adding `onAccent`,
+  `onDanger` and `lineStrong`, darkening `inkMuted` and `amber`, injecting a
+  `:focus-visible` ring on web, and giving the timers minute granularity plus a
+  polite live region for Running/Paused.
+
+  A second round found that the first round's own fix did nothing: the
+  `decorative` helper set `accessibilityElementsHidden` and
+  `importantForAccessibility`, and react-native-web 0.21 reads neither. The web
+  accessibility tree was unchanged until `aria-hidden` was added — which is
+  why the helpers now set both dialects and the tests assert against rendered
+  `aria-*` rather than against props. Bar rows had been announcing their label,
+  their value and a summary as three separate elements; the score dial read its
+  digits twice; tab glyphs were read as "black circle, Home"; section headings
+  were ordinary paragraphs; and `Button` used a fixed height that clips at a
+  1.3x font scale.
+
+  Contrast, touch targets and label/role structure are now gated by tests. The
+  per-screen results are in
+  [docs/design/accessibility.md](docs/design/accessibility.md), including what
+  the audit did **not** cover: it was run with a browser accessibility tree and
+  a keyboard, not with a screen reader, and not by anyone who uses assistive
+  technology daily.
+
 - **The Human Mode skill in 繁體中文.** Copy-paste instruction files for
   ChatGPT, Gemini, AGENTS.md and tight instruction boxes, generated from the
   same method as the English ones. Translations are **overlays, not forks**:
@@ -25,7 +101,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 - **繁體中文 (Traditional Chinese), and the machinery to add more languages.**
   Every screen, all nine capability names, the whole AI-usage taxonomy, the ten
-  reflection prompts and all 27 challenges — translated, not machine-generated.
+  reflection prompts and every challenge — translated, not machine-generated.
   The app follows the device language by default and nothing is sent anywhere
   to translate it (the privacy invariant is unchanged).
 
@@ -56,7 +132,7 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - `@ai-detox/core`: deterministic AI Dependency Score with configurable
   weights and per-factor breakdown; AI Gate state machine; detox sessions;
   usage-tracking taxonomy (quantity vs dependency behavior); reflection
-  prompts; challenge engine with 27-challenge seed catalog, deterministic
+  prompts; challenge engine with a 55-challenge catalog, deterministic
   daily selection, adaptive difficulty, and non-punitive streak/XP;
   local-first storage with versioned schema, migrations, and corrupt-data
   backup. Unit tested throughout.
@@ -185,13 +261,23 @@ project adheres to [Semantic Versioning](https://semver.org/).
   Values are unchanged; they were previously hardcoded in the algorithm body,
   which ADR-0004 forbids.
 
-### Known issues
-
-- The Brain Report's rounded factor rows do not always sum to the dial
-  ([#6](https://github.com/madeofroc-arch/AI-Detox-Center/issues/6)). The copy
-  no longer claims they do.
-
 ### Fixed
+
+- **The Brain Report's factor rows now add up to the dial.** They reconciled on
+  52.5% of a 17,540-profile sweep before this: the rows rendered
+  `Math.round(points)` each while the dial rendered `Math.round(sum)`, and
+  rounding a list is not the same operation as rounding its sum. 44.7% of
+  profiles were off by one and 2.8% by two, and a reachable profile put rows
+  summing to 71 beside a dial reading 70
+  ([#6](https://github.com/madeofroc-arch/AI-Detox-Center/issues/6)).
+
+  `FactorScore` now carries `displayPoints`, apportioned by largest remainder
+  (Hamilton's method) in core rather than rounded in the component: every shown
+  value is its true value floored or ceiled, so no row moves by a whole point,
+  and the sum is exact by construction rather than by luck. The report's
+  methodology copy goes back to promising the numbers add up, in both
+  languages. The new sweep asserts its own teeth — it counts how many profiles
+  the old rendering got wrong and fails if that ever reaches zero.
 
 - The Home additive line could render "You handled 0% of these moments without
   AI." under a high band; it now falls back to the encouraging line.

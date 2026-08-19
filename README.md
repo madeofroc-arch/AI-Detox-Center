@@ -90,10 +90,11 @@ capabilities that atrophy first.
   blocks and never shames.
 - **Detox Mode** — focused work blocks without AI. Ending early is data,
   not defeat.
-- **Daily Human Challenge** — one challenge per day across nine
-  capabilities (Thinking, Creativity, Writing, Memory, Decision Making,
-  Problem Solving, Communication, Learning, Focus), with adaptive
-  difficulty.
+- **Daily Human Challenge** — one challenge per day drawn from 55, across
+  nine capabilities (Thinking, Creativity, Writing, Memory, Decision Making,
+  Problem Solving, Communication, Learning, Focus), with adaptive difficulty.
+  Every capability covers the full range from a ten-minute start to something
+  that takes a real afternoon.
 - **Reflection** — short optional prompts that turn experience into
   awareness.
 - **Progress & Brain Report** — additive progress records and a score
@@ -185,7 +186,7 @@ Requires Node 20+.
 ```bash
 npm run lint         # all workspaces
 npm run typecheck    # all workspaces
-npm test             # core unit tests (Vitest)
+npm test             # both workspaces (Vitest): core domain + app UI
 npm run build        # core tsc build + app web export
 npm run icons        # regenerate brand assets (icon, splash, favicon)
 npm run screenshots  # regenerate documentation screenshots (app must be running)

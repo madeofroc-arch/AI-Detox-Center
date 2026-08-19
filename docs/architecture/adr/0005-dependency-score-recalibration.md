@@ -141,13 +141,19 @@ Brain Score at 3 of 7 practice days):
   exactly 30 points, before and after.
 - **Home no longer shows a band alone.** The dial caption is paired with one
   additive fact drawn from the user's strongest reducer.
-- **Explainability improved**, with one caveat found after acceptance.
-  Contributor points minus reducer points equals the displayed score exactly in
-  unrounded values, and `points = intensity × maxPoints` holds for every factor.
-  The UI rounds each row independently, so the *displayed* integers reconcile
-  with the dial only about half the time — see issue #6. The v1 clamp made both false (one persona's factors summed
-  to −17.8 and displayed 0). The Brain Report can honestly claim the numbers add
-  up, and does.
+- **Explainability improved.** Contributor points minus reducer points equals
+  the displayed score exactly in unrounded values, and
+  `points = intensity × maxPoints` holds for every factor. The v1 clamp made
+  both false (one persona's factors summed to −17.8 and displayed 0). The Brain
+  Report can honestly claim the numbers add up, and does.
+
+  One caveat was found after acceptance and has since been closed. The claim
+  above was about `points`; the UI rendered `Math.round(points)` per row beside
+  a dial rendering `Math.round(sum)`, and those reconciled on only 52.5% of a
+  17,540-profile sweep (±1 on 44.7%, ±2 on 2.8%). `FactorScore` now carries
+  `displayPoints`, apportioned by largest remainder so the whole numbers sum to
+  the dial exactly while no row moves by a full point — see
+  `__tests__/scoring-display.test.ts` and issue #6.
 - **No transcendental math in the scoring path.** The design considered response
   curves (`Math.pow`) and a per-event evidence exponent. Both were dropped after
   proving that at exponent 1.0 the per-event formulation is *identical* to the

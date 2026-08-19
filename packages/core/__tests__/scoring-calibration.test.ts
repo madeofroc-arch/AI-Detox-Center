@@ -277,7 +277,7 @@ describe('the report can honestly say the factors add up', () => {
     }
   });
 
-  it('keeps the eight-factor breakdown the UI renders', () => {
+  it('keeps the full factor breakdown the UI renders', () => {
     const result = score(MODERATE);
     expect(result.factors).toHaveLength(
       CONTRIBUTOR_FACTORS.length + REDUCER_FACTORS.length,

@@ -3,10 +3,20 @@ import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
 import { useI18n } from '../../i18n/useI18n';
 import { useTheme } from '../../theme/useTheme';
+import { decorative } from '../../theme/a11y';
 import { type } from '../../theme/tokens';
 
+/**
+ * Tab icons are text characters, so a screen reader would otherwise read
+ * "black circle, Home". Every tab already has a visible label; the glyph is
+ * decoration and says so (#4).
+ */
 function Glyph({ symbol, color }: { symbol: string; color: import("react-native").ColorValue }) {
-  return <Text style={[type.heading, { color }]}>{symbol}</Text>;
+  return (
+    <Text {...decorative} style={[type.heading, { color }]}>
+      {symbol}
+    </Text>
+  );
 }
 
 export default function TabsLayout() {
@@ -17,7 +27,9 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.inkFaint,
+        // inkMuted, not a fainter shade: an inactive tab label is text, and
+        // the token it used sat at 2.26:1 (#4).
+        tabBarInactiveTintColor: colors.inkMuted,
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.line },
       }}
     >

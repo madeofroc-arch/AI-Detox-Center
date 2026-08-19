@@ -17,7 +17,7 @@ All from the repo root:
 npm install                                  # install all workspaces (Node 20+)
 npm run lint                                 # lint all workspaces
 npm run typecheck                            # tsc --noEmit all workspaces
-npm test                                     # core unit tests (Vitest)
+npm test                                     # both workspaces (Vitest): core domain + app UI
 npm run build                                # core tsc build + app web export
 ```
 
@@ -25,6 +25,7 @@ Scoped runs:
 
 ```bash
 npm test -w @ai-detox/core                                   # just core tests
+npm test -w @ai-detox/mobile                                 # just app UI tests
 npx vitest run __tests__/scoring.test.ts                     # single test file (run in packages/core)
 npm run web --workspace @ai-detox/mobile -- --port 8123      # app in browser
 npm run start --workspace @ai-detox/mobile                   # Expo dev server (Expo Go)
@@ -69,8 +70,10 @@ work fully without any LLM API.
 5. **Scoring weights, band cut points, and Brain Score shares all live in
    `ScoringConfig`** — never hardcode them in algorithm bodies. Score output
    must keep its per-factor breakdown, and the breakdown must sum exactly to
-   the displayed score in unrounded points (ADR-0005 pins both; note the
-   rounded values shown in the UI do not always reconcile — see issue #6).
+   the displayed score — in unrounded points via `points`, AND in whole numbers
+   via `displayPoints`, which core apportions by largest remainder so the rows
+   a user reads off always reconcile with the dial (ADR-0005; #6). Render
+   `displayPoints`, never `Math.round(points)`.
    There is exactly ONE reducer and adding an AI use must never raise it: a
    reducer an AI use can raise inverts that use's marginal effect and makes the
    dial fall when reliance rises (ADR-0007). It discounts reliance by at most
@@ -90,7 +93,11 @@ work fully without any LLM API.
    Styles come from theme tokens (`apps/mobile/src/theme/tokens.ts`), never
    inline hex values.
 8. **Tests accompany logic changes** — determinism tests are mandatory for
-   scoring/selection changes (same inputs ⇒ deep-equal outputs).
+   scoring/selection changes (same inputs ⇒ deep-equal outputs). The app has
+   tests too: `apps/mobile/__tests__/` renders through react-native-web under
+   Vitest, so `aria-*` assertions check the real accessibility tree. A new
+   palette colour needs a pairing in `contrast.test.ts` — the suite fails on a
+   token nothing covers.
 
 ## Key entry points
 

@@ -4,8 +4,12 @@ import { StatusBar } from 'expo-status-bar';
 import { Text, View } from 'react-native';
 import { useI18n } from '../i18n/useI18n';
 import { useAppStore } from '../state/store';
+import { installFocusRing } from '../theme/focusRing';
 import { useTheme } from '../theme/useTheme';
 import { spacing, type } from '../theme/tokens';
+
+// Once, at module load, before anything renders. No-op on native.
+installFocusRing();
 
 export default function RootLayout() {
   const { colors, isDark } = useTheme();

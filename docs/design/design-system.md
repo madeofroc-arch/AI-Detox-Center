@@ -14,13 +14,37 @@ behavior; red exists only for destructive actions.
 | `surface` | `#FFFFFF` | `#1D2026` | Cards |
 | `surfaceAlt` | `#F1EDE6` | `#262A31` | Secondary surfaces, wells |
 | `ink` | `#22262B` | `#ECEAE5` | Primary text |
-| `inkMuted` | `#6B7178` | `#9BA1A8` | Secondary text |
-| `inkFaint` | `#A8ADB3` | `#6B7178` | Tertiary text, placeholders |
+| `inkMuted` | `#62686E` | `#9BA1A8` | Secondary text, placeholders, inactive tab |
 | `accent` | `#3E6B5C` (deep sage) | `#7FAE9E` | Primary actions, progress |
 | `accentSoft` | `#E3EDE8` | `#22332E` | Accent backgrounds |
-| `amber` | `#B08A3E` | `#D4B36A` | Gentle attention (never alarm) |
+| `onAccent` | `#FFFFFF` | `#14161A` | Label ON an accent fill |
+| `amber` | `#967535` | `#D4B36A` | Contributor bar fill (never alarm) |
 | `danger` | `#A94438` | `#C96A5E` | Destructive actions ONLY |
-| `line` | `#E5E0D8` | `#31353C` | Hairline borders |
+| `onDanger` | `#FFFFFF` | `#14161A` | Label ON a danger fill |
+| `line` | `#E5E0D8` | `#31353C` | Decorative hairlines |
+| `lineStrong` | `#85827D` | `#75787C` | A control's visible boundary |
+
+Four of these changed when the accessibility checklist was finally run against
+the built app (#4), and the reasons are worth keeping:
+
+- **`inkFaint` was deleted.** It sat at 1.9–2.3:1 on our surfaces and was used
+  for placeholder text and the inactive tab label. No ink light enough to feel
+  "faint" clears 4.5:1 here, so the token was a trap rather than a shade. Quiet
+  text is `inkMuted`; quiet non-text is `line`.
+- **`onAccent` / `onDanger` exist because white is only correct in light mode.**
+  White on the dark-mode accent is 2.49:1 — and that was the label on every
+  primary button in the app. Never write `#FFFFFF` in a component.
+- **`lineStrong` is the border that has to be seen.** A text field's fill is
+  1.17:1 against the card behind it, so the border is what identifies it as a
+  field, and a border doing that job needs 3:1. `line` stays quiet because it
+  is only decoration.
+- **`amber` darkened** from `#B08A3E`, which was 2.44:1 against the bar track it
+  fills. A bar is a graphic that means something: 3:1 against its track.
+
+Every pairing the app renders is asserted in
+`apps/mobile/__tests__/contrast.test.ts`, including a check that no palette
+token escapes the list. Add a colour there in the same commit that adds it
+here, or the suite fails — which is the point.
 
 ## Typography
 

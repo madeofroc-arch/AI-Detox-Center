@@ -35,7 +35,10 @@ export function FactorBar({
   const tone = factor.role === 'contributor' ? 'amber' : 'accent';
   const direction =
     factor.role === 'contributor' ? t.report.factorAdds : t.report.factorLowers;
-  const points = Math.round(factor.points);
+  // `displayPoints`, never `Math.round(points)`: core apportions the whole
+  // numbers so the rows a user reads off actually add up to the dial. Rounding
+  // here independently put 71 next to a dial reading 70 (#6).
+  const points = factor.displayPoints;
   const fill = scale > 0 ? factor.points / scale : 0;
   return (
     <View style={{ gap: spacing.xs }}>

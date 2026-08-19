@@ -17,14 +17,17 @@ contributions smooth for humans and AI coding agents alike.
    I/O, no network, no nondeterminism. Time and randomness enter as
    parameters.
 4. **Tests accompany logic.** Domain changes need unit tests in the same PR.
-   Determinism tests are mandatory for scoring/selection changes.
+   Determinism tests are mandatory for scoring/selection changes. UI changes
+   go in `apps/mobile/__tests__/` — a new colour needs a pairing in
+   `contrast.test.ts`, and a screen rule that only a person could catch needs
+   a test in `screens.test.tsx`.
 5. **A TODO is not a feature.** Do not mark partial work as complete.
 
 ## Setup
 
 ```bash
 npm install          # Node 20+
-npm test             # core tests
+npm test             # both workspaces: core domain tests + app UI tests
 npm run web --workspace @ai-detox/mobile   # app on web
 ```
 
@@ -58,7 +61,7 @@ the compiler will tell you when you are done.
    it.
 2. **Domain strings** — copy `packages/core/src/i18n/zh-TW.ts` and translate:
    score bands, factor names, the AI-usage taxonomy, the reflection prompts,
-   and all 27 challenges. Register it in the `OVERRIDES` map in
+   and all 55 challenges. Register it in the `OVERRIDES` map in
    `packages/core/src/i18n/i18n.ts`. This file may be **partial**; anything
    you leave out falls back to English key by key, so you can ship one
    section at a time.
