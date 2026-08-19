@@ -67,6 +67,25 @@ If either assessment stops holding — the app gains a build step that parses
 user images, or the project starts running `expo prebuild` — revisit both.
 Say so in a PR rather than quietly changing the table.
 
+### Automated updates
+
+`.github/dependabot.yml` turns alerts into pull requests, and CI decides
+whether they can land. Two gates matter beyond the usual lint/typecheck/test:
+
+- **`npx expo install --check`** is the authority on which versions of React
+  Native, Metro and the `react-native-*` family an Expo SDK supports. A bump
+  can satisfy semver, pass every other check, and still produce a tree Expo
+  does not support — the react-native family moving 0.86 → 0.87 did exactly
+  that, at *minor* level.
+- **The app's own test suite**, which caught Dependabot bumping `react` without
+  `react-dom`. React refuses to start on a version mismatch, and nothing else
+  in CI would have noticed before it shipped.
+
+Everything the Expo SDK pins is therefore ignored by Dependabot at every update
+level and updated with `npx expo install --fix` during an SDK upgrade. That is
+a deliberate trade: those packages stop getting automated version PRs, and
+security *alerts* against them still arrive and are triaged by hand, as above.
+
 ## Supported versions
 
 Pre-1.0: only the latest release receives fixes.

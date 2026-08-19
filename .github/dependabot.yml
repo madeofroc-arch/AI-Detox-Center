@@ -1,8 +1,8 @@
 # Dependency updates.
 #
 # Alerts on the Security tab are a badge nobody reads. Pull requests get
-# reviewed. This file turns the former into the latter, and groups the noisy
-# parts so a weekly run does not open fifteen PRs for one Expo release.
+# reviewed. This file turns the former into the latter — and keeps Dependabot
+# out of the one part of the tree it cannot safely touch.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -16,21 +16,6 @@ updates:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
     groups:
-      # Expo and React Native release as a coordinated set; a PR per package
-      # is noise, and each one alone would fail `expo install --check`.
-      expo-react-native:
-        patterns:
-          - "expo"
-          - "expo-*"
-          - "@expo/*"
-          - "react-native"
-          - "react-native-*"
-          - "@react-native/*"
-          - "metro"
-          - "metro-*"
-        update-types:
-          - minor
-          - patch
       dev-tooling:
         patterns:
           - "vitest"
@@ -38,47 +23,47 @@ updates:
           - "@testing-library/*"
           - "jsdom"
           - "eslint"
-          - "eslint-*"
           - "@eslint/*"
-          - "typescript"
           - "typescript-eslint"
         update-types:
           - minor
           - patch
     ignore:
-      # An Expo SDK major is a migration, not a version bump: it moves React
-      # Native, Metro, the config plugins and the native runtime together, and
-      # the supported path is `npx expo install --fix` plus a manual read of
-      # the upgrade notes. A Dependabot PR that bumps one package out of that
-      # set produces a broken tree that CI cannot repair.
+      # Everything the Expo SDK version-pins, at EVERY update level.
       #
-      # This list is every package the Expo SDK version-pins. The first version
-      # of this file named only expo/react-native/react/react-dom, and the very
-      # first Dependabot run opened a major bump of react-native-gesture-handler
-      # — which apps/mobile/package.json pins at `~2.32.0` precisely because
-      # Expo 57 requires that line. Groups only cover minor and patch, so a
-      # major always falls out into its own PR; the ignore list is what catches
-      # it, and it has to cover the whole pinned set.
+      # These packages are not independently versioned dependencies; they are
+      # one release train, and `npx expo install --fix` is how you ride it.
+      # `npx expo install --check` — a CI step since 064a270 — is the authority
+      # on what an SDK supports. This list only stops Dependabot opening PRs
+      # that gate would reject anyway. If the two ever disagree, the gate wins.
+      #
+      # Three real failures taught this list its shape, all within an hour of
+      # the file being added:
+      #
+      #   - react-native-gesture-handler 2.32 -> 3.2.1. A major, and
+      #     apps/mobile/package.json pins `~2.32.0` because Expo 57 requires
+      #     that line.
+      #   - The react-native family, 0.86 -> 0.87. All MINOR, all semver-valid,
+      #     and rejected by `expo install --check` — so "majors only" was never
+      #     enough.
+      #   - react 19.2.3 -> 19.2.8 ALONE, leaving react-dom at 19.2.3. React
+      #     refuses to boot on a version mismatch; the app's test suite caught
+      #     it. There is no update level at which splitting that pair is safe.
       - dependency-name: "expo"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "expo-*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "@expo/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-native"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "react-native-*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@react-native/*"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "metro"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "metro-*"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "react"
-        update-types: ["version-update:semver-major"]
       - dependency-name: "react-dom"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native/*"
+      - dependency-name: "metro"
+      - dependency-name: "metro-*"
+      # Also on Expo's list: `expo install --check` validates these two against
+      # the SDK, and typescript@7 was rejected for exactly that reason.
+      - dependency-name: "typescript"
+      - dependency-name: "@types/react"
+      - dependency-name: "eslint-config-expo"
 
   - package-ecosystem: github-actions
     directory: "/"
