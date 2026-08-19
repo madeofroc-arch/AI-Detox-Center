@@ -43,7 +43,7 @@
     "@types/react": "~19.2.2",
     "eslint": "^9.21.0",
     "eslint-config-expo": "~57.0.1",
-    "jsdom": "^26.1.0",
+    "jsdom": "^30.0.1",
     "typescript": "~6.0.3",
     "vitest": "^3.2.7"
   }
