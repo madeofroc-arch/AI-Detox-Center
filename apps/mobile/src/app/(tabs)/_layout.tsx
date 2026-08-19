@@ -10,8 +10,17 @@ import { type } from '../../theme/tokens';
  * Tab icons are text characters, so a screen reader would otherwise read
  * "black circle, Home". Every tab already has a visible label; the glyph is
  * decoration and says so (#4).
+ *
+ * The colour is a token, not the `color` the tab bar passes to this callback.
+ * That argument is typed with react-navigation's copy of React Native's
+ * `ColorValue`, and when the two copies disagree — as they did the moment
+ * React Native 0.87 changed the internal shape of that type — the typecheck
+ * breaks on a dependency bump that touched none of our code. Reading `focused`
+ * and picking from the palette keeps the same two colours (they are exactly
+ * what `tabBarActiveTintColor` and `tabBarInactiveTintColor` are set to below)
+ * and owes nothing to another package's type.
  */
-function Glyph({ symbol, color }: { symbol: string; color: import("react-native").ColorValue }) {
+function Glyph({ symbol, color }: { symbol: string; color: string }) {
   return (
     <Text {...decorative} style={[type.heading, { color }]}>
       {symbol}
@@ -22,6 +31,7 @@ function Glyph({ symbol, color }: { symbol: string; color: import("react-native"
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { t } = useI18n();
+  const tint = (focused: boolean): string => (focused ? colors.accent : colors.inkMuted);
   return (
     <Tabs
       screenOptions={{
@@ -37,21 +47,21 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: t.tabs.home,
-          tabBarIcon: ({ color }) => <Glyph symbol="●" color={color} />,
+          tabBarIcon: ({ focused }) => <Glyph symbol="●" color={tint(focused)} />,
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
           title: t.tabs.progress,
-          tabBarIcon: ({ color }) => <Glyph symbol="▲" color={color} />,
+          tabBarIcon: ({ focused }) => <Glyph symbol="▲" color={tint(focused)} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: t.tabs.settings,
-          tabBarIcon: ({ color }) => <Glyph symbol="■" color={color} />,
+          tabBarIcon: ({ focused }) => <Glyph symbol="■" color={tint(focused)} />,
         }}
       />
     </Tabs>

@@ -28,6 +28,16 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # The authority on which versions of React Native, Metro and the
+      # react-native-* family this Expo SDK supports is Expo, not a range in
+      # package.json. A dependency bump that satisfies semver and breaks that
+      # contract passes lint, typecheck and tests — the first Dependabot run on
+      # this repo opened exactly that PR. This is the check that catches it,
+      # and it stays correct as the SDK moves without anyone maintaining a list.
+      - name: Expo SDK compatibility
+        working-directory: apps/mobile
+        run: npx expo install --check
+
       - name: Build
         run: npm run build
 
