@@ -40,6 +40,22 @@ const check = process.argv.includes('--check');
 
 const read = (p) => parse(readFileSync(p, 'utf8'));
 const ladder = read(join(METHOD, 'ladder.yaml'));
+
+/**
+ * The optional personal profile — the other half of Human Mode.
+ *
+ * `skill/method/profile.yaml` is what The Adversary's record screen emits: a
+ * starting rung and a handful of instruction lines, each one earned by
+ * something the game actually measured. It is gitignored, because it describes
+ * one person's habits and nothing about one person's habits belongs in a
+ * public repository.
+ *
+ * Absent is the normal case and changes nothing. Present, it is the joint that
+ * makes the game the diagnosis and this the prescription rather than two
+ * products sharing a name.
+ */
+const PROFILE_PATH = join(METHOD, 'profile.yaml');
+const profile = existsSync(PROFILE_PATH) ? (read(PROFILE_PATH)?.profile ?? {}) : {};
 const signals = read(join(METHOD, 'signals.yaml'));
 const domains = readdirSync(join(METHOD, 'domains'))
   .filter((f) => f.endsWith('.yaml'))
@@ -59,8 +75,23 @@ const levels = (ladder.rungs ?? []).map((r) => r.level);
 if (new Set(levels).size !== levels.length) problems.push('ladder.yaml: duplicate rung levels');
 if (!levels.includes(ladder.default_rung)) problems.push(`ladder.yaml: default_rung ${ladder.default_rung} is not a rung`);
 const top = Math.max(...levels);
+// The profile moves where a conversation starts. It cannot reach any other
+// rung behaviour, and it can never lock the top one — that rule is not a
+// setting (see ladder.yaml).
+const defaultRung = profile.default_rung ?? ladder.default_rung;
 if (!(ladder.rungs ?? []).some((r) => r.level === top && (r.withholds ?? []).length === 0)) {
   problems.push('ladder.yaml: the top rung must withhold nothing — the ladder must never lock');
+}
+if (profile.default_rung !== undefined && !levels.includes(profile.default_rung)) {
+  problems.push(`profile.yaml: default_rung ${profile.default_rung} is not a rung`);
+}
+if (profile.instructions !== undefined && !Array.isArray(profile.instructions)) {
+  problems.push('profile.yaml: instructions must be a list');
+}
+for (const line of profile.instructions ?? []) {
+  if (typeof line !== 'string' || line.trim() === '') {
+    problems.push('profile.yaml: an instruction is empty');
+  }
 }
 for (const group of ['bypass', 'descend', 'ascend', 'never']) {
   if (!Array.isArray(signals[group]) || signals[group].length === 0) problems.push(`signals.yaml: "${group}" is empty`);
@@ -134,6 +165,7 @@ const EN_STRINGS = {
   never_prefix: 'Never',
   always_allowed_label: 'Always fine at any rung',
   skip_label: 'Skip the ladder when',
+  tuned_heading: 'Tuned for this person',
   tone_heading: 'Tone',
   tone_body:
     'Calm, warm, brief. Never say a person should have known something, should have\n' +
@@ -364,12 +396,26 @@ function render(view) {
     )
     .join('\n');
 
+  // Sits with the ladder because that is what it modifies, and reads as part of
+  // the method rather than as an appendix, which is the point: a profile the
+  // model treats as an afterthought is a profile that does nothing.
+  const tunedSection =
+    (profile.instructions ?? []).length > 0
+      ? [
+          '',
+          `## ${tidy(S.tuned_heading)}`,
+          '',
+          ...profile.instructions.map((line) => `- ${tidy(line)}`),
+          '',
+        ].join('\n')
+      : '';
+
   const CORE = `## ${tidy(S.ladder_heading)}
 
-${block(fill(S.ladder_intro, { default: ladder.default_rung }))}
+${block(fill(S.ladder_intro, { default: defaultRung }))}
 
 ${ladderSection}
-
+${tunedSection}
 ## ${tidy(S.bypass_heading)}
 
 ${bypassSection}
@@ -459,7 +505,7 @@ ${block(S.compact_howto)}
 
 ---
 
-${block(fill(S.compact_body, { default: ladder.default_rung }))}
+${block(fill(S.compact_body, { default: defaultRung }))}
 ${view.rungs.map((r) => `${r.level}) ${tidy(r.name)}${COLON}${firstSentence(tidy(r.intent))}`).join(' ')}
 
 ${block(fill(S.compact_bypass, { top }))}

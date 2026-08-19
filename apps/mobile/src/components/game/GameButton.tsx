@@ -2,7 +2,7 @@ import React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Pressable, Text, View } from 'react-native';
 import { gamePalette, gameRadius, gameSpace, gameType } from '../../theme/game';
-import { MIN_TOUCH_TARGET } from '../../theme/a11y';
+import { MIN_TOUCH_TARGET, selectionState } from '../../theme/a11y';
 
 export type GameButtonTone = 'you' | 'plain' | 'quiet';
 
@@ -18,12 +18,21 @@ export function GameButton({
   tone = 'plain',
   style,
   accessibilityLabel,
+  role = 'button',
+  selected,
 }: {
   label: string;
   onPress: () => void;
   tone?: GameButtonTone;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  /**
+   * `radio` for one of a set of mutually exclusive choices. Colour alone
+   * carries the current one otherwise, which is exactly the class of defect the
+   * accessibility audit found shipped everywhere in the last product.
+   */
+  role?: 'button' | 'radio';
+  selected?: boolean;
 }) {
   const background =
     tone === 'you' ? gamePalette.you : tone === 'plain' ? gamePalette.surfaceAlt : 'transparent';
@@ -32,8 +41,9 @@ export function GameButton({
 
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={role}
       accessibilityLabel={accessibilityLabel ?? label}
+      {...(role === 'radio' ? selectionState(selected === true, 'radio') : {})}
       onPress={onPress}
       style={({ pressed }) => [
         {

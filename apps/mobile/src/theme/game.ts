@@ -46,8 +46,6 @@ export interface GamePalette {
   lineStrong: string;
   /** Label on a `you` fill. */
   onYou: string;
-  /** Label on a `gold` fill. */
-  onGold: string;
 }
 
 export const gamePalette: GamePalette = {
@@ -65,7 +63,6 @@ export const gamePalette: GamePalette = {
   line: '#2A313C',
   lineStrong: '#77808F',
   onYou: '#0D1015',
-  onGold: '#0D1015',
 };
 
 /**

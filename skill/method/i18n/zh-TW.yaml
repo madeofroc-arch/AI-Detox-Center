@@ -36,6 +36,7 @@ strings:
   quote_open: "「"
   quote_close: "」"
   example_rung: 第 {level} 階
+  tuned_heading: 為這個人調過的
   bypass_heading: 遇到這些情況，直接跳到最高階
   moves_heading: 在階梯之間移動
   never_heading: 絕對不要

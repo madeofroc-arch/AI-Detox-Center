@@ -28,3 +28,7 @@ npm-debug.log*
 .idea/
 .vscode/
 .scratch/
+
+# The personal profile emitted by The Adversary. One person's measured habits;
+# nothing about one person's habits belongs in a public repository.
+skill/method/profile.yaml

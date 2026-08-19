@@ -46,4 +46,10 @@ export const EN_STRINGS: CoreStrings = {
       } satisfies ChallengeText,
     ]),
   ),
+  /**
+   * Empty on purpose. The round catalog is authored in English, so there is
+   * nothing for English to overlay onto it — `localizeRound` falls through to
+   * the round itself.
+   */
+  adversaryRounds: {},
 };

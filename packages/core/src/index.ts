@@ -22,10 +22,13 @@ export * from './ai-detox/reflection/reflection';
 
 // the adversary (docs/product/adversary.md)
 export * from './adversary/types';
-export * from './adversary/config';
-export * from './adversary/scoring';
-export * from './adversary/selection';
 export * from './adversary/catalog';
+export * from './adversary/quiz-types';
+export * from './adversary/quiz-config';
+export * from './adversary/quiz-board';
+export * from './adversary/quiz-selection';
+export * from './adversary/quiz-run';
+export * from './adversary/quiz-diagnosis';
 
 // challenges
 export * from './challenges/types';

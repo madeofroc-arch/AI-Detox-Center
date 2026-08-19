@@ -9,9 +9,23 @@ It ships two things:
   Codex that answers on a hint ladder instead of handing over finished work. It
   intervenes at the moment the outsourcing happens, inside the tool where it
   happens.
-- **The Adversary** — a three-minute game where you commit to an answer, a
-  confident opponent argues against it, and you win by knowing when to hold your
-  ground.
+- **The Adversary** — a game show where you pick one of four answers, a
+  confident host tells you which one it would pick and why, and you win by
+  knowing when it is wrong.
+
+**They are one product, and the joint is literal.** The game is the diagnosis:
+it wrote the argument, so it knows the ground truth, and it can measure what no
+questionnaire can — whether fluent wrong reasoning moved you. The skill is the
+prescription: the run ends by emitting a starting rung and a short list of
+instructions for the AI you already use, each one shown with the plays that
+earned it. `skill/build.mjs` reads that file and it reaches Claude, ChatGPT,
+Gemini and Codex at once.
+
+That order matters. Nobody installs an instruction set that makes their AI less
+immediately helpful without evidence that they need it, and self-report cannot
+supply that evidence — a person who folds to a confident wrong argument is not
+aware of it at the time. The game earns the install; the skill does the work
+where the behaviour happens.
 
 > Fluency is not evidence.
 
@@ -99,11 +113,19 @@ less. That is a written instruction not to be wanted, and it is upstream of
 everything that went wrong. Daily actives and session length are no longer sins.
 They are also not goals: they are simply not the measurement.
 
-**Principle 7 — the rule.** The subject of a number must be a claim, never a
-person. "Of the bands you called 90% sure, 61% contained the answer" is legal:
-its subject is a claim you made, it is actionable in one move (widen your
-bands), and it is bounded to the game. "Your AI reliance is 61" was not: its
-subject was how you live, and there was no move.
+**Principle 7 — the rule.** The subject of a number must be a claim or a play,
+never a person. "Of 12 bad arguments the host made, 5 got through" is legal: its
+subject is a set of things that happened in a game, it carries its own
+denominator, it is bounded to the game, and it is actionable in one move. "Your
+AI reliance is 61" was not: its subject was how you live, and there was no move.
+
+The rule has an architectural consequence rather than a copy one. Every finding
+in the diagnosis is a `numerator` and a `denominator` before it is a sentence,
+so a screen *cannot* render it as a verdict without inventing something the type
+does not carry — and the copy that names it ("answering alone and wrong", not
+"overconfident") is held to the same line. An earlier draft called one finding
+`overconfident`, which claims more than a four-option game can see: no
+confidence is stated anywhere in it.
 
 The built app already ran the experiment where careful copy protects a falling
 number — band labels paired with an additive line that always resolves, a

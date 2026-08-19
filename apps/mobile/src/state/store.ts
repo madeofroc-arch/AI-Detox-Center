@@ -13,9 +13,11 @@ import type {
   LanguagePreference,
   LoadWarning,
   ReflectionEntry,
+  RunRecord,
 } from '@ai-detox/core';
 import {
   AppRepository,
+  appendRunRecord,
   defaultScoringConfig,
   emptyAppData,
   gateToUsageEvent,
@@ -43,6 +45,8 @@ interface AppStore {
   recordDetoxSession: (session: DetoxSession) => Promise<void>;
   recordChallengeAttempt: (attempt: ChallengeAttempt) => Promise<void>;
   addReflection: (entry: ReflectionEntry) => Promise<void>;
+  /** Keep a finished run of The Adversary. The diagnosis reads all of them. */
+  recordAdversaryRun: (record: RunRecord) => Promise<void>;
   resetScoringConfig: () => Promise<void>;
   deleteAllData: () => Promise<void>;
   exportJson: () => string;
@@ -131,6 +135,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }
       return next;
     }),
+
+  recordAdversaryRun: (record) =>
+    get().update((data) => ({
+      ...data,
+      adversaryRuns: appendRunRecord(data.adversaryRuns, record),
+    })),
 
   resetScoringConfig: () =>
     get().update((data) => ({

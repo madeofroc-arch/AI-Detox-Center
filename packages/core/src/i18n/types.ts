@@ -11,6 +11,7 @@
 import type { ScoreBand } from '../ai-detox/scoring/scoring';
 import type { ScoringFactor } from '../ai-detox/scoring/config';
 import type { AIUsageCategory } from '../ai-detox/tracking/types';
+import type { AdversaryRound } from '../adversary/types';
 import type { Challenge, ChallengeCategory } from '../challenges/types';
 
 export const LOCALES = ['en', 'zh-TW'] as const;
@@ -40,6 +41,26 @@ export interface ChallengeText {
   reflectionQuestions: string[];
 }
 
+/**
+ * The translatable text of one round of The Adversary.
+ *
+ * Everything the game computes with — the true value, the axis, the band, the
+ * bluff's figure and its direction — is deliberately absent. Selection, board
+ * construction and scoring must run on the canonical catalog and only then swap
+ * the words, or the same seed would deal different questions to the same person
+ * in two languages (CLAUDE.md rule 6).
+ *
+ * `fallacy` is here because it is a phrase, not a key: it is shown to the
+ * player after the reveal.
+ */
+export interface RoundText {
+  question: string;
+  unit: string;
+  sourceNote: string;
+  honest: { argument: string; verdict: string };
+  bluff: { argument: string; verdict: string; fallacy: string };
+}
+
 export interface UsageCategoryText {
   label: string;
   description: string;
@@ -57,6 +78,14 @@ export interface CoreStrings {
   reflectionPrompts: Record<string, string>;
   /** Keyed by Challenge id. */
   challenges: Record<string, ChallengeText>;
+  /**
+   * Keyed by AdversaryRound id.
+   *
+   * Empty for English: the catalog IS the English text, so there is nothing to
+   * overlay. Any other language supplies what it has, and a round it has not
+   * reached yet renders in English rather than as a hole.
+   */
+  adversaryRounds: Record<string, RoundText>;
 }
 
 /**
@@ -70,3 +99,6 @@ export type PartialCoreStrings = {
 
 /** A challenge with its text swapped for the requested language. */
 export type LocalizedChallenge = Challenge;
+
+/** A round with its text swapped. Everything computable about it is unchanged. */
+export type LocalizedRound = AdversaryRound;

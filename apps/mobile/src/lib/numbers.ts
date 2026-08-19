@@ -7,17 +7,31 @@
  * player reading a log axis needs the landmarks in their own units.
  */
 
-/** Compact values for axis ticks and answers: 1.2K, 130B, 0.8. */
-export function compactFormatter(locale: string): (value: number) => string {
+/**
+ * Compact values for the four options and the revealed answer: 130B, 1300億.
+ *
+ * This is where the locale earns its keep. Written out in full, four magnitudes
+ * an order apart are four rows of zeros to count — 28,000,000,000 against
+ * 290,000,000,000 — which is cognitive work with nothing to do with the
+ * reasoning the game is about. And the grouping a reader thinks in is not the
+ * same everywhere: English groups by thousands and Chinese by 萬 and 億, so the
+ * same number is 130B in one and 1300億 in the other.
+ *
+ * `digits` is how many significant figures survive. Three is right for options,
+ * which are two-significant-figure values anyway; four is right for the
+ * revealed answer, where the extra digit is the difference between "about the
+ * same as option C" and "the actual figure".
+ */
+export function compactFormatter(locale: string, digits = 3): (value: number) => string {
   try {
     const nf = new Intl.NumberFormat(locale, {
       notation: 'compact',
-      maximumSignificantDigits: 3,
+      maximumSignificantDigits: digits,
     });
     return (value) => nf.format(value);
   } catch {
     // Some runtimes ship without full ICU. A readable number beats a crash.
-    return (value) => String(Number(value.toPrecision(3)));
+    return (value) => String(Number(value.toPrecision(digits)));
   }
 }
 

@@ -37,6 +37,7 @@ const MIGRATIONS: Record<number, Migration> = {
     detoxSessions: Array.isArray(data.detoxSessions) ? data.detoxSessions : [],
     reflections: Array.isArray(data.reflections) ? data.reflections : [],
     challengeHistory: Array.isArray(data.challengeHistory) ? data.challengeHistory : [],
+    adversaryRuns: Array.isArray(data.adversaryRuns) ? data.adversaryRuns : [],
     schemaVersion: 1,
   }),
   // 1 -> 2: AppSettings gained `language`. Existing users follow their device
@@ -57,6 +58,15 @@ const MIGRATIONS: Record<number, Migration> = {
       schemaVersion: 2,
     };
   },
+  // 2 -> 3: The Adversary keeps its finished runs. Nothing existed before, so
+  // the migration is an empty list — but it still has to be a migration rather
+  // than a default, because `migrateAppData` is what stamps the version and a
+  // v2 document that never passes through here would keep claiming v2 forever.
+  2: (data) => ({
+    ...data,
+    adversaryRuns: Array.isArray(data.adversaryRuns) ? data.adversaryRuns : [],
+    schemaVersion: 3,
+  }),
 };
 
 /**
@@ -106,6 +116,7 @@ export function migrateAppData(raw: unknown): AppData {
     detoxSessions: asArray(result.detoxSessions),
     reflections: asArray(result.reflections),
     challengeHistory: asArray(result.challengeHistory),
+    adversaryRuns: asArray(result.adversaryRuns),
     scoringConfig: config ?? defaultScoringConfig(),
     settings: {
       onboardingComplete: result.settings?.onboardingComplete === true,

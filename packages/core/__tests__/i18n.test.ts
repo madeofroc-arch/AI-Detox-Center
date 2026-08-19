@@ -7,16 +7,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   CATEGORY_INFO,
+  ADVERSARY_CATALOG,
   CHALLENGE_CATALOG,
   CHALLENGE_CATEGORIES,
   DEFAULT_LOCALE,
   LOCALES,
   LOCALE_NAMES,
   REFLECTION_PROMPTS,
+  SCHEMA_VERSION,
   getCoreStrings,
   isLocale,
   localizeCategoryInfo,
   localizeChallenge,
+  localizeRound,
   localizePrompt,
   matchLocale,
   migrateAppData,
@@ -215,7 +218,9 @@ describe('the language setting survives storage', () => {
       settings: { onboardingComplete: true, focusCategories: ['thinking'] },
     };
     const migrated = migrateAppData(v1);
-    expect(migrated.schemaVersion).toBe(2);
+    // The point of the test is that a v1 document arrives intact at whatever
+    // the current schema is, not that the current schema is any given number.
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
     expect(migrated.settings.language).toBe('system');
     expect(migrated.settings.onboardingComplete).toBe(true);
     expect(migrated.settings.focusCategories).toEqual(['thinking']);
@@ -248,3 +253,64 @@ describe('the language setting survives storage', () => {
     }
   });
 });
+
+describe('a translated round', () => {
+  /**
+   * The load-bearing rule of a translated catalog: everything the game computes
+   * with has to survive the swap. If a translation could move a true value, an
+   * axis, a band or the bluff's own figure, the same seed would deal a
+   * different board to the same person in two languages — and the record they
+   * are comparing across runs would stop meaning one thing.
+   */
+  it('changes words and nothing a board is built from', () => {
+    for (const locale of LOCALES) {
+      const strings = getCoreStrings(locale);
+      for (const round of ADVERSARY_CATALOG) {
+        const localized = localizeRound(round, strings);
+        expect(localized.id).toBe(round.id);
+        expect(localized.band).toBe(round.band);
+        expect(localized.domain).toBe(round.domain);
+        expect(localized.difficulty).toBe(round.difficulty);
+        expect(localized.trueValue).toBe(round.trueValue);
+        expect(localized.axisMin).toBe(round.axisMin);
+        expect(localized.axisMax).toBe(round.axisMax);
+        expect(localized.honest.direction).toBe(round.honest.direction);
+        expect(localized.bluff.direction).toBe(round.bluff.direction);
+        expect(localized.bluff.bluffValue).toBe(round.bluff.bluffValue);
+      }
+    }
+  });
+
+  it('falls back to English for a round a language has not reached', () => {
+    const strings = getCoreStrings('zh-TW');
+    const round = ADVERSARY_CATALOG[0]!;
+    const missing = { ...round, id: 'not_translated_yet' };
+    expect(localizeRound(missing, strings).question).toBe(round.question);
+  });
+
+  it('swaps every visible field when the text is there', () => {
+    const round = ADVERSARY_CATALOG[0]!;
+    const strings = {
+      ...getCoreStrings('en'),
+      adversaryRounds: {
+        [round.id]: {
+          question: 'Q',
+          unit: 'U',
+          sourceNote: 'S',
+          honest: { argument: 'HA', verdict: 'HV' },
+          bluff: { argument: 'BA', verdict: 'BV', fallacy: 'BF' },
+        },
+      },
+    };
+    const localized = localizeRound(round, strings);
+    expect(localized.question).toBe('Q');
+    expect(localized.unit).toBe('U');
+    expect(localized.sourceNote).toBe('S');
+    expect(localized.honest.argument).toBe('HA');
+    expect(localized.honest.verdict).toBe('HV');
+    expect(localized.bluff.argument).toBe('BA');
+    expect(localized.bluff.verdict).toBe('BV');
+    expect(localized.bluff.fallacy).toBe('BF');
+  });
+});
+
