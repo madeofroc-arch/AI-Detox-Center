@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ADVERSARY_CATALOG,
   DEFAULT_QUIZ_CONFIG,
+  LOCALES,
+  LOCALE_NAMES,
   LIFELINE_IDS,
   TIER_ORDER,
   advance,
@@ -26,7 +28,7 @@ import {
   swapQuestion,
   walkAway,
 } from '@ai-detox/core';
-import type { RunState, TierId } from '@ai-detox/core';
+import type { LanguagePreference, RunState, TierId } from '@ai-detox/core';
 import { GameButton } from '../components/game/GameButton';
 import { LadderRail, LifelineBar } from '../components/game/LifelineBar';
 import { OptionRow } from '../components/game/OptionRow';
@@ -35,7 +37,7 @@ import { useI18n } from '../i18n/useI18n';
 import { todayKey } from '../lib/clock';
 import { exactFormatter } from '../lib/numbers';
 import { useAppStore } from '../state/store';
-import { decorative, group } from '../theme/a11y';
+import { MIN_TOUCH_TARGET, decorative, group } from '../theme/a11y';
 import { gamePalette, gameRadius, gameSpace, gameType } from '../theme/game';
 
 /**
@@ -60,6 +62,8 @@ export default function Adversary() {
 
   const history = useAppStore((s) => s.data.adversaryRuns);
   const recordAdversaryRun = useAppStore((s) => s.recordAdversaryRun);
+  const language = useAppStore((s) => s.data.settings.language);
+  const setLanguage = useAppStore((s) => s.setLanguage);
 
   const [run, setRun] = useState<RunState | null>(null);
   const [runIndex, setRunIndex] = useState(0);
@@ -174,6 +178,30 @@ export default function Adversary() {
             onPress={() => router.push('/prescription')}
           />
         ) : null}
+
+        {/* The game is the whole app now, so the one setting it cannot do
+            without lives here rather than behind a tab bar belonging to a
+            product nothing links to any more. */}
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel={t.game.language}
+          style={{ gap: gameSpace.sm, marginTop: gameSpace.lg }}
+        >
+          <Text style={[gameType.label, { color: gamePalette.quiet }]}>{t.game.language}</Text>
+          <View style={{ flexDirection: 'row', gap: gameSpace.sm }}>
+            {(['system', ...LOCALES] as LanguagePreference[]).map((option) => (
+              <GameButton
+                key={option}
+                label={option === 'system' ? t.game.languageSystem : LOCALE_NAMES[option]}
+                tone={language === option ? 'you' : 'quiet'}
+                role="radio"
+                selected={language === option}
+                style={{ flex: 1, minHeight: MIN_TOUCH_TARGET }}
+                onPress={() => void setLanguage(option)}
+              />
+            ))}
+          </View>
+        </View>
       </>,
     );
   }

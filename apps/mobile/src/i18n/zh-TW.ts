@@ -32,6 +32,8 @@ export const ZH_TW: AppStrings = {
     title: '對手',
 
     // ── 選模式 ──────────────────────────────────────────────────────────────
+    language: '語言',
+    languageSystem: '跟隨系統',
     chooseTier: '選一個模式',
     chooseTierHelp:
       '每個模式用的是同一批題目。差別在四個答案彼此靠多近——以及主持人多常在唬你。',

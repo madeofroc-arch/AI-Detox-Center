@@ -39,6 +39,8 @@ export const EN = {
     title: 'The Adversary',
 
     // ── Choosing a mode ────────────────────────────────────────────────────
+    language: 'Language',
+    languageSystem: 'System',
     chooseTier: 'Pick a mode',
     chooseTierHelp:
       'Every mode uses the same questions. What changes is how close together the four answers sit — and how often the host is lying to you.',

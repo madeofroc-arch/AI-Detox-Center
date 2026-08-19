@@ -17,6 +17,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { emptyAppData } from '@ai-detox/core';
 import type { AppData, RunRecord } from '@ai-detox/core';
 import Adversary from '../src/app/adversary';
+import Index from '../src/app/index';
 import Prescription from '../src/app/prescription';
 import { EN } from '../src/i18n/en';
 import { useAppStore } from '../src/state/store';
@@ -44,6 +45,36 @@ const lifeline = (name: string) =>
   screen.getAllByRole('button').find((b) => label(b).startsWith(name))!;
 const finalAnswer = () =>
   screen.queryAllByRole('button').find((b) => label(b).startsWith(EN.game.lockAnswer));
+
+describe('the front door', () => {
+  /**
+   * For one build the game was reachable only by typing `/adversary`: opening
+   * the app landed on the abandoned dependency tracker and nothing anywhere
+   * linked to the new product. Nothing in the type checker, the linter or the
+   * export could see it, and the person who noticed was the owner.
+   */
+  it('is the game', () => {
+    seed();
+    render(<Index />);
+    expect(screen.getByTestId('redirect').getAttribute('data-href')).toBe('/adversary');
+  });
+
+  it('is the game even before anything has been played', () => {
+    seed({ settings: { onboardingComplete: false, focusCategories: [], language: 'system' } });
+    render(<Index />);
+    expect(screen.getByTestId('redirect').getAttribute('data-href')).toBe('/adversary');
+  });
+
+  it('offers the one setting the game cannot do without', () => {
+    seed();
+    render(<Adversary />);
+    const languages = screen
+      .getAllByRole('radio')
+      .map((r) => r.getAttribute('aria-label') ?? '');
+    expect(languages).toContain(EN.game.languageSystem);
+    expect(languages).toContain('English');
+  });
+});
 
 describe('the provisional lock', () => {
   /**
