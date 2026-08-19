@@ -1,19 +1,19 @@
 /**
- * The Adversary — a calibration game where a confident opponent argues against
- * the range you just committed to, and you win by knowing when to hold.
+ * The Adversary's authored content: a round, and the two arguments a host can
+ * make about it.
  *
  * Spec: docs/product/adversary.md.
  *
- * Everything here is data and pure functions. Rounds are static content; the
- * player's band is an input; nothing reads a clock or a random number
- * generator, so a session is reproducible from its seed and a bug report is a
- * seed (CLAUDE.md rule 2).
+ * Everything here is static data. How a round becomes a board of four options
+ * lives in `quiz-board.ts`; how a run is played lives in `quiz-run.ts`. Nothing
+ * in any of them reads a clock or a random number generator, so a run is
+ * reproducible from its seed and a bug report is a seed (CLAUDE.md rule 2).
  */
 
 /** Whether the opponent's argument was sound, or fluent and structurally wrong. */
 export type PushbackKind = 'honest' | 'bluff';
 
-/** What the argument claims about the player's band. */
+/** Which way the argument pushes: that the answer is lower, or that it is higher. */
 export type PushbackDirection = 'too_high' | 'too_low';
 
 export interface Pushback {
@@ -33,6 +33,19 @@ export interface Pushback {
   verdict: string;
   /** Short label for the failure mode. Bluffs only. */
   fallacy?: string;
+  /**
+   * The figure this bluff's own arithmetic reaches. Bluffs only.
+   *
+   * Load-bearing rather than decorative: the option board is spaced so that
+   * this figure IS one of the four, which is the only arrangement in which the
+   * host can state its reasoning and then name an option without contradicting
+   * itself. Optional in the type because the field was added after the catalog
+   * was authored; `quiz-board.test.ts` requires every shipped round to carry
+   * one, and a round without it has no board.
+   *
+   * It is never scored and never shown.
+   */
+  bluffValue?: number;
 }
 
 export interface AdversaryRound {
@@ -44,7 +57,15 @@ export interface AdversaryRound {
   trueValue: number;
   /** Where the number comes from, and roughly when. Shown at the reveal. */
   sourceNote: string;
-  /** Log-axis bounds. Generous on purpose: a narrow axis is a hint. */
+  /**
+   * The range of values this quantity could plausibly take.
+   *
+   * Authored generously — a narrow bound is a hint — and load-bearing: the
+   * option board is clamped to within a tolerance of it, which is what stops a
+   * generated option being physically impossible and eliminating itself. A
+   * round whose board cannot be built inside these bounds at a given mode is
+   * dropped from that mode's pool rather than shown broken.
+   */
   axisMin: number;
   axisMax: number;
   difficulty: 1 | 2 | 3 | 4 | 5;
@@ -52,14 +73,9 @@ export interface AdversaryRound {
   bluff: Pushback;
 }
 
-/** The range the player claims, at the fixed confidence in the config. */
-export interface Band {
-  lo: number;
-  hi: number;
-}
-
 /**
- * What the player did when pushed, crossed with what the argument actually was.
+ * What the player did when the host spoke, crossed with what the host was
+ * doing.
  *
  * The whole measurement, and it needs no self-report: the app knows the ground
  * truth because the app wrote the argument. That is the property the old
@@ -75,36 +91,3 @@ export type NerveCell =
   | 'updated'
   /** Moved on a bluff. */
   | 'taken';
-
-export interface RoundResult {
-  roundId: string;
-  /** The band before the opponent spoke. */
-  initialBand: Band;
-  /** The band that was scored — same as `initialBand` unless the player moved. */
-  band: Band;
-  moved: boolean;
-  pushback: PushbackKind;
-  hit: boolean;
-  points: number;
-  nerve: NerveCell;
-  /**
-   * How far outside the band the answer fell, as a multiple: 6 means "you were
-   * 6x off". Exactly 1 on a hit. Used for copy, never for scoring.
-   */
-  missFactor: number;
-}
-
-/**
- * Everything the record shows, recomputed from stored results rather than kept
- * as a running total — acceptance criterion 6, so no number can drift away from
- * the rounds that produced it.
- */
-export interface AdversaryRecord {
-  bands: number;
-  hits: number;
-  /** hits / bands, or null before the first band. Compare against `claimedConfidence`. */
-  calibration: number | null;
-  claimedConfidence: number;
-  nerve: Record<NerveCell, number>;
-  points: number;
-}

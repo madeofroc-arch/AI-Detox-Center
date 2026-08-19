@@ -29,6 +29,22 @@ describe('migrateAppData', () => {
     expect(migrated.scoringConfig).toEqual(DEFAULT_SCORING_CONFIG);
   });
 
+  it('gives a v2 document an empty run history rather than leaving it undefined', () => {
+    // A v2 document predates The Adversary keeping its runs. The diagnosis
+    // reads this list on every render, so `undefined` here is a white screen.
+    const v2 = { ...emptyAppData(), schemaVersion: 2 } as Record<string, unknown>;
+    delete v2.adversaryRuns;
+    const migrated = migrateAppData(v2);
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(migrated.adversaryRuns).toEqual([]);
+  });
+
+  it('keeps a run history that is already there', () => {
+    const runs = [{ tier: 'hard', seed: 's', bank: 12 }];
+    const migrated = migrateAppData({ ...emptyAppData(), schemaVersion: 2, adversaryRuns: runs });
+    expect(migrated.adversaryRuns).toHaveLength(1);
+  });
+
   it('repairs a corrupted scoring config with defaults', () => {
     const data = { ...emptyAppData(), scoringConfig: { totally: 'broken' } };
     const migrated = migrateAppData(data);

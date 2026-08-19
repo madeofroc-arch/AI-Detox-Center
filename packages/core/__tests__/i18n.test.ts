@@ -13,6 +13,7 @@ import {
   LOCALES,
   LOCALE_NAMES,
   REFLECTION_PROMPTS,
+  SCHEMA_VERSION,
   getCoreStrings,
   isLocale,
   localizeCategoryInfo,
@@ -215,7 +216,9 @@ describe('the language setting survives storage', () => {
       settings: { onboardingComplete: true, focusCategories: ['thinking'] },
     };
     const migrated = migrateAppData(v1);
-    expect(migrated.schemaVersion).toBe(2);
+    // The point of the test is that a v1 document arrives intact at whatever
+    // the current schema is, not that the current schema is any given number.
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
     expect(migrated.settings.language).toBe('system');
     expect(migrated.settings.onboardingComplete).toBe(true);
     expect(migrated.settings.focusCategories).toEqual(['thinking']);

@@ -48,7 +48,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       argument:
         'Anchor on people, not on shops. China has about 1.4 billion residents, and its platforms run on many small, cheap items shipped separately rather than one large basket, so one parcel per person per week — ordinary for an active urban shopper — is already 70 billion a year. Delivery there is cheap enough that heavy users order daily, and rural coverage is near universal.',
       verdict:
-        'Sound. Per-capita reasoning is the right frame for a parcel count, and China\'s parcel intensity really does run above 90 per person per year, so a band anchored in the low billions is far too small.',
+        'Sound. Per-capita reasoning is the right frame for a parcel count, and China\'s parcel intensity really does run above 90 per person per year, so anything in the low billions is far too small.',
     },
     bluff: {
       kind: 'bluff',
@@ -58,6 +58,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. Income correlates with parcel volume across countries, but it is not the mechanism — parcel counts are driven by e-commerce penetration, cheap last-mile labour, and low-value orders shipped one item at a time. China averaged about 94 parcels per person in 2023, roughly 1.5 times the US rate, on a fraction of the income.',
       fallacy: 'correlation offered as a mechanism (income treated as the driver of parcel volume)',
+      bluffValue: 28_000_000_000,
     },
   },
   {
@@ -76,7 +77,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'The top of this table is easy to underrate. The world\'s twenty busiest container ports together moved about 390 million TEU in 2023, and Shanghai has led that list for more than a decade, running roughly a quarter ahead of second-place Singapore. A band peaking in the single-digit millions would place the world\'s number one port below dozens of ordinary regional terminals.',
+        'The top of this table is easy to underrate. The world\'s twenty busiest container ports together moved about 390 million TEU in 2023, and Shanghai has led that list for more than a decade, running roughly a quarter ahead of second-place Singapore. A figure in the single-digit millions would place the world\'s number one port below dozens of ordinary regional terminals.',
       verdict:
         'Sound. Anchoring on the top-twenty aggregate and Shanghai\'s known margin over Singapore gets you to the right order of magnitude from public, checkable figures.',
     },
@@ -88,6 +89,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. It compares a stock with a flow. Containers do not sit still — a box makes several loaded voyages a year and is counted again at every port that lifts it on or off — so annual throughput vastly exceeds the box population. The top twenty ports alone handled about 390 million TEU in 2023 against that same 51-million-TEU fleet.',
       fallacy: 'stock vs flow',
+      bluffValue: 8_000_000,
     },
   },
   {
@@ -118,6 +120,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. It confuses how long one ship takes with how many ships fit. The canal is a pipeline: many vessels are under way inside it at once, with the locks cycling continuously behind each one. Transit duration is latency; throughput is set by lockage cycle time, lane count, and the fresh water the lake can spare. That is how 2019 averaged about 34 transits a day rather than eight.',
       fallacy: 'latency treated as throughput (serial reasoning about a pipelined system)',
+      bluffValue: 8,
     },
   },
   {
@@ -144,10 +147,11 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Start from the value. Air carries about 35% of world trade by value, and world merchandise exports were roughly $23.8 trillion in 2023 — call it $8.3 trillion of goods flying. World merchandise trade averages on the order of $1,500 per tonne shipped. Divide one by the other and you get something like five billion tonnes moving by air; your band is orders of magnitude short.',
+        'Start from the value. Air carries about 35% of world trade by value, and world merchandise exports were roughly $23.8 trillion in 2023 — call it $8.3 trillion of goods flying. World merchandise trade averages on the order of $1,500 per tonne shipped. Divide one by the other and it comes out at something like five billion tonnes moving by air — billions, not millions.',
       verdict:
         'That was a bluff. The average dollars-per-tonne of all trade cannot be applied to air cargo, because goods are put on aircraft precisely when their value density is extreme — pharmaceuticals, semiconductors, urgent spare parts. Spread $8.3 trillion over about 58 million tonnes and you get roughly $143,000 a tonne, some ninety-five times the all-trade average. That gap is the reason those goods fly and iron ore does not.',
       fallacy: 'a population average applied to a subsample selected on that very variable',
+      bluffValue: 5_000_000_000,
     },
   },
   {
@@ -178,6 +182,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. The 250 million journeys are right; the loss rate was never measured, it was chosen because it sounded modest. Carriers report losses of roughly six containers per million shipped, not a hundred — about sixteen times better than the \'conservative\' figure — which puts the annual average near 1,566. A rate you have not looked up is not a lower bound just because it feels careful.',
       fallacy: 'an invented rate treated as a floor because it sounds conservative',
+      bluffValue: 25_000,
     },
   },
   {
@@ -196,18 +201,19 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'Almost everyone anchors on what a litre of fuel weighs — about 0.75 kg — and caps their band there or below. But combustion is not a repackaging of the fuel: every carbon atom leaves with two oxygen atoms attached, and carbon is 12 grams per mole against CO2\'s 44. Whatever the blend, the CO2 comes out several times heavier than the fuel, so a band topping out near 1 kg is too low.',
+        'Almost everyone anchors on what a litre of fuel weighs — about 0.75 kg — and puts the answer there or below. But combustion is not a repackaging of the fuel: every carbon atom leaves with two oxygen atoms attached, and carbon is 12 grams per mole against CO2\'s 44. Whatever the blend, the CO2 comes out several times heavier than the fuel, so anything near 1 kg is too low.',
       verdict:
-        'Sound. The 12-to-44 ratio is the whole story: the roughly 0.64 kg of carbon in a litre of petrol leaves the exhaust as about 2.3 kg of CO2, so any band capped near the fuel\'s own mass sits low.',
+        'Sound. The 12-to-44 ratio is the whole story: the roughly 0.64 kg of carbon in a litre of petrol leaves the exhaust as about 2.3 kg of CO2, so any figure near the fuel\'s own mass sits low.',
     },
     bluff: {
       kind: 'bluff',
       direction: 'too_high',
       argument:
-        'A litre of petrol weighs about 0.75 kg, and that is the entire mass you ever put into the tank. Everything leaving the exhaust — CO2, water vapour, the lot — has to be carved out of that budget, so the CO2 alone certainly cannot exceed it. A band sitting above one kilogram per litre is quietly claiming more mass out than went in.',
+        'A litre of petrol weighs about 0.75 kg, and that is the entire mass that ever goes into the tank. Everything leaving the exhaust — CO2, water vapour, the lot — has to be carved out of that budget, so the CO2 alone certainly cannot exceed it. Anything above one kilogram per litre is quietly claiming more mass out than went in.',
       verdict:
         'That was a bluff. Mass is conserved across the whole reaction, and the reaction has a second input the argument never counts: roughly 2.5 kg of atmospheric oxygen is drawn in per litre burned. The 0.64 kg of carbon in the fuel leaves as about 2.3 kg of CO2 because 32 of every 44 grams came out of the air. The tank was only half the ledger.',
       fallacy: 'closed system assumed where mass enters from outside',
+      bluffValue: 0.7,
     },
   },
   {
@@ -226,7 +232,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'World electricity consumption is around 28,000 TWh a year, and it is dominated by things that dwarf computing: industrial motors, heating and cooling, and lighting for eight billion people. Fast growth from a small base is still a small base — a double-digit share would put data centres in the same league as all of global industry. If your band\'s top end is in the tens of percent, it is too high.',
+        'World electricity consumption is around 28,000 TWh a year, and it is dominated by things that dwarf computing: industrial motors, heating and cooling, and lighting for eight billion people. Fast growth from a small base is still a small base — a double-digit share would put data centres in the same league as all of global industry. That puts it in the low single digits of a percent, not the tens.',
       verdict:
         'Sound. Anchoring on the size of the denominator rather than on the growth rate points the right way: about 415 TWh against roughly 28,000 TWh is near 1.5%.',
     },
@@ -238,6 +244,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and the growth rate is real — it belongs to workloads, not to watts. Data-centre compute grew several-fold over that decade while electricity use stayed close to flat, because the work migrated into efficient hyperscale sites and cooling and hardware improved at almost the rate demand rose. Energy only started climbing again with the recent AI build-out, and the IEA puts 2024 at about 415 TWh — near 1.5%.',
       fallacy: 'a growth rate borrowed from a different quantity',
+      bluffValue: 8,
     },
   },
   {
@@ -268,6 +275,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. Both numbers are correct and they measure different things: withdrawal statistics count blue water pumped or diverted, while the beef figure is about 94% green water — rain falling on pasture and feed crops, which nobody withdraws and which never enters that 4,000 cubic kilometres. Beef\'s blue-water footprint is around 550 litres per kilogram, about 1% of withdrawals. The clash was between two ledgers, not two facts.',
       fallacy: 'two accounting bases compared as if they were one',
+      bluffValue: 400,
     },
   },
   {
@@ -286,7 +294,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'Physics caps this tightly. Even fully saturated air at 25 °C carries only about 23 grams of water per cubic metre, and vapour thins out fast with height — nearly all of it sits in the lowest couple of kilometres. The wettest tropical column on Earth condenses to about 60 millimetres of water, so a band whose top end reaches into the hundreds of litres is too high.',
+        'Physics caps this tightly. Even fully saturated air at 25 °C carries only about 23 grams of water per cubic metre, and vapour thins out fast with height — nearly all of it sits in the lowest couple of kilometres. The wettest tropical column on Earth condenses to about 60 millimetres of water, so the global mean has to sit in the tens of litres, not the hundreds.',
       verdict:
         'Sound. Saturation vapour pressure plus a vapour scale height of roughly two kilometres bounds any column at a few tens of kilograms per square metre; the global mean is near 25 and the tropical maximum near 60.',
     },
@@ -298,6 +306,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. The 1,000 mm is a year\'s throughput, not what is up there at any moment — the same air is refilled by evaporation and wrung out by rain about forty times a year. Divide the year\'s rain by that turnover and you get what the column holds: roughly 25 litres per square metre, which is why a water molecule spends about nine days in the air rather than a year.',
       fallacy: 'annual flow mistaken for an instantaneous stock',
+      bluffValue: 1000,
     },
   },
   {
@@ -316,7 +325,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'Desalination\'s reputation for being ruinously energy-hungry comes from its capital cost and its brine, not from the separation itself. The minimum thermodynamic work to pull fresh water out of seawater at plant recovery rates is about 1 kWh per cubic metre; real membranes need two to three times that, and intake, pre-treatment and post-treatment add a little on top — three to four kWh in total. If your band\'s top end runs into the hundreds, it is too high.',
+        'Desalination\'s reputation for being ruinously energy-hungry comes from its capital cost and its brine, not from the separation itself. The minimum thermodynamic work to pull fresh water out of seawater at plant recovery rates is about 1 kWh per cubic metre; real membranes need two to three times that, and intake, pre-treatment and post-treatment add a little on top — three to four kWh in total. Nothing in that chain gets anywhere near the hundreds.',
       verdict:
         'Sound, and it lands on the figure: the roughly 1 kWh per cubic metre minimum separation work is a hard anchor, real membrane trains sit a small multiple above it, and whole-plant consumption comes out at 3 to 4.',
     },
@@ -328,6 +337,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. Latent heat is the price of one particular route — boiling — not of the separation. Reverse osmosis never makes vapour: it pushes water through a membrane against seawater\'s osmotic pressure, and the free energy of that separation is only about 1 kWh per cubic metre. A path-dependent cost was dressed up as a thermodynamic floor; real plants run near 3 to 4.',
       fallacy: 'one process\'s cost treated as the physical floor',
+      bluffValue: 63,
     },
   },
   {
@@ -358,6 +368,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and it turned on the word \'crude\'. A crude rate is defined per thousand of the total population — that is precisely what distinguishes it from the general fertility rate, which is per thousand women aged 15 to 49 and runs near 65, not 17. Applied to the denominator it was actually measured against, 17 per thousand of eight billion is about 132 million births a year: roughly 360,000 a day.',
       fallacy: 'a rate re-based onto a denominator it was never measured against',
+      bluffValue: 95_000,
     },
   },
   {
@@ -388,6 +399,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and this time the method was fine: beats per minute times millilitres per beat times 1,440 is exactly the calculation. The figure inside it was wrong. Resting stroke volume in an adult is about 70 millilitres, not 20 — the left ventricle holds roughly 120 millilitres and ejects a bit more than half of it each beat. Put 70 back in and you get 4.9 litres a minute, about 7,000 litres a day. The numbers inside a good argument are worth checking too.',
       fallacy: 'sound structure carrying one wrong figure — stroke volume understated',
+      bluffValue: 2000,
     },
   },
   {
@@ -418,6 +430,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and the conversion from a year\'s slaughter to a standing flock was actually correct. The population it was applied to was not: broilers are only one part of the flock. Billions of laying hens live a year or more and never enter meat production, and the replacement pullets behind them, the breeding stock behind those, and the world\'s backyard birds appear in no slaughter statistic at all — which is how the standing total reaches about 26 billion, roughly three per living person.',
       fallacy: 'a sample that is not the population',
+      bluffValue: 8_750_000_000,
     },
   },
   {
@@ -448,6 +461,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. \'Each doubling equals everything before it\' describes a standing population, not the number of people born: at every level, births keep arriving for as long as that level lasts, and pre-industrial populations lasted a very long time while barely growing. With birth rates of 60 to 80 per thousand — the level a species needs just to survive when most children die young — a world of a few hundred million produced two or three billion births per century, century after century. On the Population Reference Bureau\'s numbers, 46 billion arrive between 8000 B.C.E. and 1 C.E. alone and 97.6 billion — 83 per cent of the total — before 1750. The total is about 117 billion, which makes the living roughly 7 per cent.',
       fallacy: 'a doubling-series intuition applied to cumulative births',
+      bluffValue: 20_000_000_000,
     },
   },
   {
@@ -478,6 +492,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and it turned on a single unit. A decilitre is a tenth of a litre, so five litres is fifty decilitres: about 750 grams of haemoglobin, not 75. Every other step was right — 750 grams at 30 picograms per cell is 2.5 x 10^13 red cells, and over 120 days that comes to roughly 2.4 million new cells every second.',
       fallacy: 'unit slip — decilitres read as litres',
+      bluffValue: 240_000,
     },
   },
   {
@@ -508,6 +523,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and the method was right: die area times process density is exactly how you estimate this. The density was not. Leading 3 nm logic runs near 200 million transistors per square millimetre — no process in production is anywhere near a billion per square millimetre — the densest logic shipping today is about five times below that figure. Put 200 million back in and 100 square millimetres gives about 20 billion, which is the published 19. A confident constant in the middle of a good method is still worth checking.',
       fallacy: 'correct method carrying an inflated constant — process density overstated tenfold',
+      bluffValue: 200_000_000_000,
     },
   },
   {
@@ -538,6 +554,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and every rating in it is real — for a card in a slot. The PCIe version of this accelerator is indeed capped near 350 watts for exactly that reason. But SXM is not a card: the module bolts onto a baseboard and is fed by busbars sized for the job, which is the whole reason the form factor exists. The question named SXM, and its rated maximum is 700 watts.',
       fallacy: 'a real limit imported from a different form factor',
+      bluffValue: 375,
     },
   },
   {
@@ -568,6 +585,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and every number in it is true: the distance is right and light really does cross it in 18.6 ms. The step that never gets stated is that the signal travels at that speed. In glass the refractive index is about 1.47, so it moves at roughly two-thirds of c, and the cable route is longer than the straight line. Those two omitted corrections are the entire gap.',
       fallacy: 'an idealised constant applied to the wrong medium',
+      bluffValue: 45,
     },
   },
   {
@@ -598,6 +616,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. The economics are described correctly, and they are exactly why systems get shared — but capacity is not what sets the count, because a cable joins two specific places. Spare capacity on a Singapore-to-Marseille system does nothing for a Chile-to-New-Zealand route. The number is driven by how many distinct pairs of coastlines need joining, by redundancy against anchor and earthquake cuts, by separate ownership, and by the fact that a 1990s cable keeps earning: 570 in service.',
       fallacy: 'a real constraint that does not bind',
+      bluffValue: 60,
     },
   },
   {
@@ -616,7 +635,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'Start from who can actually buy one. EUV is only needed at the leading edge of logic and the newest DRAM — five companies in total, one of them dominant, with a handful of leading-edge fabs between them. A single tool costs on the order of 150 to 200 million euros, arrives in dozens of freight containers and takes months to assemble and qualify on site, and ASML\'s own build rate is the bottleneck for the whole industry — a band reaching into the hundreds per year is above what that allows.',
+        'Start from who can actually buy one. EUV is only needed at the leading edge of logic and the newest DRAM — five companies in total, one of them dominant, with a handful of leading-edge fabs between them. A single tool costs on the order of 150 to 200 million euros, arrives in dozens of freight containers and takes months to assemble and qualify on site, and ASML\'s own build rate is the bottleneck for the whole industry — all of which keeps annual shipments in the tens, not the hundreds.',
       verdict:
         'Sound. A five-name customer list, a nine-figure price and months of assembly per unit cap the annual figure in the tens, which is where the reported number sits.',
     },
@@ -628,6 +647,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. The backlog figure is genuine, but a backlog is an accumulated queue: it covers several years of scheduled deliveries, and it mixes EUV with the far more numerous DUV systems that make up most of the units in it. Dividing an order book by a unit price tells you how much committed demand exists, never how many machines leave the factory in a year — that is set by how many ASML can physically build, which is a few dozen.',
       fallacy: 'a multi-year order book divided by a unit price and read as an annual rate',
+      bluffValue: 216,
     },
   },
   {
@@ -654,10 +674,11 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Every league table you have seen puts world output at around $23,000 a head — that is the figure the IMF and the World Bank publish for the world aggregate, and it is what every cross-country comparison is scaled against. A band topping out near $15,000 sits below the published world average, which is not a defensible place for a ceiling.',
+        'Every league table puts world output at around $23,000 a head — that is the figure the IMF and the World Bank publish for the world aggregate, and it is what every cross-country comparison is scaled against. That published average is where this answer sits; anything near $15,000 is a long way below it.',
       verdict:
         'That was a bluff, and the $23,000 is real — it is output per head at purchasing power parity. The question named market exchange rates, and the two differ by design: PPP revalues what a dollar buys in low-income countries and lifts their measured output by a factor of two or three, which covers most of humanity. At market rates world GDP was about $105 trillion across eight billion people — $13,200 each.',
       fallacy: 'a different measure substituted for the one the question named',
+      bluffValue: 23_000,
     },
   },
   {
@@ -684,10 +705,11 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_high',
       argument:
-        'World output is about $105 trillion a year, and the overwhelming majority of it never crosses a border — services, housing, construction, government, health, retail. Traded goods are a slice of the manufacturing slice of that, and manufacturing is under a fifth of world output. Wherever you put the top of your band, it has to sit comfortably below the manufacturing part of what the world makes in a year.',
+        'World output is about $105 trillion a year, and the overwhelming majority of it never crosses a border — services, housing, construction, government, health, retail. Traded goods are a slice of the manufacturing slice of that, and manufacturing is under a fifth of world output. So the traded-goods total has to sit comfortably below the manufacturing part of what the world makes in a year.',
       verdict:
         'That was a bluff. GDP counts value added once; exports count gross value every time goods cross a border, so a phone\'s components can be recorded three or four times over before the finished unit ships. That is why recorded goods exports reach about $24 trillion — close to a quarter of world GDP — while \'most output never leaves home\' stays perfectly true. The two numbers are not measuring the same thing.',
       fallacy: 'a gross flow read as if it were a value-added measure',
+      bluffValue: 15_000_000_000_000,
     },
   },
   {
@@ -706,7 +728,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'Debt-to-GDP is a ratio, and it is the ratio that is extreme here, not the absolute total. Japan\'s economy is about $4 trillion at market exchange rates — roughly a sixth of the United States\', and the weak yen is a large part of why that ratio is so low. Two and a half times $4 trillion is about $10 trillion, so a band built by scaling up from US debt totals is too high.',
+        'Debt-to-GDP is a ratio, and it is the ratio that is extreme here, not the absolute total. Japan\'s economy is about $4 trillion at market exchange rates — roughly a sixth of the United States\', and the weak yen is a large part of why that ratio is so low. Two and a half times $4 trillion is about $10 trillion; scaling up from US debt totals overshoots badly.',
       verdict:
         'Sound, and the arithmetic lands on the answer: about 250% of a roughly $4 trillion economy is near $10 trillion, well under the US total even though the ratio is far worse.',
     },
@@ -714,10 +736,11 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Japan has been the quadrillion-debt economy since 2013, when its government debt crossed one quadrillion, and it has climbed every year since. A quadrillion is a thousand trillion. Even allowing for every argument about what counts as government debt, a band topping out in the low tens of trillions is short by more than an order of magnitude.',
+        'Japan has been the quadrillion-debt economy since 2013, when its government debt crossed one quadrillion, and it has climbed every year since. A quadrillion is a thousand trillion. Even allowing for every argument about what counts as government debt, that leaves the total in the hundreds of trillions, not the low tens.',
       verdict:
         'That was a bluff. The quadrillion is yen — the argument never named a currency and let the word carry the weight. At roughly 140 yen to the dollar, Japan\'s 1,400 to 1,500 trillion yen of gross government debt is about $10.5 trillion: the heaviest debt burden relative to output in the developed world, and about a hundredth of what \'a thousand trillion\' implies in dollars.',
       fallacy: 'unit slip — an unnamed currency',
+      bluffValue: 1_000_000_000_000_000,
     },
   },
   {
@@ -744,10 +767,11 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_high',
       argument:
-        'Currency trades exist to settle cross-border payments: trade in goods and services, plus investment flows. World trade runs around $31 trillion a year and cross-border investment adds a few trillion more — under $100 billion a day of genuine underlying need. Markets add churn on top of that, but not a hundredfold; a band reaching trillions per day has nothing underneath it.',
+        'Currency trades exist to settle cross-border payments: trade in goods and services, plus investment flows. World trade runs around $31 trillion a year and cross-border investment adds a few trillion more — under $100 billion a day of genuine underlying need. Markets add churn on top of that, but not a hundredfold; trillions a day would have nothing underneath it.',
       verdict:
         'That was a bluff. Underlying need is not a ceiling on turnover. Close to half the market is FX swaps with very short maturities, rolled over again and again, and each position is passed between dealers before it reaches a final holder. The BIS measured about $7.5 trillion a day — roughly eighty times the underlying flow, and both numbers are correct.',
       fallacy: 'constraint that does not bind',
+      bluffValue: 300_000_000_000,
     },
   },
   {
@@ -778,6 +802,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff, and the compounding it describes is real — the cumulative duty carried by a finished good genuinely can be several times the rate at any one border. But the figure asked for is duty collected divided by the value of imports, and every extra crossing adds to both sides of that ratio: the same 2 or 3 per cent is charged again on a larger declared value, so the average per import does not move. World duty collected against world merchandise imports is about 2.5 per cent.',
       fallacy: 'a chain of crossings counted into a per-crossing ratio',
+      bluffValue: 8,
     },
   },
   {
@@ -808,6 +833,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. Both surfaces are real and described correctly; the weights are not. Shelves shallower than 200 m are about 8% of ocean area and the slopes and rises another 15 or so, while more than half the seafloor is abyssal plain deeper than 4,000 m. Weight each surface by the area it actually covers rather than by how prominent it looks on a map, and the mean comes out at 3,682 m.',
       fallacy: 'a mixture averaged as if its parts were equal',
+      bluffValue: 2000,
     },
   },
   {
@@ -826,7 +852,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'The sea surface falls away as roughly d squared over 2R: about 0.8 m at 3 km, 2 m at 5 km, 30 m at 20 km. Your eye is only 1.7 m up, so the water curves out of your line of sight almost as soon as that drop passes your own height. A band reaching into the tens of kilometres quietly assumes you can see over tens of metres of curvature.',
+        'The sea surface falls away as roughly d squared over 2R: about 0.8 m at 3 km, 2 m at 5 km, 30 m at 20 km. The eye here is only 1.7 m up, so the water curves out of the line of sight almost as soon as that drop passes eye height. An answer in the tens of kilometres quietly assumes a sight line over tens of metres of curvature.',
       verdict:
         'Sound. The drop really does go as d squared over 2R, and it passes your 1.7 m eye height at about 4.7 km — which is the horizon, by definition.',
     },
@@ -838,6 +864,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. Distance to the horizon and distance you can see are two different lengths, and the geometry adds a term for each height: about 3.6(sqrt h_eye + sqrt h_object) in km with heights in metres. A 50 m lighthouse supplies roughly 25 of those 30 km; your 1.7 m supplies 4.7 — and that 4.7 is the horizon. Tall things are visible past it precisely because they stick up over it.',
       fallacy: 'borrowed figure that contains a second term',
+      bluffValue: 30,
     },
   },
   {
@@ -868,6 +895,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff — the analogy imports loads that are not there. A skyscraper\'s steel is sized to hold up seventy floors of slab, occupants, services and cladding, so its mass tracks the floor area it carries, not its height. The tower carries almost no floor area; it holds up only itself, against gravity and wind. 7,300 tonnes.',
       fallacy: 'false analogy — mechanism does not transfer',
+      bluffValue: 40_000,
     },
   },
   {
@@ -886,7 +914,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'A barometer reading of 101 kPa is a statement about mass: it is the weight of the whole air column standing on each square metre, about 10,300 kg — ten tonnes per square metre, everywhere on the planet. Multiply by Earth\'s 5.1 x 10^14 square metres and you are pinned in the 10^18 range. Air feels like nothing, but there is an enormous depth of it.',
+        'A barometer reading of 101 kPa is a statement about mass: it is the weight of the whole air column standing on each square metre, about 10,300 kg — ten tonnes per square metre, everywhere on the planet. Multiply by Earth\'s 5.1 x 10^14 square metres and the total sits in the 10^18 range. Air feels like nothing, but there is an enormous depth of it.',
       verdict:
         'Sound, and it is the standard derivation: mass equals surface pressure times area divided by g — 101,325 x 5.1 x 10^14 / 9.81, about 5.2 x 10^18 kg. The barometer was telling you the answer all along.',
     },
@@ -894,10 +922,11 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Density falls from about 1.2 kilograms per cubic metre at the surface to essentially nothing by 100 km. Average the two ends, call it 0.6, and multiply by the shell — Earth\'s 5.1 x 10^14 square metres by 100 km of depth is 5.1 x 10^19 cubic metres — and the atmosphere comes to about 3 x 10^19 kg. Your band is an order of magnitude light.',
+        'Density falls from about 1.2 kilograms per cubic metre at the surface to essentially nothing by 100 km. Average the two ends, call it 0.6, and multiply by the shell — Earth\'s 5.1 x 10^14 square metres by 100 km of depth is 5.1 x 10^19 cubic metres — and the atmosphere comes to about 3 x 10^19 kg.',
       verdict:
         'That was a bluff. Density does not fall linearly, it falls exponentially, and the mean of an exponential over a long column is nowhere near the midpoint of its ends: it is surface density times scale height over column height — 1.2 x 8.5 / 100, about 0.10 kilograms per cubic metre, six times under the 0.6 the argument used. Multiply that through and you get 5.1 x 10^18 kg, which is simply surface pressure divided by g: 10,300 kilograms standing on every square metre.',
       fallacy: 'linear mean taken of an exponential profile',
+      bluffValue: 30_000_000_000_000_000_000,
     },
   },
   {
@@ -928,6 +957,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       verdict:
         'That was a bluff. The Amazon really is that big — and it is the single largest river channel on Earth, carrying about a fifth of all river discharge by itself, which makes it the worst possible template for the rest. The median river on the planet is metres deep and tens of metres wide, and channel volume falls away faster than discharge does, because narrower rivers are shallower too. Sum the whole distribution instead of scaling its largest member and you get about 2,120 cubic kilometres.',
       fallacy: 'the largest member of a set treated as its typical member',
+      bluffValue: 30_000,
     },
   },
 ];
