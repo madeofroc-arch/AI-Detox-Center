@@ -241,51 +241,81 @@ generator. Therefore: an authored core, with generation as variation rather than
 as the engine, and every authoring pass reviewed by a reader whose only job is
 to find a rule.
 
-### One such rule is currently in the catalog
+### One such rule was in the catalog, and it is now a test
 
-The reader checking the 繁體中文 localisation found it, which is a good argument
-for that review existing: **honest arguments open by correcting an anchor far
-more often than bluffs do.** "Anchor on people, not on shops." "The binding
-constraint here is water, not appetite." "Count the cycle, not the crank." A
-player who simply picks the option whose first sentence tells them where *not*
-to anchor wins more rounds than they lose, without reading either argument to
-the end.
+The reader checking the 繁體中文 localisation found it, which is a good
+argument for that review existing: **honest arguments opened by correcting an
+anchor far more often than bluffs did.** "Anchor on people, not on shops."
+"Count the cycle, not the crank." A player who simply picked the option whose
+first sentence told them where *not* to anchor won more rounds than they lost,
+without reading either argument to the end. Over the thirty rounds then
+shipped, that opener fronted **12 honest arguments and 0 bluffs** — twelve
+wins, no losses, for someone who never read past the first sentence.
 
-Measured across the 56 rounds now shipped, that opener fronts 15 honest
-arguments and 4 bluffs — but the aggregate hides the useful fact. Split by
-band:
+Nothing else in the repo could see it. Every other gate watches the
+arithmetic: that the option a bluff names is the figure its own reasoning
+reaches, that no fallacy repeats, that the board stays near the authored
+axis. A tell lives in the prose, and the prose had no gate.
+
+#### The fix
+
+Eight honest openings lost the shape; five bluff openings gained it. The
+second half is the part that has to be done carefully rather than
+mechanically: it is only legitimate where the bluff's fallacy *is* a wrong
+anchor — a stock offered where a flow was asked for, the largest member of a
+set offered as its typical member — because then "anchor on X, not on Y" is
+the lie the argument is already telling, and the shape argues for the error
+instead of flagging it. Bolted onto a bluff that fails some other way it
+would read as a template, and the content would die of legibility from the
+other direction.
+
+One proposed rewrite was refused by the adversarial check and the reason is
+worth keeping: it had the bluff open by rejecting *the exact measurement
+basis the question defines*, so the host declined the question's own terms in
+its first breath — a worse tell than the one being removed. Whatever the
+shape rejects has to be an anchor a reasonable person might hold, never the
+one the question already ruled in.
 
 | band | honest opens correctively | bluff does | rounds |
 | --- | --- | --- | --- |
 | elementary | 0 | 1 | 13 |
 | middle | 2 | 1 | 12 |
-| high | 5 | 1 | 14 |
-| university | 8 | 1 | 17 |
+| high | 2 | 3 | 14 |
+| university | 4 | 4 | 17 |
+| **total** | **8** | **9** | **56** |
 
-**簡單 is clean. 終極 carries almost all of it.** The expansion did not dilute
-the tell evenly; it added two bands that never had it, and the university band
-still opens eight honest arguments correctively against one bluff. So the fix
-is smaller and better aimed than it looked: move the shape onto some
-university-band bluffs — which are themselves wrong anchors, so it fits them
-naturally — and off an equal number of honest openings there.
+The heuristic now loses more often than it wins, in both languages.
 
-A second measurement bounds how much it currently costs. All 24 newly
-localised rounds were put to blind readers who saw the question and the two
-arguments with every answer stripped out — no verdict, no fallacy name, no
-direction, and the flawed side alternating between the two labels. They got
-24 of 24, and **none of them decided a round on wording**: 23 on domain
-knowledge, 1 on arithmetic. Several named the corrective-opener asymmetry
-unprompted and then went and did the arithmetic anyway — and in the
-elementary band they kept finding it on the *sound* side, which is what the
-table above says. A reader who knows the answers is not the player this game
-is for, so this bounds the tell rather than clearing it.
+#### The durable half
 
-It is not fixed here, and pretending otherwise would be worse than recording it.
-The fix is to move that shape onto some bluffs — which are themselves wrong
-anchors, so it fits them naturally — and off an equal number of honest openings,
-in both languages. A secondary tell points the same way: the self-licensing
-clause ("the only figure that is hard here", "the one part you can actually
-measure") appears only in bluffs.
+`packages/core/__tests__/legibility.test.ts` measures it on every commit and
+fails the build if the honest side ever wins on net, in either language, or
+if any single band drifts more than one round past even. Run against the
+pre-fix catalog it fails with exactly the numbers above (15 / 4 overall, 8 / 1
+at university), which is the only evidence that a gate has teeth.
+
+The detector is deliberately crude — a substring match on a handful of words.
+It over-fires on an idiom and under-fires on a construction nobody listed,
+and that is correct: it is the rule a *player* would form after a dozen
+rounds, not a linguistic analysis. Because it is noisy the assertion is about
+the net result rather than any single round.
+
+#### What is still open
+
+The gate watches one shape. **A secondary tell points the same way and is not
+fixed**: the self-licensing clause ("the only figure that is hard here", "the
+one part you can actually measure") appears only in bluffs. Others would pass
+untouched — a register that shifts when the host is lying, a difference in
+sentence length, a hedge that only honest arguments allow themselves.
+
+The defence against those is not a better regex. It is a reader whose only
+job is to find a rule, which is how this one was found — and a blind pass:
+24 newly localised rounds were put to readers who saw the question and the
+two arguments with every answer stripped out — no verdict, no fallacy name,
+no direction, the flawed side alternating between the labels. They got 24 of
+24, and **none decided a round on wording**: 23 on domain knowledge, 1 on
+arithmetic. That bounds a tell rather than clearing it, because a reader who
+knows the answers is not the player this game is for.
 
 ### Authoring with a model is allowed. Inference at runtime is not.
 

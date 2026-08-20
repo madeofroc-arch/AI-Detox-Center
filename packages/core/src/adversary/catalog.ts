@@ -25,28 +25,38 @@
  * repeat, and on a round whose named figure is not the option the host would
  * pick.
  *
- * ONE KNOWN TELL, not yet fixed and recorded so it is not rediscovered: a
- * reader checking the 繁體中文 localisation found that honest arguments open by
- * correcting an anchor ("Anchor on people, not on shops", "The binding
- * constraint here is water, not appetite") far more often than bluffs do. A
- * player who picks the corrective opener wins more than they lose without
- * reading either argument. Measured over the 56 rounds shipped here it fronts
- * 15 honest arguments and 4 bluffs — but the split by band is the useful
- * number, because the tell is not spread evenly:
+ * ONE TELL WAS FOUND HERE, and the story is kept because it is how this
+ * failure mode actually arrives. A reader checking the 繁體中文 localisation
+ * noticed that honest arguments open by correcting an anchor — "Anchor on
+ * people, not on shops", "Count the cycle, not the crank" — and bluffs did
+ * not. Over the thirty rounds then shipped it fronted 12 honest arguments and
+ * 0 bluffs: a rule that won twelve rounds and lost none, available to a player
+ * who never read past the first sentence. Nothing else in the repo could see
+ * it, because every other gate watches the arithmetic.
  *
- *   band         honest / bluff / rounds
+ * It is fixed. Eight honest openings lost the shape and five bluff openings
+ * gained it — legitimately, because each of those bluffs anchors on the wrong
+ * quantity, so "anchor on X, not on Y" is the lie it is already telling. One
+ * proposed rewrite was refused by the adversarial check for naming the exact
+ * measurement basis its question defines, which would have had the host
+ * decline the question's own terms in its first breath. Where it stands:
+ *
+ *   band         honest / bluff / rounds      (English; 繁體中文 within one)
  *   elementary        0 / 1 / 13
  *   middle            2 / 1 / 12
- *   high              5 / 1 / 14
- *   university        8 / 1 / 17
+ *   high              2 / 3 / 14
+ *   university        4 / 4 / 17
+ *   TOTAL             8 / 9
  *
- * 簡單 is clean and 終極 carries almost all of it. Fixing it means moving that
- * shape onto some university bluffs — which are themselves wrong anchors — and
- * off an equal number of honest openings there, in both languages. A blind
- * read of all 24 newly localised rounds, given the two arguments with the
- * answers stripped out, decided none of them on wording; the readers named the
- * asymmetry unprompted and then went and did the arithmetic anyway.
- * See docs/product/adversary.md.
+ * The heuristic now loses more often than it wins, in both languages, and
+ * `legibility.test.ts` fails the build if that stops being true. That test is
+ * the durable part: it would have caught this the day it was introduced, and
+ * it catches the next drift without anyone re-reading fifty-six rounds.
+ *
+ * It watches only THIS shape. A different tell — the self-licensing clause, a
+ * register that shifts when the host is lying — passes it untouched. The
+ * defence against those is a reader whose only job is to find a rule, which is
+ * how this one was found. See docs/product/adversary.md.
  *
  * The `honest` and `bluff` arguments for a round may push the SAME direction.
  * That is deliberate. If the sound argument always disagreed with the bluff
@@ -74,7 +84,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'Anchor on people, not on shops. China has about 1.4 billion residents, and its platforms run on many small, cheap items shipped separately rather than one large basket, so one parcel per person per week — ordinary for an active urban shopper — is already 70 billion a year. Delivery there is cheap enough that heavy users order daily, and rural coverage is near universal.',
+        'Anchor on people. China has about 1.4 billion residents, and its platforms run on many small, cheap items shipped separately rather than one large basket, so one parcel per person per week — ordinary for an active urban shopper — is already 70 billion a year. Delivery there is cheap enough that heavy users order daily, and rural coverage is near universal.',
       verdict:
         'Sound. Per-capita reasoning is the right frame for a parcel count, and China\'s parcel intensity really does run above 90 per person per year, so anything in the low billions is far too small.',
     },
@@ -114,7 +124,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_high',
       argument:
-        'There are only about 51 million TEU of shipping containers in existence anywhere on Earth — every box on every ship, yard, chassis and inland depot combined. For a single port to handle 40 or 50 million TEU in one year, essentially every container on the planet would have to pass through Shanghai and nowhere else. The size of the physical box population caps what any one port can plausibly move.',
+        'The limit here is physical, not statistical: there are only about 51 million TEU of shipping containers in existence anywhere on Earth — every box on every ship, yard, chassis and inland depot combined. For a single port to handle 40 or 50 million TEU in one year, essentially every container on the planet would have to pass through Shanghai and nowhere else. The size of the physical box population caps what any one port can plausibly move.',
       verdict:
         'That was a bluff. It compares a stock with a flow. Containers do not sit still — a box makes several loaded voyages a year and is counted again at every port that lifts it on or off — so annual throughput vastly exceeds the box population. The top twenty ports alone handled about 390 million TEU in 2023 against that same 51-million-TEU fleet.',
       fallacy: 'stock vs flow',
@@ -170,7 +180,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'Do not picture only freighters. Roughly half of all air cargo rides in the bellies of ordinary passenger flights, and there are on the order of 100,000 commercial flights a day worldwide. Something like a tonne of belly freight on an average departure, before you count a single dedicated freighter, already puts the annual total in the tens of millions of tonnes.',
+        'Start from the passenger fleet. Roughly half of all air cargo rides in the bellies of ordinary passenger flights, and there are on the order of 100,000 commercial flights a day worldwide. Something like a tonne of belly freight on an average departure, before you count a single dedicated freighter, already puts the annual total in the tens of millions of tonnes.',
       verdict:
         'Sound. Belly capacity is the part people forget, and flights-per-day multiplied by tonnes-per-flight lands squarely in the right decade: about 58 million tonnes in 2023.',
     },
@@ -338,7 +348,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Anchor it on what actually falls. Global mean precipitation is about 1,000 millimetres a year, and one millimetre of rain is one litre per square metre — so a tonne of water per square metre comes out of the sky annually. All of that water is in the atmosphere before it falls, so the column has to be holding something on that order at any given moment; bands in the tens are far too low.',
+        'Anchor on what actually falls, not on the clouds overhead. Global mean precipitation is about 1,000 millimetres a year, and one millimetre of rain is one litre per square metre — so a tonne of water per square metre comes out of the sky annually. All of that water is in the atmosphere before it falls, so the column has to be holding something on that order at any given moment; bands in the tens are far too low.',
       verdict:
         'That was a bluff. The 1,000 mm is a year\'s throughput, not what is up there at any moment — the same air is refilled by evaporation and wrung out by rain about forty times a year. Divide the year\'s rain by that turnover and you get what the column holds: roughly 25 litres per square metre, which is why a water molecule spends about nine days in the air rather than a year.',
       fallacy: 'annual flow mistaken for an instantaneous stock',
@@ -554,7 +564,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'Anchor on the part it replaced rather than on intuition. Apple\'s A16, a year earlier, was published at 16 billion transistors on a die of comparable size, and a full node shrink adds density — chips do not go backwards. A ceiling in the low billions would put the newest phone chip below one that was already several generations old.',
+        'Anchor on the part it replaced. Apple\'s A16, a year earlier, was published at 16 billion transistors on a die of comparable size, and a full node shrink adds density — chips do not go backwards. A ceiling in the low billions would put the newest phone chip below one that was already several generations old.',
       verdict:
         'Sound. Generation-over-generation anchoring is the reliable route here: 16 billion the year before, a node shrink on top, and the published A17 Pro figure is 19 billion.',
     },
@@ -618,7 +628,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'This number is set by physics, not by equipment. Light in glass moves at about two-thirds of its vacuum speed, roughly 200,000 km per second, and the laid cable route between the two cities runs some 5,500 to 6,000 km, longer than the straight line. That is already close to 30 ms in each direction before a single router touches the packet, so a ceiling below 50 ms cannot hold.',
+        'This number is set by physics. Light in glass moves at about two-thirds of its vacuum speed, roughly 200,000 km per second, and the laid cable route between the two cities runs some 5,500 to 6,000 km, longer than the straight line. That is already close to 30 ms in each direction before a single router touches the packet, so a ceiling below 50 ms cannot hold.',
       verdict:
         'Sound. The two-thirds-of-c propagation speed in fibre, over a route longer than the great circle, sets a hard round-trip floor in the mid-fifties, and the everyday measured figure sits just above it.',
     },
@@ -650,7 +660,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_low',
       argument:
-        'Count the landings rather than the traffic. The industry maps plot well over a thousand cable landing stations, and a single system touches only a couple of them plus the odd branch. Add that separately owned systems built decades apart share the busy corridors, and that old cables are retired slowly, and you compound into the high hundreds — a ceiling near a hundred is far too low.',
+        'Count the landings. The industry maps plot well over a thousand cable landing stations, and a single system touches only a couple of them plus the odd branch. Add that separately owned systems built decades apart share the busy corridors, and that old cables are retired slowly, and you compound into the high hundreds — a ceiling near a hundred is far too low.',
       verdict:
         'Sound. Landing-station count divided by the two or three landings a typical system has is the right structure, and it lands close to the real figure of about 570.',
     },
@@ -690,7 +700,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Look at the order book. ASML closed 2023 with a backlog around 39 billion euros, and EUV systems run roughly 180 million each. That is well over two hundred machines of committed, paid-for demand, and a company that is sold out ships everything it can build — so a ceiling in the low dozens is under the mark.',
+        'This number is set by the order book, not by how many customers there are. ASML closed 2023 with a backlog around 39 billion euros, and EUV systems run roughly 180 million each. That is well over two hundred machines of committed, paid-for demand, and a company that is sold out ships everything it can build — so a ceiling in the low dozens is under the mark.',
       verdict:
         'That was a bluff. The backlog figure is genuine, but a backlog is an accumulated queue: it covers several years of scheduled deliveries, and it mixes EUV with the far more numerous DUV systems that make up most of the units in it. Dividing an order book by a unit price tells you how much committed demand exists, never how many machines leave the factory in a year — that is set by how many ASML can physically build, which is a few dozen.',
       fallacy: 'a multi-year order book divided by a unit price and read as an annual rate',
@@ -850,7 +860,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Duty is charged at every border, and a modern good crosses three or four before it is finished — components in, subassembly out, assembly in, finished unit out. Even at 2 or 3 per cent a crossing, the duty a finished product has accumulated by the time it reaches a buyer runs to high single digits. Averaged across world imports that is nearer 8 per cent than 2.',
+        'Anchor on the whole path a product takes, not on a single crossing: duty is charged at every border, and a modern good crosses three or four before it is finished — components in, subassembly out, assembly in, finished unit out. Even at 2 or 3 per cent a crossing, the duty a finished product has accumulated by the time it reaches a buyer runs to high single digits. Averaged across world imports that is nearer 8 per cent than 2.',
       verdict:
         'That was a bluff, and the compounding it describes is real — the cumulative duty carried by a finished good genuinely can be several times the rate at any one border. But the figure asked for is duty collected divided by the value of imports, and every extra crossing adds to both sides of that ratio: the same 2 or 3 per cent is charged again on a larger declared value, so the average per import does not move. World duty collected against world merchandise imports is about 2.5 per cent.',
       fallacy: 'a chain of crossings counted into a per-crossing ratio',
@@ -1010,7 +1020,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'bluff',
       direction: 'too_low',
       argument:
-        'Picture the lower Amazon: tens of metres deep, kilometres wide, and running like that for well over a thousand kilometres before it reaches the sea — that one channel is hundreds of cubic kilometres of standing water on its own. Now add the Congo, the Yangtze, the Mississippi, the Ob, the Ganges and every other continental-scale river, and the world total has to run into the tens of thousands.',
+        'Anchor on the size of a real channel, not on how thin rivers look on a map: the lower Amazon is tens of metres deep and kilometres wide, and it runs like that for well over a thousand kilometres before it reaches the sea — that one channel is hundreds of cubic kilometres of standing water on its own. Now add the Congo, the Yangtze, the Mississippi, the Ob, the Ganges and every other continental-scale river, and the world total has to run into the tens of thousands.',
       verdict:
         'That was a bluff. The Amazon really is that big — and it is the single largest river channel on Earth, carrying about a fifth of all river discharge by itself, which makes it the worst possible template for the rest. The median river on the planet is metres deep and tens of metres wide, and channel volume falls away faster than discharge does, because narrower rivers are shallower too. Sum the whole distribution instead of scaling its largest member and you get about 2,120 cubic kilometres.',
       fallacy: 'the largest member of a set treated as its typical member',
@@ -1258,7 +1268,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'Count the cycle, not the crank. Intake, compression, power and exhaust take two full turns of the crankshaft between them, and only the first of the four draws air, so the engine swallows its whole 2 litres once every two revolutions rather than once every revolution - 1,500 fills a minute, 3,000 litres. The fuel side agrees: 3,000 litres of air is about 3.6 kg, and at the stoichiometric 14.7 to 1 that burns roughly 245 grams of petrol a minute, about a third of a litre, which is what a car that size drinks flat out.',
+        'Count the cycle. Intake, compression, power and exhaust take two full turns of the crankshaft between them, and only the first of the four draws air, so the engine swallows its whole 2 litres once every two revolutions rather than once every revolution - 1,500 fills a minute, 3,000 litres. The fuel side agrees: 3,000 litres of air is about 3.6 kg, and at the stoichiometric 14.7 to 1 that burns roughly 245 grams of petrol a minute, about a third of a litre, which is what a car that size drinks flat out.',
       verdict:
         'Sound, and the cross-check is what makes it sound: displacement times half the crank speed gives 3,000 litres a minute, and running that air through the 14.7-to-1 stoichiometric ratio reproduces a fuel flow that matches what such an engine actually consumes at full throttle.',
     },
@@ -1290,7 +1300,7 @@ export const ADVERSARY_CATALOG: readonly AdversaryRound[] = [
       kind: 'honest',
       direction: 'too_high',
       argument:
-        'The count has come down over time, not up, and that direction is the clue. Protein-coding exons occupy under 2% of the three billion bases, and each major revision since the draft genome has removed candidates rather than added them, because predicted open reading frames kept failing to show a real transcript. It settled near twenty thousand - about what a millimetre-long nematode carries, which is why gene count turned out to be a poor measure of complexity.',
+        'The count has come down over time, and that direction is the clue. Protein-coding exons occupy under 2% of the three billion bases, and each major revision since the draft genome has removed candidates rather than added them, because predicted open reading frames kept failing to show a real transcript. It settled near twenty thousand - about what a millimetre-long nematode carries, which is why gene count turned out to be a poor measure of complexity.',
       verdict:
         'Sound on both legs. The annotation history really does run downward - roughly 100,000 guessed in the 1990s, 30,000 to 40,000 in the 2001 draft, and about 20,000 in every reference release of the past decade - and C. elegans, with about 20,000 protein-coding genes of its own, is the check that stops a bigger number being read off a bigger organism.',
     },
