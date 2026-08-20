@@ -1,10 +1,14 @@
 import React, { useMemo, useState } from 'react';
+import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { diagnose } from '@ai-detox/core';
 import type { FindingId } from '@ai-detox/core';
 import { GameButton } from '../components/game/GameButton';
+import { RungTower } from '../components/game/RungTower';
 import { useI18n } from '../i18n/useI18n';
+import { confirmAsync } from '../lib/confirm';
+import { exportJsonToUser } from '../lib/exportData';
 import { copyPrescription, prescriptionBlock } from '../lib/prescription';
 import { useAppStore } from '../state/store';
 import { decorative, group } from '../theme/a11y';
@@ -28,6 +32,21 @@ import { gamePalette, gameRadius, gameSpace, gameType } from '../theme/game';
  * `signals.yaml` forbids inventing difficulty to make something feel
  * educational. Without the third case every player gets told something is
  * wrong with them, which is the failure mode the previous product shipped.
+ *
+ * ## The ladder is drawn as the show's tower
+ *
+ * The rung used to be a number and a name on one line, which is accurate and
+ * says nothing. It is a five-rung ladder with one rung lit and one rung that
+ * can always be reached — which is a money tower with a safe point, and the
+ * player has already read one of those on the mode screen. `RungTower` carries
+ * the rest of the reasoning, including why rung 1 is at the top.
+ *
+ * ## Export and erase live here now
+ *
+ * They were on the settings tab, and the settings tab was part of the tracker
+ * that this product replaced. They are the two things a local-first app owes
+ * the person whose device it is (ADR-0003), so they moved onto the record
+ * rather than being deleted with the screens around them.
  */
 
 const RUNG_KEYS = [1, 2, 3, 4, 5] as const;
@@ -36,6 +55,8 @@ export default function Prescription() {
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
   const runs = useAppStore((s) => s.data.adversaryRuns);
+  const deleteAllData = useAppStore((s) => s.deleteAllData);
+  const exportJson = useAppStore((s) => s.exportJson);
   const [copied, setCopied] = useState(false);
 
   const diagnosis = useMemo(() => diagnose(runs), [runs]);
@@ -45,6 +66,12 @@ export default function Prescription() {
   const rungName = RUNG_KEYS.includes(rung as (typeof RUNG_KEYS)[number])
     ? t.game.rungName[rung as (typeof RUNG_KEYS)[number]]
     : '';
+
+  const tower = RUNG_KEYS.map((level) => ({
+    level,
+    name: t.game.rungName[level],
+    gives: t.game.rungGives[level],
+  }));
 
   // Two findings can move the rung and they pull opposite ways, so a shift of
   // zero is ambiguous: it means either nothing fired or both did. Saying
@@ -58,6 +85,32 @@ export default function Prescription() {
         : fired('unnecessary_reliance') && fired('unaided_misses')
           ? t.game.rungWhyBoth
           : t.game.rungDefault;
+
+  const backToGame = () => {
+    // `back` keeps whatever the game screen was showing; `replace` is the
+    // fallback for a deep link, where there is no screen behind this one.
+    if (router.canGoBack()) router.back();
+    else router.replace('/adversary');
+  };
+
+  const onDelete = async () => {
+    const first = await confirmAsync(
+      t.game.deleteTitle1,
+      t.game.deleteBody1,
+      t.common.continue,
+      t.common.cancel,
+    );
+    if (!first) return;
+    const second = await confirmAsync(
+      t.game.deleteTitle2,
+      t.game.deleteBody2,
+      t.game.deleteAll,
+      t.common.cancel,
+    );
+    if (!second) return;
+    await deleteAllData();
+    router.replace('/adversary');
+  };
 
   return (
     <ScrollView
@@ -73,6 +126,15 @@ export default function Prescription() {
         gap: gameSpace.lg,
       }}
     >
+      {/* First, not last: a screen you cannot leave without the system back
+          gesture is a screen the web build strands you on. */}
+      <GameButton
+        label={t.game.backToGame}
+        tone="quiet"
+        onPress={backToGame}
+        style={{ alignSelf: 'flex-start', minHeight: 44, paddingVertical: gameSpace.sm }}
+      />
+
       <Text accessibilityRole="header" style={[gameType.question, { color: gamePalette.ink }]}>
         {t.game.prescriptionTitle}
       </Text>
@@ -142,11 +204,15 @@ export default function Prescription() {
         })}
       </View>
 
-      <View style={{ gap: gameSpace.xs }}>
+      <View style={{ gap: gameSpace.sm }}>
         <Text style={[gameType.label, { color: gamePalette.quiet }]}>{t.game.rungTitle}</Text>
-        <Text style={[gameType.figure, { color: gamePalette.you, fontSize: 28 }]}>
-          {rung} · {rungName}
-        </Text>
+        <RungTower
+          rungs={tower}
+          current={rung}
+          hereLabel={t.game.rungHere}
+          alwaysOpenLabel={t.game.rungAlwaysOpen}
+          label={t.game.rungTowerLabel(rung, rungName)}
+        />
         <Text style={[gameType.body, { color: gamePalette.inkMuted }]}>{rungExplanation}</Text>
       </View>
 
@@ -207,6 +273,19 @@ export default function Prescription() {
           {t.game.whatIsThisBody}
         </Text>
       </View>
+
+      <View style={{ gap: gameSpace.sm, marginTop: gameSpace.lg }}>
+        <Text style={[gameType.label, { color: gamePalette.quiet }]}>{t.game.dataTitle}</Text>
+        <Text style={[gameType.body, { color: gamePalette.inkMuted }]}>{t.game.dataNote}</Text>
+        <GameButton
+          label={t.game.exportData}
+          tone="quiet"
+          onPress={() => void exportJsonToUser(exportJson())}
+        />
+        <GameButton label={t.game.deleteAll} tone="danger" onPress={() => void onDelete()} />
+      </View>
+
+      <GameButton label={t.game.backToGame} tone="quiet" onPress={backToGame} />
     </ScrollView>
   );
 }

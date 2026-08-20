@@ -17,6 +17,9 @@ export const routerMock = {
   back: vi.fn(),
   dismissTo: vi.fn(),
   navigate: vi.fn(),
+  // `canGoBack` decides whether the record goes back or replaces. A mock that
+  // returned undefined would silently take the deep-link branch every time.
+  canGoBack: vi.fn(() => true),
 };
 export const searchParamsMock: { current: Record<string, string> } = { current: {} };
 

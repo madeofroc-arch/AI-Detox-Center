@@ -15,24 +15,16 @@
  * presented as a verdict on the person.
  */
 export const EN = {
+  /**
+   * What is left of the shared vocabulary.
+   *
+   * It used to hold a dozen labels for a dozen screens. Two survive, and
+   * both are the platform's word rather than the product's: they label the
+   * buttons in a confirm dialog.
+   */
   common: {
-    done: 'Done',
-    back: 'Back',
-    next: 'Next',
     continue: 'Continue',
-    begin: 'Begin',
-    save: 'Save',
-    skip: 'Skip',
     cancel: 'Cancel',
-    addReflection: 'Add a reflection',
-    minutesShort: (n: number): string => `${n} min`,
-    // Screen-reader text for a running countdown. Deliberately coarse: the
-    // accessibility spec says a timer announces at start, pause and end, not
-    // every second, and a label that changes 1,500 times a session does the
-    // opposite of informing anyone (#4).
-    minutesLeft: (minutes: number): string =>
-      `About ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} left`,
-    underAMinuteLeft: 'Less than a minute left',
   },
 
   game: {
@@ -215,6 +207,24 @@ export const EN = {
       4: 'Approach',
       5: 'Full answer',
     },
+    /**
+     * One line per rung on the tower. Short enough to sit in a row, and
+     * taken from the ladder's own `gives` rather than invented here — the
+     * ladder is the source and this is a caption of it.
+     */
+    rungGives: {
+      1: 'The shape of the problem, and where to look',
+      2: 'One question or observation that unblocks you',
+      3: 'The concept you need, not applied to your case',
+      4: 'The whole method, step by step — you do the doing',
+      5: 'The complete thing, with no reluctance',
+    },
+    rungHere: 'you start here',
+    /** The bottom rung is the show's safe point: it can always be reached. */
+    rungAlwaysOpen: 'always open',
+    rungTowerLabel: (rung: number, name: string): string =>
+      `The hint ladder, five rungs. Conversations start at rung ${rung}, ${name}. ` +
+      'Rung 5, the full answer, is always reachable.',
     rungWhyLess:
       'Help was bought on questions that had already been answered, so the ladder starts lower — less unasked-for help by default. "Just give me the answer" still works instantly; that never locks.',
     rungWhyMore:
@@ -264,228 +274,31 @@ export const EN = {
     blockRung: 'where a conversation starts, on the 1-5 ladder',
     blockNothing: 'Nothing measured needs changing. The defaults are fine.',
 
+    backToGame: 'Back to the game',
+
+    // ── Data ────────────────────────────────────────────────────
+    // Export and erase outlived the settings tab they used to live in. They
+    // are the two things a local-first product owes the person whose device
+    // it is (ADR-0003), so they moved onto the record rather than going with
+    // the screens that were deleted.
+    dataTitle: 'Your data',
+    dataNote: 'Everything lives on this device. No account, no cloud, no analytics.',
+    exportData: 'Export my data',
+    deleteAll: 'Delete all data',
+    deleteTitle1: 'Delete all data?',
+    deleteBody1: 'This erases everything on this device. There is no cloud copy.',
+    deleteTitle2: 'Really delete everything?',
+    deleteBody2: 'Every run, every kept bluff, every setting. This cannot be undone.',
+
     whatIsThis: 'Why the game and the skill are one thing',
     whatIsThisBody:
       'Nobody installs an instruction set that makes their AI less immediately helpful without evidence that they need it — and self-report cannot supply that evidence, because someone who folds to fluent wrong reasoning is not aware of it at the time. The game supplies it instead: it wrote the argument, so it knows the ground truth. Nothing here asks you what you think of yourself.',
   },
-  tabs: {
-    home: 'Home',
-    progress: 'Progress',
-    settings: 'Settings',
-  },
-
   root: {
     corruptData: 'Stored data could not be read. A backup was kept on this device.',
     schemaTooNew: 'Data was written by a newer app version. Update the app to use it.',
   },
 
-  onboarding: {
-    panels: [
-      {
-        title: 'Not anti-AI',
-        body: 'Human Mode is not anti-AI. It helps you use AI on purpose — as a tool that extends your thinking instead of replacing it.',
-      },
-      {
-        title: 'Behavior, not screen time',
-        body: 'Dependency is behavior, not screen time. We look at how you use AI — did you try first, who made the decision — never just how much.',
-      },
-      {
-        title: 'Yours alone',
-        body: 'Your thinking data stays on your device. No account. No cloud. You can export or erase everything at any time.',
-      },
-    ],
-    step: (current: number, total: number): string => `${current} / ${total}`,
-    focusTitle: 'Where do you want to grow?',
-    focusSubtitle: 'Pick up to three capabilities to focus on. You can change this anytime.',
-    skipForNow: 'Skip for now',
-    languageTitle: 'Language',
-    languageSubtitle: 'You can change this later in Settings.',
-  },
-
-  home: {
-    title: 'Human Mode',
-    subtitle: 'Your thinking, back in your hands.',
-    saveError:
-      'Saving to this device failed. Recent changes are held in memory — freeing up storage space usually resolves this.',
-    brainScore: 'Brain Score',
-    openReport: 'Open Brain Report',
-    scoreEmpty: 'Your score appears after your first few gates and challenges.',
-    reliance: (band: string): string => `AI reliance: ${band} — tap to see why`,
-    tapToSee: 'Tap to see why',
-    strengthIndependent: (percent: number): string =>
-      `You handled ${percent}% of these moments without AI.`,
-    strengthReflection: (percent: number): string =>
-      `You paused to reflect on ${percent}% of your AI uses.`,
-    strengthDeliberate: (percent: number): string =>
-      `${percent}% of your AI use was deliberate, tool-like work.`,
-    strengthPractice: (days: number): string => `You practised on ${days} of the last 7 days.`,
-    strengthFallback: 'One gate where you try first will start moving this.',
-    doneToday: 'Today’s practice is in the books. See you tomorrow.',
-    openChallenge: 'Open today’s challenge',
-    aiGate: 'AI Gate',
-    aiGateA11y: 'Open AI Gate — pause before using AI',
-    detox: 'Detox',
-    detoxA11y: 'Start a detox focus session',
-  },
-
-  gate: {
-    title: 'AI Gate',
-    subtitle: 'A moment of intention before AI.',
-    askWhat: 'What are you about to ask AI?',
-    askPlaceholder: 'One line is enough. Stays on this device.',
-    kindOfUse: 'What kind of use is it?',
-    triedYet: 'Have you tried it yourself yet?',
-    yesTried: 'Yes, I tried',
-    notYet: 'Not yet',
-    attemptBlurb: 'Three minutes with just your own head. Hints and AI will still be there after.',
-    startAttempt: 'Start 3-minute attempt',
-    doneAttempting: 'Done attempting',
-    skipAndContinue: 'Skip and continue',
-    howDidItGo: 'How did it go?',
-    solvedMyself: 'Solved it myself',
-    hintThenThinking: 'Got a hint, thinking more',
-    proceedingToAI: 'Proceeding to AI',
-    confirmSolved: 'That was all you. Noted.',
-    confirmHint: 'A hint, then your own thinking. Noted.',
-    confirmProceeded: 'Noted. Nice pause.',
-  },
-
-  detox: {
-    title: 'Detox',
-    subtitle: 'A block of time for just you and the work.',
-    durationLabel: 'Session duration',
-    intentionPlaceholder: 'What will you do with this time?',
-    intentionA11y: 'Session intention',
-    pause: 'Pause',
-    resume: 'Resume',
-    endSession: 'End session',
-    completeSession: 'Complete session',
-    endedTitle: 'Session ended',
-    focusedMinutes: (minutes: number): string => `${minutes} focused minutes.`,
-    minutesNoted: (minutes: number): string => `${minutes} minutes — noted.`,
-    completedBody: 'A full block of your own thinking.',
-    endedEarlyBody: 'Ending early is data, not defeat. Every minute counted.',
-    statusRunning: 'Running',
-    statusPaused: 'Paused',
-    statusTimeUp: 'Time is up',
-  },
-
-  challenge: {
-    title: 'Today’s challenge',
-    difficulty: (level: number, max: number): string => `Difficulty ${level} of ${max}`,
-    doneMeans: 'Done means',
-    workPlaceholder: 'Work here if you like — this text stays on your device.',
-    workA11y: 'Challenge work area',
-    markOutcome: 'Mark outcome',
-    honestyNote: 'Honesty beats streaks. All three are fine answers.',
-    completed: 'Completed',
-    attempted: 'Attempted',
-    skipped: 'Skipped',
-  },
-
-  challengeResult: {
-    completed: 'Good thinking. That was all you.',
-    attempted: 'You showed up and tried. That counts.',
-    skipped: 'Skipped today. Tomorrow brings a new one.',
-    xpLine: (xp: number, category: string): string => `+${xp} XP · ${category}`,
-    streakWithRun: (current: number, total: number): string =>
-      `${current} days in a row · ${total} active days total`,
-    streakTotalOnly: (total: number): string => `${total} active days total`,
-  },
-
-  reflection: {
-    title: 'Reflection',
-    placeholder: 'A line or two is plenty.',
-    privacyNote: 'Reflections never leave your device.',
-  },
-
-  report: {
-    title: 'Brain Report',
-    subtitle: 'Why your score is what it is.',
-    insufficientHeading: 'Not enough data yet',
-    insufficientMessage: (minimum: number): string =>
-      `The report unlocks after about ${minimum} recorded uses. Each AI Gate visit counts — including the ones you solve yourself.`,
-    reliance: 'AI reliance',
-    whatAdds: 'What adds to reliance',
-    whatLowers: 'What lowers it',
-    notCounted: 'Not counted, worth knowing',
-    reflectedLine: (percent: number): string =>
-      `You paused to reflect on ${percent}% of your AI uses.`,
-    deliberateLine: (percent: number): string =>
-      `${percent}% of your AI use was deliberate, tool-like work.`,
-    notCountedNote:
-      'Neither of these moves the number. Anything you could do inside this app to lower your own score would make the score worth less, so reflecting is reported and never rewarded.',
-    howItWorks: (windowDays: number, moments: number, aiUses: number, discount: number): string =>
-      `How this works: each factor above is measured from your last ${windowDays} days of recorded uses (${moments} moments, ${aiUses} of them with AI). The factors that add up form your reliance; moments you resolved without AI discount that reliance by up to ${discount}%, never erase it. The whole numbers are apportioned so that what adds minus what lowers is exactly the number on the dial — read them off and check.`,
-    whatCounts: (windowDays: number): string =>
-      `What counts is how much thinking you handed over, not how much you used AI. Heavy, deliberate use where you think first scores low by design, and handing over twice as many whole tasks counts as twice as much — until the scale runs out, above roughly two handed-over tasks a day, where the dial simply stays at 100. Early on the number reads low while the ${windowDays} days fill up. Computed entirely on this device.`,
-    factorAdds: 'adds to',
-    factorLowers: 'lowers',
-    points: (points: number): string => `${points} pts`,
-    factorA11y: (label: string, points: number, direction: string): string =>
-      `${label}: ${points} ${points === 1 ? 'point' : 'points'}, ${direction} the score`,
-  },
-
-  progress: {
-    title: 'Progress',
-    subtitle: 'Everything here only ever adds up.',
-    emptyHeading: 'Your record starts today',
-    emptyMessage: 'Do a challenge or visit the AI Gate once, and this page begins to fill.',
-    thisWeek: 'This week',
-    weekSummary: (challenges: number, attempts: number): string =>
-      `${challenges} ${challenges === 1 ? 'challenge' : 'challenges'} practiced · ${attempts} independent ${attempts === 1 ? 'attempt' : 'attempts'}`,
-    practice: 'Practice',
-    levelAndXp: (level: number, xp: number): string => `Level ${level} · ${xp} XP`,
-    towardLevel: (level: number): string => `Toward level ${level}`,
-    streakActive: (days: number): string =>
-      `Active streak: ${days} ${days === 1 ? 'day' : 'days'}`,
-    streakPaused: 'Streak paused — it picks back up whenever you do.',
-    streakNone: 'Your first active day starts the record.',
-    activeDaysTotal: (days: number): string => ` · ${days} active days total`,
-    capabilitySpread: 'Capability spread',
-    history: 'History',
-    historyEmpty: 'Moments you record — challenges, gates, detox sessions — collect here.',
-  },
-
-  settings: {
-    title: 'Settings',
-    focus: 'Focus',
-    focusNote: 'Up to three capabilities your daily challenge leans toward.',
-    language: 'Language',
-    languageNote: 'Challenges, prompts and every screen. Nothing is sent anywhere to translate it.',
-    languageSystem: 'Follow device',
-    about: 'About',
-    aboutBody:
-      'Human Mode trains independent thinking. The goal is not to eliminate AI — it is to eliminate unconscious dependence on it. The best outcome is that you eventually need this app less.',
-    version: 'AI Detox Center v0.1.0 · MIT licensed open source',
-    dataPrivacy: 'Data & privacy',
-    dataNote: 'Everything lives on this device. No account, no cloud, no analytics.',
-    exportData: 'Export my data',
-    resetScoring: 'Reset scoring settings',
-    deleteAll: 'Delete all data',
-    deleteTitle1: 'Delete all data?',
-    deleteBody1: 'This erases everything on this device. There is no cloud copy.',
-    deleteTitle2: 'Really delete everything?',
-    deleteBody2: 'Scores, challenges, reflections — all of it. This cannot be undone.',
-  },
-
-  timeline: {
-    challenge: 'Challenge',
-    aiGate: 'AI Gate',
-    detox: 'Detox',
-    statusCompleted: 'Completed',
-    statusAttempted: 'Attempted',
-    statusSkipped: 'Skipped',
-    gateSolved: 'Solved it yourself',
-    gateHint: 'Took a hint, kept thinking',
-    gateProceeded: 'Went to AI',
-    gateRecorded: 'Recorded',
-    aiUse: 'AI use',
-    focusedMinutes: (minutes: number): string => `${minutes} focused minutes`,
-    focusedMinutesEarly: (minutes: number): string => `${minutes} focused minutes · ended early`,
-    today: 'Today',
-    yesterday: 'Yesterday',
-  },
 };
 
 /**

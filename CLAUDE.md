@@ -58,8 +58,11 @@ work fully without any LLM API.
    `packages/core` imports no React, no Expo, no platform APIs.
 2. **Core is deterministic.** No `Date.now()`, `new Date()`, or
    `Math.random()` inside `packages/core` domain logic — time enters as ISO
-   strings/date keys, randomness as caller-provided seeds/ids
-   (`apps/mobile/src/lib/{clock,ids}.ts` are the only clock/random sources).
+   strings/date keys, randomness as caller-provided seeds.
+   `apps/mobile/src/lib/clock.ts` is the only clock, and there is no random
+   source at all any more: a run of The Adversary is seeded by the calendar
+   day, the tier and the run index, so the same person on the same day is
+   dealt the same board and a bug report is a seed.
 3. **No network calls anywhere.** Local-first privacy is structural
    (ADR-0003); core's ESLint bans `fetch` via `no-restricted-globals`, CI
    greps the rest.
@@ -90,8 +93,9 @@ work fully without any LLM API.
    compile time, which is the point.
 7. **Business rules never live in components.** Screens read the zustand
    store (`apps/mobile/src/state/store.ts`), call core functions, render.
-   Styles come from theme tokens (`apps/mobile/src/theme/tokens.ts`), never
-   inline hex values.
+   Styles come from theme tokens (`apps/mobile/src/theme/game.ts`), never
+   inline hex values. One palette, dark only — the light/dark pair went with
+   the tracker's screens.
 8. **Tests accompany logic changes** — determinism tests are mandatory for
    scoring/selection changes (same inputs ⇒ deep-equal outputs). The app has
    tests too: `apps/mobile/__tests__/` renders through react-native-web under
@@ -102,14 +106,19 @@ work fully without any LLM API.
 ## Key entry points
 
 - Core public API: `packages/core/src/index.ts` (everything is re-exported)
-- Score pipeline: `tracking/types.ts` (event taxonomy) → `tracking.ts`
-  (stats) → `scoring/scoring.ts` (weighted factors) → UI `report.tsx`
-- Gate flow: `ai-gate/gate.ts` FSM → `gateToUsageEvent` → store
-  `recordGateSession` (returns event id for reflection linking)
-- Daily challenge: `challenges/selection.ts` (`selectDailyChallenge` is
-  seeded by date — same day + history ⇒ same challenge)
-- App routes: `apps/mobile/src/app/` (expo-router; tabs: home/progress/
-  settings; stack: gate/detox/challenge/challenge-result/reflection/report)
+- A run: `adversary/quiz-selection.ts` (`planRun` picks the ladder from the
+  tier's band) → `quiz-board.ts` (`buildLevel` spaces the four options by the
+  bluff's own displacement) → `quiz-run.ts` (the reducer) → UI `adversary.tsx`
+- The joint: `adversary/quiz-diagnosis.ts` (`diagnose` reads accumulated run
+  records) → UI `prescription.tsx` → a YAML block → `skill/method/profile.yaml`
+- App routes: `apps/mobile/src/app/` — `index` redirects to `adversary`, and
+  `prescription` is the only other screen. The tracker's eleven screens
+  (tabs, gate, detox, challenge, reflection, report, onboarding) are deleted.
+
+`packages/core` still holds the tracker's engines — scoring, tracking, the AI
+gate, detox, challenges, reflection — with their tests and their ADRs. Nothing
+renders them. Removing them is a separate change, and it needs an `AppData`
+migration.
 
 ## Tone in user-visible copy
 

@@ -12,8 +12,8 @@
  * particular round would pass today and fail tomorrow for no reason.
  */
 import React from 'react';
-import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { emptyAppData } from '@ai-detox/core';
 import type { AppData, RunRecord } from '@ai-detox/core';
 import Adversary from '../src/app/adversary';
@@ -21,6 +21,7 @@ import Index from '../src/app/index';
 import Prescription from '../src/app/prescription';
 import { EN } from '../src/i18n/en';
 import { useAppStore } from '../src/state/store';
+import { routerMock } from './setup';
 
 function seed(over: Partial<AppData> = {}) {
   useAppStore.setState({
@@ -73,6 +74,49 @@ describe('the front door', () => {
       .map((r) => r.getAttribute('aria-label') ?? '');
     expect(languages).toContain(EN.game.languageSystem);
     expect(languages).toContain('English');
+  });
+});
+
+/**
+ * Export and erase used to live on a settings tab. That tab went with the
+ * tracker, and a local-first product that quietly loses its erase button has
+ * quietly stopped being one (ADR-0003). The two confirmations are the rule
+ * the old screen was tested against, and it moved with the button.
+ */
+describe('erasing everything', () => {
+  const confirmSpy = vi.spyOn(window, 'confirm');
+  afterEach(() => confirmSpy.mockReset());
+
+  const runsLeft = () => useAppStore.getState().data.adversaryRuns.length;
+
+  it('stops at the first refusal', async () => {
+    seed({ adversaryRuns: [record()] });
+    confirmSpy.mockReturnValue(false);
+    render(<Prescription />);
+
+    fireEvent.click(screen.getByText(EN.game.deleteAll));
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalledTimes(1));
+    expect(runsLeft()).toBe(1);
+  });
+
+  it('stops at the second refusal, after the first was accepted', async () => {
+    seed({ adversaryRuns: [record()] });
+    confirmSpy.mockReturnValueOnce(true).mockReturnValueOnce(false);
+    render(<Prescription />);
+
+    fireEvent.click(screen.getByText(EN.game.deleteAll));
+    await waitFor(() => expect(confirmSpy).toHaveBeenCalledTimes(2));
+    expect(runsLeft()).toBe(1);
+  });
+
+  it('erases, and returns to a game with nothing behind it', async () => {
+    seed({ adversaryRuns: [record()] });
+    confirmSpy.mockReturnValue(true);
+    render(<Prescription />);
+
+    fireEvent.click(screen.getByText(EN.game.deleteAll));
+    await waitFor(() => expect(runsLeft()).toBe(0));
+    expect(routerMock.replace).toHaveBeenCalledWith('/adversary');
   });
 });
 
@@ -254,7 +298,41 @@ describe('the prescription', () => {
     render(<Prescription />);
 
     expect(screen.getByText(EN.game.rungWhyLess)).toBeInTheDocument();
-    expect(screen.getByText(/^1 · /)).toBeInTheDocument();
+    // The lit row on the tower, not a bare number: the row is what a player
+    // reads, and it carries the rung's name beside it.
+    expect(
+      screen.getByText(`${EN.game.rungName[1]} · ${EN.game.rungHere}`),
+    ).toBeInTheDocument();
+  });
+
+  /**
+   * The one rule in `ladder.yaml` that is not up for negotiation: "just give
+   * me the answer" always works. The tower is where that promise becomes
+   * visible, and it has to be visible whatever the prescription says.
+   */
+  it('shows the whole ladder, with the full answer marked always reachable', () => {
+    seed({
+      adversaryRuns: [
+        record({
+          reliance: { soloRight: 0, soloWrong: 0, aidedUnneeded: 5, aidedNeeded: 2 },
+          aidedLevels: 7,
+        }),
+      ],
+    });
+    render(<Prescription />);
+
+    for (const level of [2, 3, 4, 5] as const) {
+      expect(screen.getByText(EN.game.rungName[level])).toBeInTheDocument();
+    }
+    expect(screen.getByText(new RegExp(`${EN.game.rungAlwaysOpen}$`))).toBeInTheDocument();
+  });
+
+  it('offers a way back to the game, so the record is not a dead end', () => {
+    seed({ adversaryRuns: [record()] });
+    render(<Prescription />);
+
+    fireEvent.click(screen.getAllByText(EN.game.backToGame)[0]!);
+    expect(routerMock.back).toHaveBeenCalled();
   });
 
   it('shows the block itself, so the copy button is a convenience and not the only route', () => {

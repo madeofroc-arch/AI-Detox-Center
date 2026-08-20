@@ -1,4 +1,4 @@
-import { darkPalette, lightPalette } from './tokens';
+import { gamePalette } from './game';
 
 /**
  * Keyboard focus indicator for the web build.
@@ -23,6 +23,11 @@ import { darkPalette, lightPalette } from './tokens';
  *
  * `:focus-visible` and not `:focus`: a mouse click should not leave a ring
  * behind, and the browser already knows the difference.
+ *
+ * There used to be a `prefers-color-scheme` block here, because the tracker
+ * had a light palette and a dark one. The game has one surface, so the ring
+ * has one colour: the player's own — `you`, asserted at 3:1 against the
+ * background in `contrast.test.ts`.
  */
 let installed = false;
 
@@ -34,14 +39,9 @@ export function installFocusRing(): void {
   style.setAttribute('data-human-mode', 'focus-ring');
   style.textContent = [
     ':focus-visible:focus-visible {',
-    `  outline: 2px solid ${lightPalette.accent};`,
+    `  outline: 2px solid ${gamePalette.you};`,
     '  outline-offset: 2px;',
     '  border-radius: 4px;',
-    '}',
-    '@media (prefers-color-scheme: dark) {',
-    '  :focus-visible:focus-visible {',
-    `    outline-color: ${darkPalette.accent};`,
-    '  }',
     '}',
   ].join('\n');
   document.head.appendChild(style);

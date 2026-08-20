@@ -1,12 +1,11 @@
 /**
  * Palette and type for The Adversary.
  *
- * Separate from `tokens.ts` on purpose, and temporarily. The old screens still
- * build and still have to until the deletion commit, and a game about an
- * opponent cannot share a palette with a calm paper-and-ink wellness app —
- * "Quiet Mind" was the right direction for a product nobody wanted to open.
- * When the old surface goes, this replaces `tokens.ts` rather than sitting
- * beside it.
+ * The only palette. It was written beside `tokens.ts` while both surfaces had
+ * to build — a game about an opponent cannot share a palette with a calm
+ * paper-and-ink wellness app, and "Quiet Mind" was the right direction for a
+ * product nobody wanted to open. The old surface is deleted and `tokens.ts`
+ * went with it, along with the light theme it carried.
  *
  * Dark by default, because the moment this competes for is 22:40 on a sofa.
  *
@@ -46,6 +45,18 @@ export interface GamePalette {
   lineStrong: string;
   /** Label on a `you` fill. */
   onYou: string;
+  /**
+   * The one destructive control on the surface: erase everything.
+   *
+   * Separate from `opponent` on purpose. The opponent is a confident
+   * arguer and never a warning, and the design system reserves red for
+   * actions that destroy something (design-system.md, Voice & tone). A
+   * surface with one irreversible button needs one colour for it and no
+   * more — this token has exactly one caller.
+   */
+  danger: string;
+  /** Label on a `danger` fill. */
+  onDanger: string;
 }
 
 export const gamePalette: GamePalette = {
@@ -63,6 +74,8 @@ export const gamePalette: GamePalette = {
   line: '#2A313C',
   lineStrong: '#77808F',
   onYou: '#0D1015',
+  danger: '#C96A5E',
+  onDanger: '#0D1015',
 };
 
 /**

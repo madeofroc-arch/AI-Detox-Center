@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { gamePalette, gameRadius, gameSpace, gameType } from '../../theme/game';
 import { MIN_TOUCH_TARGET, selectionState } from '../../theme/a11y';
 
-export type GameButtonTone = 'you' | 'plain' | 'quiet';
+export type GameButtonTone = 'you' | 'plain' | 'quiet' | 'danger';
 
 /**
  * Buttons for the game surface.
@@ -35,9 +35,21 @@ export function GameButton({
   selected?: boolean;
 }) {
   const background =
-    tone === 'you' ? gamePalette.you : tone === 'plain' ? gamePalette.surfaceAlt : 'transparent';
+    tone === 'you'
+      ? gamePalette.you
+      : tone === 'danger'
+        ? gamePalette.danger
+        : tone === 'plain'
+          ? gamePalette.surfaceAlt
+          : 'transparent';
   const color =
-    tone === 'you' ? gamePalette.onYou : tone === 'plain' ? gamePalette.ink : gamePalette.quiet;
+    tone === 'you'
+      ? gamePalette.onYou
+      : tone === 'danger'
+        ? gamePalette.onDanger
+        : tone === 'plain'
+          ? gamePalette.ink
+          : gamePalette.quiet;
 
   return (
     <Pressable

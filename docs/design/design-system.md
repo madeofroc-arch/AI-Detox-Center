@@ -1,5 +1,21 @@
 # Design System — "Quiet Mind"
 
+> **Superseded for the shipped surface.** "Quiet Mind" was the tracker's
+> design system: a warm paper-and-ink palette with a light theme and a dark
+> one, and twelve components built on it. The tracker's screens are deleted
+> and so are `tokens.ts` and every component below. The Adversary ships on
+> `apps/mobile/src/theme/game.ts` — one palette, dark only, because the moment
+> it competes for is 22:40 on a sofa.
+>
+> Three things in this document still bind and were carried across verbatim:
+> **the voice and tone rules**, **the accessibility floors** (4.5:1 for text,
+> 3:1 for a control's boundary, a 44pt touch target, no colour-only state),
+> and **red is for destructive actions only** — which is why `gamePalette` has
+> exactly one `danger` token with exactly one caller.
+>
+> The rest is kept as the record of a direction that was right for a product
+> nobody wanted to open.
+
 Direction: Minimal, Premium, Calm, Intelligent, Human-centered.
 The user should feel: *"I am taking back my own thinking."*
 

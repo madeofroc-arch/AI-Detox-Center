@@ -9,8 +9,10 @@ import { Redirect } from 'expo-router';
  * `/adversary`, which meant opening the app showed the abandoned product and
  * nothing anywhere linked to the new one.
  *
- * The tracker's screens are still routable by URL and are not yet deleted; that
- * is a separate change with its own review surface. Nothing links to them.
+ * The tracker's screens are gone — eleven of them, plus the twelve components,
+ * the light palette and the i18n sections only they read. `/report`, `/gate`,
+ * `/settings` and the rest now 404, which is what "nothing links to them"
+ * should have meant in the first place.
  */
 export default function Index() {
   return <Redirect href="/adversary" />;
