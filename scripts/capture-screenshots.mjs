@@ -33,15 +33,26 @@ const CHROME_CANDIDATES = [
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
 ];
 
+/**
+ * `press` is a list of control labels to activate before the shot, matched
+ * against aria-label first and then visible text. Two of the four screens
+ * only exist mid-run, and a screenshot of a game that never shows the game
+ * is a screenshot of a menu.
+ *
+ * The run seed contains the date, so which question appears changes daily.
+ * That is the point of the seed and not worth defeating here — but it does
+ * mean these images are of a real run rather than a fixture.
+ */
 const SHOTS = [
-  { name: '01-home', path: '/(tabs)/home' },
-  { name: '02-report', path: '/report' },
-  { name: '03-progress', path: '/(tabs)/progress' },
-  // The history list sits below the fold; scroll so it is actually shown.
-  { name: '04-history', path: '/(tabs)/progress', scrollY: 1150 },
-  { name: '05-gate', path: '/gate' },
-  { name: '06-challenge', path: '/challenge' },
-  { name: '07-settings', path: '/(tabs)/settings' },
+  { name: '01-modes', path: '/adversary' },
+  { name: '02-question', path: '/adversary', press: ['@tier:1'] },
+  { name: '03-reveal', path: '/adversary', press: ['@tier:2', '@option:0', '@submit'] },
+  // The record is three screens tall and the top of it is the evidence. The
+  // two below are what the evidence bought: where the ladder now starts,
+  // and the block that goes into the AI.
+  { name: '04-record', path: '/prescription' },
+  { name: '05-ladder', path: '/prescription', scrollY: 830 },
+  { name: '06-prescription', path: '/prescription', scrollY: 1180 },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -157,6 +168,11 @@ async function main() {
     await navigate(cdp, `${BASE}${shot.path}`);
     await sleep(1200); // let fonts settle and the store hydrate
 
+    for (const target of shot.press ?? []) {
+      await cdp.send('Runtime.evaluate', { expression: pressExpression(target) });
+      await sleep(900);
+    }
+
     if (shot.scrollY) {
       await cdp.send('Runtime.evaluate', {
         expression: `(() => {
@@ -189,6 +205,38 @@ async function waitForDebugPort(dir) {
     await sleep(250);
   }
   throw new Error('Chrome never reported a debugging port');
+}
+
+/**
+ * Activate one control by label.
+ *
+ * react-native-web's Pressable listens on pointer events, and a bare
+ * `.click()` misses some of them, so this fires the whole sequence. The
+ * `@tier:N` / `@option:N` forms index a repeated control, because every tier
+ * card carries the same button label and every option row carries a figure
+ * that changes with the seed.
+ */
+function pressExpression(target) {
+  return `(() => {
+    const controls = [...document.querySelectorAll('[role="button"],[role="radio"],button')];
+    const label = (el) => (el.getAttribute('aria-label') ?? el.textContent ?? '').replace(/\\s+/g, ' ').trim();
+    let el;
+    const target = ${JSON.stringify(target)};
+    if (target.startsWith('@tier:')) {
+      el = controls.filter((c) => c.getAttribute('role') === 'button' && !/·/.test(label(c)))[Number(target.slice(6))];
+    } else if (target.startsWith('@option:')) {
+      el = controls.filter((c) => c.getAttribute('role') === 'radio')[Number(target.slice(8))];
+    } else if (target === '@submit') {
+      el = controls.find((c) => /^(Final answer|就這個)/.test(label(c)));
+    } else {
+      el = controls.find((c) => label(c).includes(target));
+    }
+    if (!el) throw new Error('no control for ' + target);
+    for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click']) {
+      el.dispatchEvent(new (type.startsWith('pointer') ? PointerEvent : MouseEvent)(type, { bubbles: true }));
+    }
+    return label(el);
+  })()`;
 }
 
 async function navigate(cdp, url) {
