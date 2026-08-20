@@ -1,29 +1,25 @@
 /**
  * The point of these tests is completeness, not spot-checking a few strings.
- * A translation that silently loses half the challenge catalog still renders
- * (English falls through), so nothing would fail — which is exactly why the
- * coverage has to be asserted rather than eyeballed.
+ * A translation that silently loses half the catalog still renders (English
+ * falls through), so nothing would fail — which is exactly why the coverage
+ * has to be asserted rather than eyeballed.
+ *
+ * The domain's only translatable data is now the round catalog. What used to
+ * be here — band names, scoring factors, the usage taxonomy, challenge text,
+ * reflection prompts — went with the tracker.
  */
 import { describe, expect, it } from 'vitest';
 import {
-  CATEGORY_INFO,
   ADVERSARY_CATALOG,
-  CHALLENGE_CATALOG,
-  CHALLENGE_CATEGORIES,
   DEFAULT_LOCALE,
   LOCALES,
   LOCALE_NAMES,
-  REFLECTION_PROMPTS,
   SCHEMA_VERSION,
   getCoreStrings,
   isLocale,
-  localizeCategoryInfo,
-  localizeChallenge,
   localizeRound,
-  localizePrompt,
   matchLocale,
   migrateAppData,
-  usageCategoryLabel,
 } from '../src/index';
 import type { Locale } from '../src/index';
 
@@ -49,6 +45,10 @@ describe('locale identity', () => {
     for (const bad of [undefined, 'fr', 'zh-CN', '']) {
       expect(getCoreStrings(bad).locale).toBe(DEFAULT_LOCALE);
     }
+  });
+
+  it('returns a stable object per locale (safe to use as a memo dependency)', () => {
+    expect(getCoreStrings('zh-TW')).toBe(getCoreStrings('zh-TW'));
   });
 });
 
@@ -84,172 +84,44 @@ describe('matching a device language', () => {
 
 describe('every locale is complete', () => {
   for (const locale of LOCALES) {
-    describe(locale, () => {
+    it(`${locale} has text for every round in the catalog`, () => {
       const strings = getCoreStrings(locale);
-
-      it('translates every scoring band and factor', () => {
-        for (const band of ['independent', 'balanced', 'leaning', 'dependent'] as const) {
-          expect(strings.bandLabels[band]).toBeTruthy();
-        }
-        for (const factor of Object.keys(strings.factorLabels)) {
-          expect(strings.factorLabels[factor as never]).toBeTruthy();
-          expect(strings.factorDescriptions[factor as never]).toBeTruthy();
-        }
-      });
-
-      it('translates every usage category, label and description', () => {
-        for (const info of CATEGORY_INFO) {
-          const text = strings.usageCategories[info.category];
-          expect(text?.label, `${locale} label for ${info.category}`).toBeTruthy();
-          expect(text?.description, `${locale} description for ${info.category}`).toBeTruthy();
-        }
-      });
-
-      it('translates every challenge category', () => {
-        for (const category of CHALLENGE_CATEGORIES) {
-          expect(strings.challengeCategories[category], `${locale}/${category}`).toBeTruthy();
-        }
-      });
-
-      it('translates every reflection prompt', () => {
-        for (const prompt of REFLECTION_PROMPTS) {
-          expect(strings.reflectionPrompts[prompt.id], `${locale}/${prompt.id}`).toBeTruthy();
-        }
-      });
-
-      it('translates every challenge, including each reflection question', () => {
-        for (const challenge of CHALLENGE_CATALOG) {
-          const text = strings.challenges[challenge.id];
-          expect(text, `${locale} is missing challenge ${challenge.id}`).toBeDefined();
-          expect(text!.title).toBeTruthy();
-          expect(text!.instructions).toBeTruthy();
-          expect(text!.successCondition).toBeTruthy();
-          expect(
-            text!.reflectionQuestions,
-            `${locale}/${challenge.id} reflection questions`,
-          ).toHaveLength(challenge.reflectionQuestions.length);
-          for (const q of text!.reflectionQuestions) expect(q).toBeTruthy();
-        }
-      });
+      if (locale === DEFAULT_LOCALE) {
+        // English is the catalog itself, so its overlay is empty by design and
+        // `localizeRound` falls through. Asserting the overlay is populated
+        // would be asserting a duplicate that must not exist.
+        expect(strings.adversaryRounds).toEqual({});
+        return;
+      }
+      for (const round of ADVERSARY_CATALOG) {
+        const text = strings.adversaryRounds[round.id];
+        expect(text, `${locale} is missing round ${round.id}`).toBeDefined();
+        expect(text!.question).toBeTruthy();
+        expect(text!.unit).toBeTruthy();
+        expect(text!.sourceNote).toBeTruthy();
+        expect(text!.honest.argument).toBeTruthy();
+        expect(text!.honest.verdict).toBeTruthy();
+        expect(text!.bluff.argument).toBeTruthy();
+        expect(text!.bluff.verdict).toBeTruthy();
+        expect(text!.bluff.fallacy).toBeTruthy();
+      }
     });
   }
 });
 
 describe('translations are actually translated', () => {
-  // Guards the failure mode where a new key is added to en and copy-pasted
-  // into zh-TW untranslated: the tests above would still pass.
-  const en = getCoreStrings('en');
+  // Guards the failure mode where a round is added to the catalog and
+  // copy-pasted into zh-TW untranslated: the coverage test above would pass.
   const zh = getCoreStrings('zh-TW');
 
-  it('shares no challenge title or instruction text with English', () => {
-    for (const challenge of CHALLENGE_CATALOG) {
-      const a = en.challenges[challenge.id]!;
-      const b = zh.challenges[challenge.id]!;
-      expect(b.title, `zh-TW title for ${challenge.id}`).not.toBe(a.title);
-      expect(b.instructions, `zh-TW instructions for ${challenge.id}`).not.toBe(a.instructions);
-    }
-  });
-
-  it('shares no band, factor, category or prompt with English', () => {
-    for (const key of Object.keys(en.bandLabels) as (keyof typeof en.bandLabels)[]) {
-      expect(zh.bandLabels[key]).not.toBe(en.bandLabels[key]);
-    }
-    for (const info of CATEGORY_INFO) {
-      expect(zh.usageCategories[info.category]!.label).not.toBe(
-        en.usageCategories[info.category]!.label,
+  it('shares no question or argument with the English original', () => {
+    for (const round of ADVERSARY_CATALOG) {
+      const text = zh.adversaryRounds[round.id]!;
+      expect(text.question, `zh-TW question for ${round.id}`).not.toBe(round.question);
+      expect(text.honest.argument, `zh-TW honest for ${round.id}`).not.toBe(
+        round.honest.argument,
       );
-    }
-    for (const prompt of REFLECTION_PROMPTS) {
-      expect(zh.reflectionPrompts[prompt.id]).not.toBe(en.reflectionPrompts[prompt.id]);
-    }
-  });
-});
-
-describe('localization never touches behavior', () => {
-  const zh = getCoreStrings('zh-TW');
-
-  it('keeps a challenge selectable and scoreable: id, category, difficulty, duration', () => {
-    for (const challenge of CHALLENGE_CATALOG) {
-      const localized = localizeChallenge(challenge, zh);
-      expect(localized.id).toBe(challenge.id);
-      expect(localized.category).toBe(challenge.category);
-      expect(localized.difficulty).toBe(challenge.difficulty);
-      expect(localized.durationMinutes).toBe(challenge.durationMinutes);
-      expect(localized.hasWorkArea).toBe(challenge.hasWorkArea);
-    }
-  });
-
-  it('keeps the usage taxonomy order and every kind', () => {
-    const localized = localizeCategoryInfo(zh);
-    expect(localized.map((c) => c.category)).toEqual(CATEGORY_INFO.map((c) => c.category));
-    expect(localized.map((c) => c.kind)).toEqual(CATEGORY_INFO.map((c) => c.kind));
-  });
-
-  it('leaves an unknown challenge or prompt untouched instead of blanking it', () => {
-    const unknown = { ...CHALLENGE_CATALOG[0]!, id: 'not_in_any_pack' };
-    expect(localizeChallenge(unknown, zh).title).toBe(unknown.title);
-    const prompt = { id: 'nope', context: 'free' as const, question: 'Original?' };
-    expect(localizePrompt(prompt, zh).question).toBe('Original?');
-  });
-
-  it('labels a usage category, falling back to the raw value', () => {
-    expect(usageCategoryLabel('direct_delegation', zh)).toBe('幫我做完');
-    expect(usageCategoryLabel('nonsense' as never, zh)).toBe('nonsense');
-  });
-
-  it('returns a stable object per locale (safe to use as a memo dependency)', () => {
-    expect(getCoreStrings('zh-TW')).toBe(getCoreStrings('zh-TW'));
-  });
-});
-
-describe('the language setting survives storage', () => {
-  it('defaults to following the device', () => {
-    expect(migrateAppData({}).settings.language).toBe('system');
-  });
-
-  it('upgrades a v1 document without touching its data', () => {
-    const v1 = {
-      schemaVersion: 1,
-      events: [],
-      gateSessions: [],
-      detoxSessions: [],
-      reflections: [],
-      challengeHistory: [{ id: 'a', challengeId: 'th_steelman', dateKey: '2026-08-01' }],
-      settings: { onboardingComplete: true, focusCategories: ['thinking'] },
-    };
-    const migrated = migrateAppData(v1);
-    // The point of the test is that a v1 document arrives intact at whatever
-    // the current schema is, not that the current schema is any given number.
-    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
-    expect(migrated.settings.language).toBe('system');
-    expect(migrated.settings.onboardingComplete).toBe(true);
-    expect(migrated.settings.focusCategories).toEqual(['thinking']);
-    expect(migrated.challengeHistory).toHaveLength(1);
-  });
-
-  it('fills the language on a v1 document without clobbering one that is there', () => {
-    // Regression: the 1 -> 2 migration set 'system' unconditionally, so every
-    // migrated document lost its language. Caught because the zh-TW
-    // screenshots came out byte-identical to the English ones.
-    const v1 = (language?: unknown): unknown => ({
-      schemaVersion: 1,
-      settings: { onboardingComplete: true, focusCategories: [], ...(language ? { language } : {}) },
-    });
-    expect(migrateAppData(v1()).settings.language).toBe('system');
-    expect(migrateAppData(v1('zh-TW')).settings.language).toBe('zh-TW');
-    expect(migrateAppData(v1('klingon')).settings.language).toBe('system');
-  });
-
-  it('keeps a valid stored language and replaces a nonsensical one', () => {
-    const withLocale = (language: unknown): unknown => ({
-      ...migrateAppData({}),
-      settings: { onboardingComplete: false, focusCategories: [], language },
-    });
-    for (const locale of LOCALES) {
-      expect(migrateAppData(withLocale(locale)).settings.language).toBe(locale as Locale);
-    }
-    for (const bad of ['klingon', 42, null, {}, 'zh-CN']) {
-      expect(migrateAppData(withLocale(bad)).settings.language).toBe('system');
+      expect(text.bluff.argument, `zh-TW bluff for ${round.id}`).not.toBe(round.bluff.argument);
     }
   });
 });
@@ -314,3 +186,37 @@ describe('a translated round', () => {
   });
 });
 
+describe('the language setting survives storage', () => {
+  it('defaults to following the device', () => {
+    expect(migrateAppData({}).settings.language).toBe('system');
+  });
+
+  it('carries a v1 language all the way to the current schema', () => {
+    // The point is that a v1 document arrives intact at whatever the current
+    // schema is, not that the current schema is any given number.
+    const v1 = (language?: unknown): unknown => ({
+      schemaVersion: 1,
+      settings: { onboardingComplete: true, focusCategories: [], ...(language ? { language } : {}) },
+    });
+    expect(migrateAppData(v1()).schemaVersion).toBe(SCHEMA_VERSION);
+    // Regression: the 1 -> 2 migration set 'system' unconditionally, so every
+    // migrated document lost its language. Caught because the zh-TW
+    // screenshots came out byte-identical to the English ones.
+    expect(migrateAppData(v1()).settings.language).toBe('system');
+    expect(migrateAppData(v1('zh-TW')).settings.language).toBe('zh-TW');
+    expect(migrateAppData(v1('klingon')).settings.language).toBe('system');
+  });
+
+  it('keeps a valid stored language and replaces a nonsensical one', () => {
+    const withLocale = (language: unknown): unknown => ({
+      ...migrateAppData({}),
+      settings: { language },
+    });
+    for (const locale of LOCALES) {
+      expect(migrateAppData(withLocale(locale)).settings.language).toBe(locale as Locale);
+    }
+    for (const bad of ['klingon', 42, null, {}, 'zh-CN']) {
+      expect(migrateAppData(withLocale(bad)).settings.language).toBe('system');
+    }
+  });
+});

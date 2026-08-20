@@ -61,7 +61,7 @@ describe('the front door', () => {
   });
 
   it('is the game even before anything has been played', () => {
-    seed({ settings: { onboardingComplete: false, focusCategories: [], language: 'system' } });
+    seed({ settings: { language: 'system' } });
     render(<Index />);
     expect(screen.getByTestId('redirect').getAttribute('data-href')).toBe('/adversary');
   });

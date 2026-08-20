@@ -15,10 +15,7 @@ product-architect          "what are we building, and why"
 ux-ui-designer             "how does a human experience it"
         |
         v
-ai-detox-engine            "how does AI dependency work"
-        |
-        v
-human-challenge-engine     "how do we train human capabilities"
+adversary-engine           "how does the game measure it"
         |
         v
 open-source-engineer       "how does it become reliable OSS"
@@ -34,8 +31,7 @@ question stays with its owning skill.
 | --- | --- | --- |
 | What problem, for whom, what scope | product-architect | `docs/product/*` |
 | Flows, screens, tokens, tone, accessibility | ux-ui-designer | `docs/design/*`, `apps/mobile/src/theme`, `apps/mobile/src/components` |
-| Dependency score, AI Gate, detox, tracking, reflection | ai-detox-engine | `packages/core/src/ai-detox/*` |
-| Challenges, adaptive difficulty, streak/XP | human-challenge-engine | `packages/core/src/challenges/*` |
+| Rounds, boards, run reducer, diagnosis, localisation | adversary-engine | `packages/core/src/{adversary,i18n}/*` |
 | Repo structure, CI, tests policy, community files, privacy architecture | open-source-engineer | root files, `.github/`, `docs/architecture/*` |
 
 ## Ownership rules
@@ -57,9 +53,10 @@ question stays with its owning skill.
   designs flow/screens, then the owning engine implements domain logic with
   tests, then ux-ui-designer implements UI, then open-source-engineer
   verifies CI/docs/privacy.
-- **Bug fix in scoring**: ai-detox-engine only (plus changelog by
-  open-source-engineer conventions).
-- **New challenge content**: human-challenge-engine only.
+- **Bug fix in the board or the reducer**: adversary-engine only (plus
+  changelog by open-source-engineer conventions).
+- **New round**: adversary-engine only — and it is not done until the
+  arithmetic has been redone by hand in both languages.
 - **Release**: open-source-engineer.
 
 ## For AI agents

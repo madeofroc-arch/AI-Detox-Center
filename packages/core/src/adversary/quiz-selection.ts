@@ -9,7 +9,7 @@
  * at the end has to be comparable to itself across runs or the diagnosis is
  * worthless.
  */
-import { hashString } from '../challenges/selection';
+import { hashString } from '../hash';
 import { fitsTier } from './quiz-board';
 import type { QuizConfig, TierConfig } from './quiz-config';
 import { levelValue } from './quiz-config';

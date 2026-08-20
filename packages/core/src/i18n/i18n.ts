@@ -4,10 +4,6 @@
  * English key by key rather than leaving a hole in the UI.
  */
 import type { AdversaryRound } from '../adversary/types';
-import type { Challenge } from '../challenges/types';
-import type { ReflectionPrompt } from '../ai-detox/reflection/reflection';
-import type { AIUsageCategory, CategoryInfo } from '../ai-detox/tracking/types';
-import { CATEGORY_INFO } from '../ai-detox/tracking/types';
 import { EN_STRINGS } from './en';
 import { ZH_TW_STRINGS } from './zh-TW';
 import type { CoreStrings, Locale, PartialCoreStrings } from './types';
@@ -38,35 +34,10 @@ export function getCoreStrings(locale: Locale | string | undefined): CoreStrings
   const over = OVERRIDES[key];
   const merged: CoreStrings = {
     locale: key,
-    bandLabels: mergeTable(EN_STRINGS.bandLabels, over.bandLabels),
-    factorLabels: mergeTable(EN_STRINGS.factorLabels, over.factorLabels),
-    factorDescriptions: mergeTable(EN_STRINGS.factorDescriptions, over.factorDescriptions),
-    usageCategories: mergeTable(EN_STRINGS.usageCategories, over.usageCategories),
-    challengeCategories: mergeTable(EN_STRINGS.challengeCategories, over.challengeCategories),
-    reflectionPrompts: mergeTable(EN_STRINGS.reflectionPrompts, over.reflectionPrompts),
-    challenges: mergeTable(EN_STRINGS.challenges, over.challenges),
     adversaryRounds: mergeTable(EN_STRINGS.adversaryRounds, over.adversaryRounds),
   };
   CACHE.set(key, merged);
   return merged;
-}
-
-/**
- * A challenge with its text in the requested language. Id, category,
- * difficulty and duration are untouched — selection and scoring must not
- * depend on the display language, or the same day would offer different
- * practice to the same person in two languages.
- */
-export function localizeChallenge(challenge: Challenge, strings: CoreStrings): Challenge {
-  const text = strings.challenges[challenge.id];
-  if (!text) return challenge;
-  return {
-    ...challenge,
-    title: text.title,
-    instructions: text.instructions,
-    successCondition: text.successCondition,
-    reflectionQuestions: text.reflectionQuestions,
-  };
 }
 
 /**
@@ -99,23 +70,6 @@ export function localizeRound(round: AdversaryRound, strings: CoreStrings): Adve
   };
 }
 
-/** A reflection prompt with its question translated. */
-export function localizePrompt(
-  prompt: ReflectionPrompt,
-  strings: CoreStrings,
-): ReflectionPrompt {
-  const question = strings.reflectionPrompts[prompt.id];
-  return question ? { ...prompt, question } : prompt;
-}
-
-/** The usage taxonomy in display order, translated. Kinds are unchanged. */
-export function localizeCategoryInfo(strings: CoreStrings): CategoryInfo[] {
-  return CATEGORY_INFO.map((info) => {
-    const text = strings.usageCategories[info.category];
-    return text ? { ...info, label: text.label, description: text.description } : { ...info };
-  });
-}
-
 /**
  * Match device language tags (most-preferred first) to a supported locale.
  *
@@ -143,12 +97,4 @@ export function matchLocale(tags: readonly string[]): Locale {
     if (match) return match;
   }
   return DEFAULT_LOCALE;
-}
-
-/** One category's label, for a chip or a row. */
-export function usageCategoryLabel(
-  category: AIUsageCategory,
-  strings: CoreStrings,
-): string {
-  return strings.usageCategories[category]?.label ?? category;
 }

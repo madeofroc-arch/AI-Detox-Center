@@ -42,7 +42,7 @@
  * fuel weighing 0.75 kg, so three of the four options eliminated themselves and
  * a player who knew no chemistry scored 100%.
  */
-import { hashString } from '../challenges/selection';
+import { hashString } from '../hash';
 import type { QuizConfig, TierConfig } from './quiz-config';
 import type { AdversaryRound, SchoolBand } from './types';
 import type { AudienceShares, FriendCall, HostCall, QuizLevel } from './quiz-types';
